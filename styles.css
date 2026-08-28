@@ -1,0 +1,113 @@
+/* Custom Styles for CarbonAxis Full-Scale Web Application */
+
+:root {
+  --color-fresh-green: #22C55E;
+  --color-dark-green: #15803D;
+  --color-metallic-green: #10B981;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F8FAFC; /* Clean light slate background */
+  color: #1E293B;
+  min-height: 100vh;
+}
+
+/* Wireframe technological grid background */
+.tech-grid-bg {
+  position: relative;
+}
+.tech-grid-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: 
+    linear-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: center center;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Glowing design features */
+.metallic-green-glow {
+  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.3);
+}
+
+.metallic-text {
+  background: linear-gradient(135deg, #047857 0%, #10B981 50%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Interactive hover cards */
+.interactive-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #E2E8F0;
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px);
+  border-color: #10B981;
+  box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.2);
+}
+
+.interactive-card:hover .card-icon {
+  background-color: #ECFDF5;
+  color: #059669;
+  transform: scale(1.08);
+}
+
+.card-icon {
+  transition: all 0.3s ease;
+}
+
+/* Project Carousel scrolling style */
+.carousel-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+.carousel-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+.carousel-item {
+  scroll-snap-align: start;
+}
+
+/* Glassmorphism Modals */
+.modal-overlay {
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px);
+}
+
+/* Custom Primary Button gradient and states */
+.btn-primary-green {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  transition: all 0.2s ease;
+}
+.btn-primary-green:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Custom Scrollbar for Registry and listings */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}

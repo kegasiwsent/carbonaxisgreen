@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarbonAxis | Integrative Carbon Credit & Offset Registry</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts - Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 tech-grid-bg text-slate-800 flex flex-col min-h-screen">
+
+  <!-- ==================== sticky Navigation Header ==================== -->
+  <header class="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between py-2 md:py-3">
+        
+        <!-- Logo CA Monogram -->
+        <a href="#" data-view="home" class="nav-link-btn flex items-center gap-3">
+          <img src="assets/logo.jpg" alt="CarbonAxis Logo" class="h-12 md:h-16 w-auto rounded-lg object-contain border border-slate-200 shadow-sm">
+          <span class="font-extrabold text-xl tracking-tight text-slate-900">CarbonAxis</span>
+        </a>
+
+        <!-- Desktop Navigation Items -->
+        <nav class="hidden md:flex space-x-6 text-sm font-medium">
+          <a href="#" class="nav-link-btn py-5 border-b-2 border-green-600 text-green-600 active" data-view="home">Homepage</a>
+          <a href="#" class="nav-link-btn py-5 border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition" data-view="about">About Us</a>
+          <a href="#" class="nav-link-btn py-5 border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition" data-view="projects">Credit Catalog</a>
+          <a href="#" class="nav-link-btn py-5 border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition" data-view="marketplace">Trading Desk</a>
+          <a href="#" class="nav-link-btn py-5 border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition" data-view="transparency">Registry Clearing</a>
+        </nav>
+
+        <!-- Right Side Header CTAs -->
+        <div class="hidden md:flex items-center gap-3">
+          <button class="trigger-contact-cta px-4 py-2 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 active:scale-98 transition">
+            Contact Us
+          </button>
+        </div>
+
+        <!-- Hamburger Icon Menu (Mobile) -->
+        <div class="md:hidden flex items-center">
+          <button id="hamburger-btn" class="text-slate-600 focus:outline-none p-1">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation Menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-2.5">
+      <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="home">Homepage</a>
+      <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="about">About Us</a>
+      <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="projects">Credit Catalog</a>
+      <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="marketplace">Trading Desk</a>
+      <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="transparency">Registry Clearing</a>
+      <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+        <button class="trigger-contact-cta w-full py-2 text-xs font-bold text-white bg-green-600 rounded-lg">Contact Us</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN PAGE CONTAINER ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+
+    <!-- ==================== VIEW: HOME ==================== -->
+    <div id="view-home" class="space-y-12">
+      
+      <!-- Hero Section -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative">
+        <div class="lg:col-span-7 space-y-6">
+          <span class="inline-flex items-center gap-1.5 bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            <i class="fa-solid fa-circle-nodes"></i> Integrated Carbon Registry
+          </span>
+          <h1 class="text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
+            Achieve Your Net-Zero Goals: <span class="metallic-text">Integratively.</span>
+          </h1>
+          <p class="text-sm sm:text-base text-slate-500 leading-relaxed max-w-xl">
+            We procure premium, verified carbon removal and reduction credits from leading global developers and clear them directly to corporate buyers. Fast, transparent, and fully audited carbon credit exchange.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button class="trigger-contact-cta px-6 py-3 text-sm font-bold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700 active:scale-98 transition">
+              Contact Us
+            </button>
+            <button id="hero-btn-learn" class="px-6 py-3 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 active:scale-98 transition">
+              Learn More
+            </button>
+          </div>
+        </div>
+
+        <!-- Hero Section Visual (Right Side) -->
+        <div class="lg:col-span-5 flex justify-center">
+          <div class="relative w-full max-w-sm bg-slate-50 p-3.5 rounded-3xl border border-slate-200 shadow-lg relative group">
+            <img src="assets/hero.jpg" alt="Integrative Offset Network" class="w-full h-auto rounded-2xl object-cover shadow-sm group-hover:scale-[1.01] transition-transform duration-300">
+            <!-- Glowing Badge Overlay -->
+            <span class="absolute -top-3 -right-3 bg-green-500 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+              <i class="fa-solid fa-square-check"></i> Standard Verified
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Core Website Directory Navigation (Interactive Hover Cards) -->
+      <section class="space-y-6">
+        <div class="text-center max-w-xl mx-auto space-y-2">
+          <h2 class="text-sm font-extrabold text-green-600 uppercase tracking-wider">Platform Hub</h2>
+          <p class="text-2xl sm:text-3xl font-black text-slate-900">Explore Platform Operations</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Card 1: About Us / Mission -->
+          <div class="homepage-nav-card interactive-card p-6 rounded-2xl cursor-pointer bg-white" data-view="about">
+            <div class="card-icon w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+              <i class="fa-solid fa-compass text-xl"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-800">About & Mission</h3>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+              Visionary leadership aligned with global net-zero goals. Adherence to strict ecological guidelines like the Core Carbon Principles (ICVCM).
+            </p>
+          </div>
+
+          <!-- Card 2: Projects / Portfolio -->
+          <div class="homepage-nav-card interactive-card p-6 rounded-2xl cursor-pointer bg-white" data-view="projects">
+            <div class="card-icon w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+              <i class="fa-solid fa-earth-americas text-xl"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-800">Credit Portfolio</h3>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+              Browse premium, audited credit batches procured from leading global developers, ready for corporate offset allocations.
+            </p>
+          </div>
+
+          <!-- Card 3: Marketplace / Trading Hub -->
+          <div class="homepage-nav-card interactive-card p-6 rounded-2xl cursor-pointer bg-white" data-view="marketplace">
+            <div class="card-icon w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+              <i class="fa-solid fa-handshake text-xl"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-800">Carbon Trading Desk</h3>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+              Calculate emissions, execute buy orders from active inventory, or liquidate excess offsets back to our clearing house.
+            </p>
+          </div>
+
+          <!-- Card 4: Transparency & Resources -->
+          <div class="homepage-nav-card interactive-card p-6 rounded-2xl cursor-pointer bg-white" data-view="transparency">
+            <div class="card-icon w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+              <i class="fa-solid fa-magnifying-glass-chart text-xl"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-800">Clearing & Registry</h3>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+              Access public clearing books, retired credit serial numbers, legal compliance audits, and download third-party reports.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Project Highlights Carousel Showcase -->
+      <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold text-green-600 uppercase tracking-widest">Active Credits</span>
+            <h2 class="text-2xl font-black text-slate-900 mt-0.5">Verified Project Highlights</h2>
+          </div>
+          <!-- Slider Controls -->
+          <div class="flex gap-2">
+            <button id="carousel-prev" class="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-slate-950 active:scale-95 transition">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <button id="carousel-next" class="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-slate-950 active:scale-95 transition">
+              <i class="fa-solid fa-chevron-right text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Carousel List -->
+        <div id="project-carousel" class="carousel-container gap-6 py-2">
+          
+          <!-- Item 1 -->
+          <div class="carousel-item min-w-[280px] sm:min-w-[340px] bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative h-44 w-full bg-slate-200 rounded-xl overflow-hidden mb-3">
+              <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=600&q=80')"></div>
+              <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                <i class="fa-solid fa-shield"></i> Gold Standard Verified
+              </span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Amazonian Canopy Preservation</h3>
+            <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-location-dot"></i> Acre, Brazil</p>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Protecting native tropical rain forests from illegal deforestation, supporting biodiversity and communities.</p>
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-200/60">
+              <span class="text-xs text-slate-400">Vintage: 2024</span>
+              <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">12,000 tCO₂e/yr</span>
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="carousel-item min-w-[280px] sm:min-w-[340px] bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative h-44 w-full bg-slate-200 rounded-xl overflow-hidden mb-3">
+              <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=600&q=80')"></div>
+              <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                <i class="fa-solid fa-shield"></i> VCS Verified
+              </span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Sahara Concentrated Solar Offset</h3>
+            <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-location-dot"></i> Ouarzazate, Morocco</p>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Generating clean electric power to offset coal grid generators across the northern African power corridor.</p>
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-200/60">
+              <span class="text-xs text-slate-400">Vintage: 2025</span>
+              <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">34,500 tCO₂e/yr</span>
+            </div>
+          </div>
+
+          <!-- Item 3 -->
+          <div class="carousel-item min-w-[280px] sm:min-w-[340px] bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative h-44 w-full bg-slate-200 rounded-xl overflow-hidden mb-3">
+              <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=600&q=80')"></div>
+              <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                <i class="fa-solid fa-shield"></i> Plan Vivo Verified
+              </span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Coastal Mangrove Carbon Reforestation</h3>
+            <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-location-dot"></i> Mombasa, Kenya</p>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Replanting and stabilizing critical marine mangrove estuaries which sequester up to 10x more carbon than dry forests.</p>
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-200/60">
+              <span class="text-xs text-slate-400">Vintage: 2023</span>
+              <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">8,400 tCO₂e/yr</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== VIEW: ABOUT US ==================== -->
+    <div id="view-about" class="space-y-8 hidden">
+      <div class="text-center max-w-xl mx-auto space-y-2">
+        <span class="text-xs font-bold text-green-600 uppercase tracking-widest">Our Framework</span>
+        <h2 class="text-3xl font-black text-slate-900">About CarbonAxis & Our Mission</h2>
+        <p class="text-sm text-slate-500">Adhering strictly to global ecological standards to drive absolute project integrity.</p>
+      </div>
+
+      <!-- Sourcing & Distribution Model Banner -->
+      <div class="p-6 bg-green-50/50 rounded-2xl border border-green-200 text-slate-700 space-y-2 shadow-sm">
+        <h3 class="text-sm font-extrabold text-green-850 flex items-center gap-2">
+          <i class="fa-solid fa-arrows-spin text-green-600"></i> Our Role: Sourcing & Distribution Partner
+        </h3>
+        <p class="text-xs text-slate-650 leading-relaxed">
+          CarbonAxis functions as a trusted liquidity intermediary in the voluntary carbon market. <strong>We do not develop projects ourselves.</strong> Instead, we perform extensive risk and quality due diligence to procure premium carbon credits in bulk from certified project developers globally, distributing them directly to corporate clients who need high-integrity assets to clear their emissions.
+        </p>
+      </div>
+
+      <!-- Core Pillars -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-2xl border border-slate-250 shadow-sm space-y-3">
+          <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-leaf text-green-600"></i> Core Carbon Principles (ICVCM)
+          </h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            CarbonAxis aligns project verification criteria with the Integrity Council for the Voluntary Carbon Market's Core Carbon Principles. This ensures additions are permanent, double-counting is mathematically impossible, and social co-benefits are fully verified.
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-250 shadow-sm space-y-3">
+          <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-green-600"></i> Strict Verification Protocols
+          </h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Each project in our database goes through continuous monitoring, reporting, and verification (MRV) using modern satellite data and third-party auditors (Verra, Gold Standard, Plan Vivo) to audit and match real-world carbon abatement.
+          </p>
+        </div>
+      </div>
+
+      <!-- Compliance Metrics Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100">
+          <h3 class="text-sm font-extrabold text-slate-800">Compliance & Verification Matrix</h3>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-500 uppercase font-bold tracking-wider border-b border-slate-100">
+              <tr>
+                <th class="px-6 py-3.5">Standard Body</th>
+                <th class="px-6 py-3.5">Verified Parameters</th>
+                <th class="px-6 py-3.5">Audit Schedule</th>
+                <th class="px-6 py-3.5">Registry Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-600">
+              <tr>
+                <td class="px-6 py-4 font-bold text-slate-800">Gold Standard</td>
+                <td class="px-6 py-4">Additionality, community co-benefits, SDG impacts</td>
+                <td class="px-6 py-4">Annual Satellite + Bi-annual Field</td>
+                <td class="px-6 py-4 text-green-600 font-semibold">Fully Compliant</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-bold text-slate-800">Verra (VCS)</td>
+                <td class="px-6 py-4">Permanence risk mitigation, baseline emissions models</td>
+                <td class="px-6 py-4">Annual Audit Checkups</td>
+                <td class="px-6 py-4 text-green-600 font-semibold">Fully Compliant</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-bold text-slate-800">Plan Vivo</td>
+                <td class="px-6 py-4">Indigenous community shares, ecosystem restoration</td>
+                <td class="px-6 py-4">Triannual Auditing Cycles</td>
+                <td class="px-6 py-4 text-green-600 font-semibold">Fully Compliant</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW: PROJECTS ==================== -->
+    <div id="view-projects" class="space-y-8 hidden">
+      <div class="text-center max-w-xl mx-auto space-y-2">
+        <span class="text-xs font-bold text-green-600 uppercase tracking-widest">Credit Inventory</span>
+        <h2 class="text-3xl font-black text-slate-900">Sourced Carbon Credit Catalog</h2>
+        <p class="text-sm text-slate-500">Browse verified offset batches procured from leading global developers, available for instant corporate clearing.</p>
+      </div>
+
+      <!-- Project Directory Filters -->
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <button class="project-filter-btn px-4 py-2 text-xs font-bold bg-green-600 text-white rounded-lg transition" data-filter="all">All Projects</button>
+        <button class="project-filter-btn px-4 py-2 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition" data-filter="nature">Nature-Based</button>
+        <button class="project-filter-btn px-4 py-2 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition" data-filter="renewables">Renewable Power</button>
+        <button class="project-filter-btn px-4 py-2 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition" data-filter="tech">High-Tech Removal</button>
+      </div>
+
+      <!-- Projects Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Nature Project 1 -->
+        <div class="project-item-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4" data-category="nature">
+          <div class="relative h-48 bg-slate-100 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=600&q=80')"></div>
+            <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Nature Reforestation</span>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-base font-extrabold text-slate-800">Acre Canopy Protection</h3>
+            <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot"></i> Acre Region, Brazil</p>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">Protects large forest sectors from logging and commercial agricultural clearing. Integrates regional community support logs.</p>
+          <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400">GS-Registry: BR-928</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded">12k t/yr</span>
+          </div>
+        </div>
+
+        <!-- Renewables Project 2 -->
+        <div class="project-item-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4" data-category="renewables">
+          <div class="relative h-48 bg-slate-100 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=600&q=80')"></div>
+            <span class="absolute top-3 left-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Renewables Solar</span>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-base font-extrabold text-slate-800">Sahara Concentrated Solar</h3>
+            <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot"></i> Ouarzazate, Morocco</p>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">Replaces coal grids with clean solar thermal infrastructure, lowering overall grid greenhouse inputs.</p>
+          <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400">VCS-Registry: MA-771</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded">34.5k t/yr</span>
+          </div>
+        </div>
+
+        <!-- Nature Project 3 -->
+        <div class="project-item-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4" data-category="nature">
+          <div class="relative h-48 bg-slate-100 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=600&q=80')"></div>
+            <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Nature Estuary</span>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-base font-extrabold text-slate-800">Mombasa Mangrove Replanting</h3>
+            <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot"></i> Mombasa Coast, Kenya</p>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">Stabilizes soil and restores ocean mangroves which capture massive carbon volumes from marine environments.</p>
+          <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400">PV-Registry: KE-004</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded">8.4k t/yr</span>
+          </div>
+        </div>
+
+        <!-- Tech Project 4 -->
+        <div class="project-item-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4" data-category="tech">
+          <div class="relative h-48 bg-slate-100 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1473872170063-eb914837e609?auto=format&fit=crop&w=600&q=80')"></div>
+            <span class="absolute top-3 left-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">High-Tech DAC</span>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-base font-extrabold text-slate-800">Icelandic Direct Air Capture</h3>
+            <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot"></i> Hellisheidi, Iceland</p>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">Uses geological geothermal systems to extract ambient CO₂ and mineralize it permanently deep underground.</p>
+          <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400">Verifier: CarbonDirect</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded">5.2k t/yr</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW: MARKETPLACE ==================== -->
+    <div id="view-marketplace" class="space-y-8 hidden">
+      <div class="text-center max-w-xl mx-auto space-y-2">
+        <span class="text-xs font-bold text-green-600 uppercase tracking-widest">Trading Terminal</span>
+        <h2 class="text-3xl font-black text-slate-900">Carbon Credit Trading Desk</h2>
+        <p class="text-sm text-slate-500">Calculate footprints, buy offset credits from our active inventory, or liquidate excess allocations back to our desk.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Side: Carbon Footprint Calculator -->
+        <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="space-y-1">
+            <h3 class="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-calculator text-green-600"></i> Annual Carbon Footprint Estimator
+            </h3>
+            <p class="text-xs text-slate-400">Complete standard fields below to determine your annual metric tons of CO₂ equivalent emissions.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Vehicle Travel (miles / month)</label>
+              <input type="number" id="calc-transport" value="1000" class="w-full text-sm p-2.5 border border-slate-200 rounded-lg focus:border-green-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Flights taken (hours / year)</label>
+              <input type="number" id="calc-flights" value="20" class="w-full text-sm p-2.5 border border-slate-200 rounded-lg focus:border-green-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Electricity grid usage (kWh / month)</label>
+              <input type="number" id="calc-elec" value="400" class="w-full text-sm p-2.5 border border-slate-200 rounded-lg focus:border-green-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Natural Gas usage (therms / month)</label>
+              <input type="number" id="calc-gas" value="25" class="w-full text-sm p-2.5 border border-slate-200 rounded-lg focus:border-green-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <button id="calc-calculate-btn" class="w-full py-3 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 active:scale-98 transition shadow">
+            Calculate My Carbon Footprint
+          </button>
+
+          <!-- Calculator Results Box -->
+          <div id="calc-results" class="hidden bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Estimated Footprint</span>
+                <p class="text-xl font-black text-slate-900 mt-0.5"><span id="calc-result-value">0.00</span> Metric Tons CO₂e / yr</p>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Offset cost ($15/ton)</span>
+                <p id="calc-cost-value" class="text-xl font-black text-green-600 mt-0.5">$0.00</p>
+              </div>
+            </div>
+
+            <!-- Visual breakdown charts -->
+            <div class="space-y-2">
+              <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Emissions Breakdown</span>
+              <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden flex">
+                <div id="break-transport" class="bg-emerald-500" style="width: 30%"></div>
+                <div id="break-home" class="bg-blue-500" style="width: 40%"></div>
+                <div id="break-travel" class="bg-amber-500" style="width: 30%"></div>
+              </div>
+              <div class="flex gap-4 text-[10px] text-slate-400 font-bold">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Ground Transport</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Home Energy</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Air Travel</span>
+              </div>
+            </div>
+
+            <button class="trigger-contact-cta w-full py-2.5 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+              Contact Us to Offset
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Side: Trading Desk -->
+        <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="space-y-1">
+            <h3 class="text-lg font-extrabold text-slate-800">CarbonAxis Trading Desk</h3>
+            <p class="text-xs text-slate-400 font-medium">Place immediate buy (ask) or sell (bid) orders on verified carbon registry offsets.</p>
+          </div>
+
+          <div class="space-y-4">
+            
+            <!-- Quick Lot 1 -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">Acre Forest Lot (GS)</h4>
+                  <p class="text-[9px] text-slate-400">Vintage 2024 • Bid $14.50 | Ask $15.00</p>
+                </div>
+                <span class="text-[10px] font-bold text-slate-500">Vol: 2,500 t</span>
+              </div>
+              <div class="flex gap-2">
+                <button class="trigger-trade-cta flex-1 py-1.5 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 active:scale-95 transition" data-action="buy" data-project="Acre Forest Lot (GS)" data-price="15.00">Buy @ $15.00</button>
+                <button class="trigger-trade-cta flex-1 py-1.5 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 active:scale-95 transition" data-action="sell" data-project="Acre Forest Lot (GS)" data-price="14.50">Sell @ $14.50</button>
+              </div>
+            </div>
+
+            <!-- Quick Lot 2 -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">Sahara Solar Lot (VCS)</h4>
+                  <p class="text-[9px] text-slate-400">Vintage 2025 • Bid $11.50 | Ask $12.00</p>
+                </div>
+                <span class="text-[10px] font-bold text-slate-500">Vol: 10,000 t</span>
+              </div>
+              <div class="flex gap-2">
+                <button class="trigger-trade-cta flex-1 py-1.5 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 active:scale-95 transition" data-action="buy" data-project="Sahara Solar Lot (VCS)" data-price="12.00">Buy @ $12.00</button>
+                <button class="trigger-trade-cta flex-1 py-1.5 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 active:scale-95 transition" data-action="sell" data-project="Sahara Solar Lot (VCS)" data-price="11.50">Sell @ $11.50</button>
+              </div>
+            </div>
+
+            <!-- Quick Lot 3 -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">Coastal Mangrove Lot (PV)</h4>
+                  <p class="text-[9px] text-slate-400">Vintage 2023 • Bid $9.50 | Ask $10.00</p>
+                </div>
+                <span class="text-[10px] font-bold text-slate-500">Vol: 4,200 t</span>
+              </div>
+              <div class="flex gap-2">
+                <button class="trigger-trade-cta flex-1 py-1.5 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 active:scale-95 transition" data-action="buy" data-project="Coastal Mangrove Lot (PV)" data-price="10.00">Buy @ $10.00</button>
+                <button class="trigger-trade-cta flex-1 py-1.5 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 active:scale-95 transition" data-action="sell" data-project="Coastal Mangrove Lot (PV)" data-price="9.50">Sell @ $9.50</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW: TRANSPARENCY ==================== -->
+    <div id="view-transparency" class="space-y-8 hidden">
+      <div class="text-center max-w-xl mx-auto space-y-2">
+        <span class="text-xs font-bold text-green-600 uppercase tracking-widest">Public Database</span>
+        <h2 class="text-3xl font-black text-slate-900">Registry Search & Transparency Reports</h2>
+        <p class="text-sm text-slate-500">Query serial numbers, verify retirements, and download audit sheets.</p>
+      </div>
+
+      <!-- Search lookup widget -->
+      <div class="max-w-xl mx-auto bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-magnifying-glass text-green-600"></i> Public Serial Lookup Desk
+        </h3>
+        <p class="text-xs text-slate-400">Validate offset retirement status, owner designations, and verification dates.</p>
+        <div class="flex gap-2">
+          <input type="text" id="registry-search-input" placeholder="e.g. RET-GS-491-2801" class="flex-1 text-sm p-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-green-500" />
+          <button id="registry-lookup-btn" class="px-5 py-2.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-950 transition">Lookup Serial</button>
+        </div>
+      </div>
+
+      <!-- Transaction Database Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+          <h3 class="text-sm font-extrabold text-slate-800">Public Retirement Ledgers</h3>
+          <span class="text-slate-400 text-xs font-semibold">Updated 5m ago</span>
+        </div>
+        
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-500 uppercase font-bold tracking-wider border-b border-slate-100">
+              <tr>
+                <th class="px-6 py-3.5">Transaction ID</th>
+                <th class="px-6 py-3.5">Serial Number</th>
+                <th class="px-6 py-3.5">Project Name</th>
+                <th class="px-6 py-3.5">Quantity (Tons)</th>
+                <th class="px-6 py-3.5">Retirement Owner</th>
+                <th class="px-6 py-3.5">Certificates</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-600">
+              <tr>
+                <td class="px-6 py-4 font-bold text-slate-900">#TX-9201</td>
+                <td class="px-6 py-4 font-mono text-[11px]">RET-GS-491-2801</td>
+                <td class="px-6 py-4">Acre Canopy Protection (BR)</td>
+                <td class="px-6 py-4 font-semibold text-slate-800">1,500 t</td>
+                <td class="px-6 py-4">Acme Corp Inc.</td>
+                <td class="px-6 py-4">
+                  <a href="#" onclick="alert('Downloading Certificate PDF...')" class="text-green-600 font-bold hover:underline">Download <i class="fa-solid fa-file-arrow-down ml-0.5"></i></a>
+                </td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-bold text-slate-900">#TX-9118</td>
+                <td class="px-6 py-4 font-mono text-[11px]">RET-VCS-702-8812</td>
+                <td class="px-6 py-4">Sahara Solar Network (MA)</td>
+                <td class="px-6 py-4 font-semibold text-slate-800">3,400 t</td>
+                <td class="px-6 py-4">EcoLogistics Group</td>
+                <td class="px-6 py-4">
+                  <a href="#" onclick="alert('Downloading Certificate PDF...')" class="text-green-600 font-bold hover:underline">Download <i class="fa-solid fa-file-arrow-down ml-0.5"></i></a>
+                </td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-bold text-slate-900">#TX-8921</td>
+                <td class="px-6 py-4 font-mono text-[11px]">RET-PV-119-0931</td>
+                <td class="px-6 py-4">Mombasa Mangrove (KE)</td>
+                <td class="px-6 py-4 font-semibold text-slate-800">800 t</td>
+                <td class="px-6 py-4">SustainaBrands Ltd</td>
+                <td class="px-6 py-4">
+                  <a href="#" onclick="alert('Downloading Certificate PDF...')" class="text-green-600 font-bold hover:underline">Download <i class="fa-solid fa-file-arrow-down ml-0.5"></i></a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== CORPORATE FOOTER ==================== -->
+  <footer class="bg-slate-950 text-slate-400 py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-900 mt-auto relative z-10">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 mb-8">
+      
+      <!-- Column 1: Info -->
+      <div class="md:col-span-4 space-y-4">
+        <div class="flex items-center gap-3">
+          <img src="assets/logo.jpg" alt="CarbonAxis Logo" class="h-12 md:h-16 w-auto rounded-lg object-contain">
+          <span class="text-lg font-black text-white tracking-tight">CarbonAxis</span>
+        </div>
+        <p class="text-xs leading-relaxed max-w-sm">
+          A technology-native carbon offset registration platform. Dedicated to high-integrity, audited carbon abatement assets complying with the Core Carbon Principles.
+        </p>
+      </div>
+
+      <!-- Column 2: Navigation Links -->
+      <div class="md:col-span-2 space-y-3">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Quick Navigation</h4>
+        <ul class="text-xs space-y-2">
+          <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="home">Homepage</a></li>
+          <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="about">About Our Mission</a></li>
+          <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="projects">Registry Directory</a></li>
+          <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="marketplace">Emissions Marketplace</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 3: Standards and Legal -->
+      <div class="md:col-span-3 space-y-3">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Standards compliance</h4>
+        <ul class="text-xs space-y-2">
+          <li><a href="https://icvcm.org/" target="_blank" class="hover:text-white transition">Core Carbon Principles (ICVCM)</a></li>
+          <li><a href="https://www.goldstandard.org/" target="_blank" class="hover:text-white transition">Gold Standard Verification</a></li>
+          <li><a href="https://verra.org/" target="_blank" class="hover:text-white transition">Verra VCS Registry</a></li>
+          <li><a href="#" class="hover:text-white transition">API Integration Docs</a></li>
+        </ul>
+      </div>
+
+      <!-- Column 4: Quick Inquiry -->
+      <div class="md:col-span-3 space-y-3">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Ask Anything</h4>
+        <form id="footer-inquiry-form" class="space-y-2">
+          <input type="email" placeholder="Your Email Address" class="w-full text-xs bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-green-500" required>
+          <div class="flex gap-1.5">
+            <input type="text" placeholder="Write question..." class="flex-1 text-xs bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-green-500">
+            <button type="submit" class="bg-green-600 text-white px-4 text-xs font-bold rounded-lg hover:bg-green-700 transition">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Bottom copy block -->
+    <div class="max-w-7xl mx-auto border-t border-slate-900 pt-8 flex flex-col sm:flex-row justify-between items-center text-[11px] gap-4">
+      <span>&copy; 2026 CarbonAxis Inc. All rights reserved.</span>
+      <div class="flex gap-4">
+        <a href="#" class="hover:text-white transition">Privacy Policy</a>
+        <a href="#" class="hover:text-white transition">Terms & Compliance</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== TRANSACTION MODAL ==================== -->
+  <div id="main-modal" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full overflow-hidden transform scale-95 transition-transform duration-300">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <h3 id="modal-title" class="text-sm font-extrabold text-slate-800">Action Overlay</h3>
+        <button id="close-modal-btn" class="text-slate-400 hover:text-slate-700 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body Form -->
+      <form id="modal-form">
+        <div class="p-5 text-slate-600" id="modal-dynamic-content">
+          <!-- Dynamic Content Loaded Here -->
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+          <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+            Submit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Core Javascript -->
+  <script src="app.js"></script>
+</body>
+</html>
