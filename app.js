@@ -342,10 +342,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Homepage redirect buttons
-  const directBuyBtn = document.getElementById('hero-btn-buy');
-  if (directBuyBtn) {
-    directBuyBtn.addEventListener('click', () => {
-      switchView('marketplace');
+  const directCatalogBtn = document.getElementById('hero-btn-catalog');
+  if (directCatalogBtn) {
+    directCatalogBtn.addEventListener('click', () => {
+      switchView('projects');
     });
   }
 
@@ -353,6 +353,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (directAboutBtn) {
     directAboutBtn.addEventListener('click', () => {
       switchView('about');
+    });
+  }
+
+  // Bottom homepage contact form
+  const bottomContactForm = document.getElementById('bottom-contact-form');
+  if (bottomContactForm) {
+    bottomContactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Thank you for reaching out! Your message has been received by the CarbonAxis trading desk. A specialist will follow up shortly.');
+      bottomContactForm.reset();
     });
   }
 });
