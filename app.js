@@ -365,4 +365,29 @@ document.addEventListener('DOMContentLoaded', () => {
       bottomContactForm.reset();
     });
   }
+
+  // Floating WhatsApp Widget Popup Toggle
+  const waToggleBtn = document.getElementById('whatsapp-toggle-btn');
+  const waPopupMenu = document.getElementById('whatsapp-popup-menu');
+  const waClosePopup = document.getElementById('close-whatsapp-popup');
+
+  if (waToggleBtn && waPopupMenu) {
+    waToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      waPopupMenu.classList.toggle('hidden');
+    });
+
+    if (waClosePopup) {
+      waClosePopup.addEventListener('click', (e) => {
+        e.stopPropagation();
+        waPopupMenu.classList.add('hidden');
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!waPopupMenu.contains(e.target) && e.target !== waToggleBtn) {
+        waPopupMenu.classList.add('hidden');
+      }
+    });
+  }
 });
