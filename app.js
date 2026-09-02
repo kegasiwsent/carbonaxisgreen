@@ -88,14 +88,21 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('bg-green-600', 'text-white');
 
       const filterValue = btn.getAttribute('data-filter');
+      let visibleCount = 0;
       projectItems.forEach(item => {
         const itemCategory = item.getAttribute('data-category');
         if (filterValue === 'all' || itemCategory === filterValue) {
           item.classList.remove('hidden');
+          visibleCount++;
         } else {
           item.classList.add('hidden');
         }
       });
+
+      const countIndicator = document.getElementById('catalog-count-indicator');
+      if (countIndicator) {
+        countIndicator.textContent = `Showing ${visibleCount} of ${projectItems.length} Projects`;
+      }
     });
   });
 

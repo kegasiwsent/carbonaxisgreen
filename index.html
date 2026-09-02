@@ -428,84 +428,174 @@
         <p class="text-xs text-slate-500">Browse verified offset batches procured from leading global developers, available for instant corporate clearing.</p>
       </div>
 
-      <!-- Project Directory Filters -->
-      <div class="flex flex-wrap items-center justify-center gap-2">
-        <button class="project-filter-btn px-4 py-2 text-xs font-bold bg-green-600 text-white rounded-lg transition" data-filter="all">All Projects</button>
-        <button class="project-filter-btn px-4 py-2 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition" data-filter="nature">Nature-Based</button>
-        <button class="project-filter-btn px-4 py-2 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition" data-filter="renewables">Renewable Power</button>
-        <button class="project-filter-btn px-4 py-2 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition" data-filter="tech">High-Tech Removal</button>
+      <!-- Portfolio Summary Metrics Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+        <div class="p-2 border-r border-slate-100 last:border-0">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Sourced Projects</span>
+          <span id="catalog-total-projects-stat" class="text-lg font-black text-green-600">6 Projects</span>
+        </div>
+        <div class="p-2 border-r border-slate-100 last:border-0">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Available Volume</span>
+          <span class="text-lg font-black text-slate-900">112,600 tCO₂e</span>
+        </div>
+        <div class="p-2 border-r border-slate-100 last:border-0">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Registry Standards</span>
+          <span class="text-lg font-black text-slate-900">VCS • GS • PV</span>
+        </div>
+        <div class="p-2">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Global Sourcing Hubs</span>
+          <span class="text-lg font-black text-slate-900">6 Countries</span>
+        </div>
+      </div>
+
+      <!-- Project Directory Filters with Counts -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+        <div class="flex flex-wrap items-center gap-2">
+          <button class="project-filter-btn px-3.5 py-1.5 text-xs font-bold bg-green-600 text-white rounded-lg transition shadow-sm" data-filter="all">
+            All Projects <span class="ml-1 bg-white/20 px-1.5 py-0.2 rounded-full text-[10px]">6</span>
+          </button>
+          <button class="project-filter-btn px-3.5 py-1.5 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition" data-filter="nature">
+            Nature-Based <span class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">3</span>
+          </button>
+          <button class="project-filter-btn px-3.5 py-1.5 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition" data-filter="renewables">
+            Renewable Power <span class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">2</span>
+          </button>
+          <button class="project-filter-btn px-3.5 py-1.5 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition" data-filter="tech">
+            High-Tech Removal <span class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">1</span>
+          </button>
+        </div>
+        <span id="catalog-count-indicator" class="text-xs font-bold text-slate-500 pr-2">Showing 6 of 6 Projects</span>
       </div>
 
       <!-- Projects Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         
-        <!-- Nature Project 1 -->
-        <div class="project-item-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4" data-category="nature">
-          <div class="relative h-48 bg-slate-100 rounded-xl overflow-hidden">
+        <!-- Project #01 (Nature) -->
+        <div class="project-item-card bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm space-y-3" data-category="nature">
+          <div class="relative h-44 bg-slate-100 rounded-xl overflow-hidden">
             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=600&q=80')"></div>
-            <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Nature Reforestation</span>
+            <span class="absolute top-2.5 left-2.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">Nature Reforestation</span>
+            <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded">Project #01</span>
           </div>
           <div class="space-y-1">
-            <h3 class="text-base font-extrabold text-slate-800">Acre Canopy Protection</h3>
-            <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot"></i> Acre Region, Brazil</p>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-mono text-green-700 font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">ID: PRJ-GS-0104</span>
+              <span class="text-slate-400"><i class="fa-solid fa-location-dot"></i> Acre, Brazil</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900">Acre Canopy Protection</h3>
           </div>
-          <p class="text-xs text-slate-500 leading-relaxed">Protects large forest sectors from logging and commercial agricultural clearing. Integrates regional community support logs.</p>
-          <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-            <span class="text-slate-400">GS-Registry: BR-928</span>
-            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded">12k t/yr</span>
+          <p class="text-[11px] text-slate-500 leading-relaxed">Protects large forest sectors from logging and commercial agricultural clearing. Integrates regional community support logs.</p>
+          <div class="pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400 text-[11px]">GS-Registry: BR-928</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded text-[11px]">12,000 t/yr</span>
           </div>
         </div>
 
-        <!-- Renewables Project 2 -->
-        <div class="project-item-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4" data-category="renewables">
-          <div class="relative h-48 bg-slate-100 rounded-xl overflow-hidden">
+        <!-- Project #02 (Renewables) -->
+        <div class="project-item-card bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm space-y-3" data-category="renewables">
+          <div class="relative h-44 bg-slate-100 rounded-xl overflow-hidden">
             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=600&q=80')"></div>
-            <span class="absolute top-3 left-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Renewables Solar</span>
+            <span class="absolute top-2.5 left-2.5 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">Renewable Solar</span>
+            <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded">Project #02</span>
           </div>
           <div class="space-y-1">
-            <h3 class="text-base font-extrabold text-slate-800">Sahara Concentrated Solar</h3>
-            <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot"></i> Ouarzazate, Morocco</p>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-mono text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">ID: PRJ-VCS-0218</span>
+              <span class="text-slate-400"><i class="fa-solid fa-location-dot"></i> Ouarzazate, Morocco</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900">Sahara Concentrated Solar</h3>
           </div>
-          <p class="text-xs text-slate-500 leading-relaxed">Replaces coal grids with clean solar thermal infrastructure, lowering overall grid greenhouse inputs.</p>
-          <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-            <span class="text-slate-400">VCS-Registry: MA-771</span>
-            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded">34.5k t/yr</span>
+          <p class="text-[11px] text-slate-500 leading-relaxed">Replaces coal grids with clean solar thermal infrastructure, lowering overall grid greenhouse gas inputs.</p>
+          <div class="pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400 text-[11px]">VCS-Registry: MA-771</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded text-[11px]">34,500 t/yr</span>
           </div>
         </div>
 
-        <!-- Nature Project 3 -->
-        <div class="project-item-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4" data-category="nature">
-          <div class="relative h-48 bg-slate-100 rounded-xl overflow-hidden">
+        <!-- Project #03 (Nature) -->
+        <div class="project-item-card bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm space-y-3" data-category="nature">
+          <div class="relative h-44 bg-slate-100 rounded-xl overflow-hidden">
             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=600&q=80')"></div>
-            <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Nature Estuary</span>
+            <span class="absolute top-2.5 left-2.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">Marine Estuary</span>
+            <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded">Project #03</span>
           </div>
           <div class="space-y-1">
-            <h3 class="text-base font-extrabold text-slate-800">Mombasa Mangrove Replanting</h3>
-            <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot"></i> Mombasa Coast, Kenya</p>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">ID: PRJ-PV-0342</span>
+              <span class="text-slate-400"><i class="fa-solid fa-location-dot"></i> Mombasa, Kenya</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900">Mombasa Mangrove Replanting</h3>
           </div>
-          <p class="text-xs text-slate-500 leading-relaxed">Stabilizes soil and restores ocean mangroves which capture massive carbon volumes from marine environments.</p>
-          <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-            <span class="text-slate-400">PV-Registry: KE-004</span>
-            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded">8.4k t/yr</span>
+          <p class="text-[11px] text-slate-500 leading-relaxed">Stabilizes coastal soil and restores ocean blue-carbon mangroves capturing massive metric volumes.</p>
+          <div class="pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400 text-[11px]">PV-Registry: KE-004</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded text-[11px]">8,400 t/yr</span>
           </div>
         </div>
 
-        <!-- Tech Project 4 -->
-        <div class="project-item-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4" data-category="tech">
-          <div class="relative h-48 bg-slate-100 rounded-xl overflow-hidden">
+        <!-- Project #04 (High-Tech DAC) -->
+        <div class="project-item-card bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm space-y-3" data-category="tech">
+          <div class="relative h-44 bg-slate-100 rounded-xl overflow-hidden">
             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1473872170063-eb914837e609?auto=format&fit=crop&w=600&q=80')"></div>
-            <span class="absolute top-3 left-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">High-Tech DAC</span>
+            <span class="absolute top-2.5 left-2.5 bg-teal-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">High-Tech DAC</span>
+            <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded">Project #04</span>
           </div>
           <div class="space-y-1">
-            <h3 class="text-base font-extrabold text-slate-800">Icelandic Direct Air Capture</h3>
-            <p class="text-xs text-slate-400"><i class="fa-solid fa-location-dot"></i> Hellisheidi, Iceland</p>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-mono text-teal-700 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">ID: PRJ-DAC-0419</span>
+              <span class="text-slate-400"><i class="fa-solid fa-location-dot"></i> Hellisheidi, Iceland</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900">Icelandic Direct Air Capture</h3>
           </div>
-          <p class="text-xs text-slate-500 leading-relaxed">Uses geological geothermal systems to extract ambient CO₂ and mineralize it permanently deep underground.</p>
-          <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-            <span class="text-slate-400">Verifier: CarbonDirect</span>
-            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded">5.2k t/yr</span>
+          <p class="text-[11px] text-slate-500 leading-relaxed">Uses geological geothermal systems to extract ambient CO₂ and mineralize it permanently underground.</p>
+          <div class="pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400 text-[11px]">Verifier: CarbonDirect</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded text-[11px]">5,200 t/yr</span>
           </div>
         </div>
+
+        <!-- Project #05 (Renewables India) -->
+        <div class="project-item-card bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm space-y-3" data-category="renewables">
+          <div class="relative h-44 bg-slate-100 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=600&q=80')"></div>
+            <span class="absolute top-2.5 left-2.5 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">Renewable Wind</span>
+            <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded">Project #05</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-mono text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">ID: PRJ-VCS-0552</span>
+              <span class="text-slate-400"><i class="fa-solid fa-location-dot"></i> Gujarat, India</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900">Gujarat Clean Wind Corridor</h3>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">Displaces thermal power generation on the western grid corridor with high-capacity wind turbines.</p>
+          <div class="pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400 text-[11px]">VCS-Registry: IN-309</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded text-[11px]">42,000 t/yr</span>
+          </div>
+        </div>
+
+        <!-- Project #06 (Nature Agroforestry) -->
+        <div class="project-item-card bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm space-y-3" data-category="nature">
+          <div class="relative h-44 bg-slate-100 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=600&q=80')"></div>
+            <span class="absolute top-2.5 left-2.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">Agroforestry</span>
+            <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded">Project #06</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">ID: PRJ-GS-0681</span>
+              <span class="text-slate-400"><i class="fa-solid fa-location-dot"></i> Antioquia, Colombia</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900">Andean Cloud Forest Conservation</h3>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">Combines native species canopy regeneration with sustainable shade-grown coffee farming cooperatives.</p>
+          <div class="pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400 text-[11px]">GS-Registry: CO-512</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded text-[11px]">10,500 t/yr</span>
+          </div>
+        </div>
+
       </div>
     </div>
 
