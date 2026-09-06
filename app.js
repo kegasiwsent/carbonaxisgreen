@@ -684,7 +684,7 @@ Sent from CarbonAxis Homepage Direct Message Form`
 
   function checkAdminAuth() {
     const isAuth = sessionStorage.getItem('carbonaxis_admin_auth') === 'true';
-    const adminEmail = sessionStorage.getItem('carbonaxis_admin_email') || 'patel5423@gmail.com';
+    const adminEmail = sessionStorage.getItem('carbonaxis_admin_email') || 'Authorized';
     const displayUserEl = document.getElementById('admin-display-user');
     if (displayUserEl) displayUserEl.textContent = adminEmail;
 
