@@ -371,26 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         message: msgInput
       });
 
-      const subject = encodeURIComponent(`CarbonAxis Inquiry (${typeInput}) - ${nameInput}`);
-      const body = encodeURIComponent(
-`Hello CarbonAxis Sales & Trading Team,
-
-I would like to submit an inquiry through the CarbonAxis Portal.
-
---- INQUIRER DETAILS ---
-Name: ${nameInput}
-Email: ${emailInput}
-Inquiry Type: ${typeInput}
-
---- MESSAGE ---
-${msgInput}
-
----
-Sent from CarbonAxis Platform`
-      );
-
-      window.location.href = `mailto:sales@carbonaxisgreen.com?subject=${subject}&body=${body}`;
-      alert('Your inquiry has been recorded and saved in our Supabase database! Opening your email client to send to sales@carbonaxisgreen.com.');
+      alert('Thank you! Your inquiry has been received and recorded in our database. Our team will follow up with you shortly.');
       closeModal();
     };
   }
@@ -533,21 +514,7 @@ Sent from CarbonAxis Platform`
         message: question
       });
 
-      const subject = encodeURIComponent(`CarbonAxis Quick Question from ${email}`);
-      const body = encodeURIComponent(
-`Hello CarbonAxis Sales & Trading Desk,
-
-Question/Inquiry from footer form:
-${question}
-
-Sender Email: ${email}
-
----
-Sent from CarbonAxis Platform`
-      );
-
-      window.location.href = `mailto:sales@carbonaxisgreen.com?subject=${subject}&body=${body}`;
-      alert('Your inquiry was recorded in our database! Opening your email application to send to sales@carbonaxisgreen.com.');
+      alert('Thank you! Your question has been submitted and recorded in our database. We will reply to you shortly.');
       if (emailInput) emailInput.value = '';
       if (questionInput) questionInput.value = '';
     });
@@ -608,29 +575,7 @@ Sent from CarbonAxis Platform`
         message: message
       });
 
-      // 2. Open prefilled mailto email redirection
-      const subject = encodeURIComponent(`CarbonAxis Carbon Credit Inquiry - ${name}`);
-      const body = encodeURIComponent(
-`Hello CarbonAxis Sales & Trading Desk,
-
-I would like to submit a direct inquiry regarding carbon credit buying, selling, or offsets.
-
---- INQUIRER CONTACT DETAILS ---
-• Name: ${name}
-• Email: ${email}
-• Phone: ${phone}
-
---- REQUIREMENTS / MESSAGE ---
-${message}
-
----
-Sent from CarbonAxis Homepage Direct Message Form`
-      );
-
-      const mailtoUrl = `mailto:sales@carbonaxisgreen.com?subject=${subject}&body=${body}`;
-      window.location.href = mailtoUrl;
-
-      alert('Inquiry successfully recorded in CarbonAxis database! Opening your email application to send to sales@carbonaxisgreen.com.');
+      alert('Thank you! Your message has been sent successfully and recorded in our database. A CarbonAxis representative will follow up with you shortly.');
       bottomContactForm.reset();
     });
   }
