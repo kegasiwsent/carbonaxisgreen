@@ -665,7 +665,6 @@ Sent from CarbonAxis Homepage Direct Message Form`
   const adminLoginCard = document.getElementById('admin-login-card');
   const adminDashboardView = document.getElementById('admin-dashboard-view');
   const adminAuthForm = document.getElementById('admin-auth-form');
-  const adminPinInput = document.getElementById('admin-pin-input');
   const adminLogoutBtn = document.getElementById('admin-logout-btn');
   const adminRefreshBtn = document.getElementById('admin-refresh-btn');
   const adminExportBtn = document.getElementById('admin-export-btn');
@@ -673,11 +672,9 @@ Sent from CarbonAxis Homepage Direct Message Form`
   // Admin tab buttons
   const tabInquiriesBtn = document.getElementById('admin-tab-inquiries-btn');
   const tabTradesBtn = document.getElementById('admin-tab-trades-btn');
-  const tabSupabaseBtn = document.getElementById('admin-tab-supabase-btn');
 
   const tabInquiriesView = document.getElementById('admin-tab-inquiries');
   const tabTradesView = document.getElementById('admin-tab-trades');
-  const tabSupabaseView = document.getElementById('admin-tab-supabase');
 
   const searchInput = document.getElementById('admin-search-input');
   const statusFilter = document.getElementById('admin-status-filter');
@@ -687,6 +684,10 @@ Sent from CarbonAxis Homepage Direct Message Form`
 
   function checkAdminAuth() {
     const isAuth = sessionStorage.getItem('carbonaxis_admin_auth') === 'true';
+    const adminEmail = sessionStorage.getItem('carbonaxis_admin_email') || 'patel5423@gmail.com';
+    const displayUserEl = document.getElementById('admin-display-user');
+    if (displayUserEl) displayUserEl.textContent = adminEmail;
+
     if (isAuth) {
       if (adminLoginCard) adminLoginCard.classList.add('hidden');
       if (adminDashboardView) adminDashboardView.classList.remove('hidden');
@@ -700,13 +701,18 @@ Sent from CarbonAxis Homepage Direct Message Form`
   if (adminAuthForm) {
     adminAuthForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const pin = adminPinInput.value.trim();
-      if (pin === 'admin123' || pin === 'carbonaxis2026') {
+      const email = (document.getElementById('admin-email-input')?.value || '').trim().toLowerCase();
+      const pass = (document.getElementById('admin-pass-input')?.value || '').trim();
+
+      // Authorized Admin Credentials
+      if (email === 'patel5423@gmail.com' && pass === 'patel5423@$') {
         sessionStorage.setItem('carbonaxis_admin_auth', 'true');
-        adminPinInput.value = '';
+        sessionStorage.setItem('carbonaxis_admin_email', email);
+        if (document.getElementById('admin-email-input')) document.getElementById('admin-email-input').value = '';
+        if (document.getElementById('admin-pass-input')) document.getElementById('admin-pass-input').value = '';
         checkAdminAuth();
       } else {
-        alert('Invalid Security PIN. Please try again (Default: admin123).');
+        alert('Access Denied: Invalid administrator email or password.');
       }
     });
   }
@@ -714,6 +720,7 @@ Sent from CarbonAxis Homepage Direct Message Form`
   if (adminLogoutBtn) {
     adminLogoutBtn.addEventListener('click', () => {
       sessionStorage.removeItem('carbonaxis_admin_auth');
+      sessionStorage.removeItem('carbonaxis_admin_email');
       checkAdminAuth();
     });
   }
@@ -721,20 +728,20 @@ Sent from CarbonAxis Homepage Direct Message Form`
   if (adminRefreshBtn) {
     adminRefreshBtn.addEventListener('click', () => {
       loadAdminDashboardData();
-      alert('Dashboard synced with Supabase database.');
+      alert('Dashboard synced with database.');
     });
   }
 
   // Tab switching inside Admin Dashboard
   function switchAdminTab(tabName) {
-    [tabInquiriesBtn, tabTradesBtn, tabSupabaseBtn].forEach(b => {
+    [tabInquiriesBtn, tabTradesBtn].forEach(b => {
       if (b) {
         b.classList.remove('border-green-600', 'text-green-600', 'active');
         b.classList.add('border-transparent', 'text-slate-500');
       }
     });
 
-    [tabInquiriesView, tabTradesView, tabSupabaseView].forEach(v => {
+    [tabInquiriesView, tabTradesView].forEach(v => {
       if (v) v.classList.add('hidden');
     });
 
@@ -746,16 +753,11 @@ Sent from CarbonAxis Homepage Direct Message Form`
       tabTradesBtn.classList.add('border-green-600', 'text-green-600', 'active');
       tabTradesBtn.classList.remove('border-transparent', 'text-slate-500');
       tabTradesView.classList.remove('hidden');
-    } else if (tabName === 'supabase') {
-      tabSupabaseBtn.classList.add('border-green-600', 'text-green-600', 'active');
-      tabSupabaseBtn.classList.remove('border-transparent', 'text-slate-500');
-      tabSupabaseView.classList.remove('hidden');
     }
   }
 
   if (tabInquiriesBtn) tabInquiriesBtn.addEventListener('click', () => switchAdminTab('inquiries'));
   if (tabTradesBtn) tabTradesBtn.addEventListener('click', () => switchAdminTab('trades'));
-  if (tabSupabaseBtn) tabSupabaseBtn.addEventListener('click', () => switchAdminTab('supabase'));
 
   async function loadAdminDashboardData() {
     currentInquiries = await fetchInquiries();
