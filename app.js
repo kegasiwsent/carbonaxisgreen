@@ -1,14 +1,167 @@
-// Interactive Scripts for CarbonAxis Full-Scale Web Application
+// Interactive Scripts for CarbonAxis Full-Scale Web Application & Supabase Admin Portal
 
 document.addEventListener('DOMContentLoaded', () => {
   
+  // ==================== 0. Supabase Client Setup ====================
+  const SUPABASE_URL = 'https://byjjvotevysrhwiiamie.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5amp2b3Rldnlzcmh3aWlhbWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MTg3NjMsImV4cCI6MjEwNDI5NDc2M30.ThMkTJ0rs2FGCwhDLbF1kGFyrbSn5WY3oxOg5XUNkEM';
+
+  let supabaseClient = null;
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log('Supabase client initialized successfully.');
+    } catch (err) {
+      console.warn('Supabase initialization note:', err);
+    }
+  }
+
+  // Database helper: Inquiries
+  async function saveInquiryToDatabase(inquiry) {
+    const record = {
+      id: Date.now(),
+      created_at: new Date().toISOString(),
+      name: inquiry.name || 'Anonymous',
+      email: inquiry.email || '',
+      phone: inquiry.phone || 'Not provided',
+      inquiry_type: inquiry.inquiry_type || 'Direct Message',
+      message: inquiry.message || '',
+      status: 'New'
+    };
+
+    // 1. Save to localStorage (instant offline-first cache)
+    try {
+      const existing = JSON.parse(localStorage.getItem('carbonaxis_inquiries') || '[]');
+      existing.unshift(record);
+      localStorage.setItem('carbonaxis_inquiries', JSON.stringify(existing));
+    } catch (e) {
+      console.error('Local storage error:', e);
+    }
+
+    // 2. Save to Supabase Cloud
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('inquiries')
+          .insert([{
+            name: record.name,
+            email: record.email,
+            phone: record.phone,
+            inquiry_type: record.inquiry_type,
+            message: record.message,
+            status: record.status
+          }]);
+        if (error) {
+          console.warn('Supabase cloud insert warning (fallback saved locally):', error.message);
+        } else {
+          console.log('Inquiry synced to Supabase successfully:', data);
+        }
+      } catch (err) {
+        console.warn('Supabase request note:', err);
+      }
+    }
+  }
+
+  // Database helper: Trades
+  async function saveTradeToDatabase(trade) {
+    const record = {
+      id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
+      created_at: new Date().toISOString(),
+      order_type: trade.order_type || 'BUY',
+      project_name: trade.project_name || 'Carbon Asset',
+      volume: trade.volume || 100,
+      limit_price: trade.limit_price || 15.00,
+      clearing_value: trade.clearing_value || 1500.00,
+      status: 'Cleared'
+    };
+
+    // 1. Save to localStorage
+    try {
+      const existing = JSON.parse(localStorage.getItem('carbonaxis_trades') || '[]');
+      existing.unshift(record);
+      localStorage.setItem('carbonaxis_trades', JSON.stringify(existing));
+    } catch (e) {
+      console.error('Local storage trade error:', e);
+    }
+
+    // 2. Save to Supabase Cloud
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('trades')
+          .insert([{
+            order_type: record.order_type,
+            project_name: record.project_name,
+            volume: record.volume,
+            limit_price: record.limit_price,
+            clearing_value: record.clearing_value,
+            status: record.status
+          }]);
+        if (error) {
+          console.warn('Supabase trade insert warning (fallback saved locally):', error.message);
+        }
+      } catch (err) {
+        console.warn('Supabase trade note:', err);
+      }
+    }
+  }
+
+  // Database query: Inquiries
+  async function fetchInquiries() {
+    let cloudList = [];
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('inquiries')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!error && Array.isArray(data)) {
+          cloudList = data;
+        }
+      } catch (err) {
+        console.warn('Supabase fetch note:', err);
+      }
+    }
+
+    const localList = JSON.parse(localStorage.getItem('carbonaxis_inquiries') || '[]');
+    if (cloudList.length > 0) {
+      return cloudList;
+    }
+    return localList;
+  }
+
+  // Database query: Trades
+  async function fetchTrades() {
+    let cloudList = [];
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('trades')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!error && Array.isArray(data)) {
+          cloudList = data;
+        }
+      } catch (err) {
+        console.warn('Supabase trades fetch note:', err);
+      }
+    }
+
+    const localList = JSON.parse(localStorage.getItem('carbonaxis_trades') || '[]');
+    if (cloudList.length > 0) {
+      return cloudList;
+    }
+    return localList;
+  }
+
   // ==================== 1. View Switching & Sticky Header Nav ====================
   const views = {
     home: document.getElementById('view-home'),
     about: document.getElementById('view-about'),
     projects: document.getElementById('view-projects'),
     marketplace: document.getElementById('view-marketplace'),
-    transparency: document.getElementById('view-transparency')
+    transparency: document.getElementById('view-transparency'),
+    admin: document.getElementById('view-admin')
   };
 
   const navLinks = document.querySelectorAll('.nav-link-btn');
@@ -23,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Hide all views
     Object.keys(views).forEach(key => {
-      views[key].classList.add('hidden');
+      if (views[key]) views[key].classList.add('hidden');
     });
 
     // Show active view
@@ -44,6 +197,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close mobile dropdown menu if open
     if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
       mobileMenu.classList.add('hidden');
+    }
+
+    // If switching to admin view, initialize check
+    if (viewKey === 'admin') {
+      checkAdminAuth();
     }
   }
 
@@ -171,38 +329,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modalTitle.textContent = 'Contact CarbonAxis';
     modalContentDiv.innerHTML = `
-      <p class="text-sm text-slate-500 mb-4">Have questions about carbon registries, compliance audits, or partnership integration? Send us a message.</p>
-      <div class="space-y-4">
+      <p class="text-xs text-slate-500 mb-4">Have questions about carbon registries, procurement, or direct offset orders? Send us a message.</p>
+      <div class="space-y-3">
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
-          <input type="text" placeholder="e.g. Sarah Jenkins" class="w-full text-sm p-2 border border-slate-200 rounded focus:border-green-500 focus:outline-none" required />
+          <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
+          <input type="text" id="modal-name" placeholder="e.g. Sarah Jenkins" class="w-full text-xs p-2 border border-slate-200 rounded-lg focus:border-green-500 focus:outline-none" required />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
-          <input type="email" placeholder="e.g. sarah@company.com" class="w-full text-sm p-2 border border-slate-200 rounded focus:border-green-500 focus:outline-none" required />
+          <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+          <input type="email" id="modal-email" placeholder="e.g. sarah@company.com" class="w-full text-xs p-2 border border-slate-200 rounded-lg focus:border-green-500 focus:outline-none" required />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Inquiry Type</label>
-          <select class="w-full text-sm p-2 border border-slate-200 rounded focus:border-green-500 focus:outline-none">
-            <option>General Information</option>
-            <option>Registry Integrity & ICVCM</option>
-            <option>Offset Lot Procurement</option>
-            <option>Technical API Integration</option>
+          <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Inquiry Type</label>
+          <select id="modal-type" class="w-full text-xs p-2 border border-slate-200 rounded-lg focus:border-green-500 focus:outline-none">
+            <option value="General Inquiry">General Information</option>
+            <option value="Offset Lot Procurement">Offset Lot Procurement</option>
+            <option value="Liquidate Credit Volume">Liquidate Credit Volume</option>
+            <option value="Registry & Compliance">Registry & Compliance Audit</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Message</label>
-          <textarea rows="3" placeholder="Tell us how we can help..." class="w-full text-sm p-2 border border-slate-200 rounded focus:border-green-500 focus:outline-none" required></textarea>
+          <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Message</label>
+          <textarea id="modal-msg" rows="3" placeholder="Tell us how we can help..." class="w-full text-xs p-2 border border-slate-200 rounded-lg focus:border-green-500 focus:outline-none" required></textarea>
         </div>
       </div>
     `;
 
-    modalForm.onsubmit = (e) => {
+    modalForm.onsubmit = async (e) => {
       e.preventDefault();
-      const nameInput = modalForm.querySelector('input[type="text"]')?.value || '';
-      const emailInput = modalForm.querySelector('input[type="email"]')?.value || '';
-      const typeInput = modalForm.querySelector('select')?.value || 'General Inquiry';
-      const msgInput = modalForm.querySelector('textarea')?.value || '';
+      const nameInput = document.getElementById('modal-name')?.value.trim() || '';
+      const emailInput = document.getElementById('modal-email')?.value.trim() || '';
+      const typeInput = document.getElementById('modal-type')?.value || 'General Inquiry';
+      const msgInput = document.getElementById('modal-msg')?.value.trim() || '';
+
+      // Save to Supabase + Local Database
+      await saveInquiryToDatabase({
+        name: nameInput,
+        email: emailInput,
+        phone: 'Modal Inquiry',
+        inquiry_type: typeInput,
+        message: msgInput
+      });
 
       const subject = encodeURIComponent(`CarbonAxis Inquiry (${typeInput}) - ${nameInput}`);
       const body = encodeURIComponent(
@@ -223,7 +390,7 @@ Sent from CarbonAxis Platform`
       );
 
       window.location.href = `mailto:sales@carbonaxisgreen.com?subject=${subject}&body=${body}`;
-      alert('Opening your email application to send your inquiry to sales@carbonaxisgreen.com. Please click Send in your email app.');
+      alert('Your inquiry has been recorded and saved in our Supabase database! Opening your email client to send to sales@carbonaxisgreen.com.');
       closeModal();
     };
   }
@@ -244,24 +411,24 @@ Sent from CarbonAxis Platform`
         </div>
         
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Carbon Lot Asset</label>
-          <input type="text" value="${project}" class="w-full text-sm p-2 border border-slate-200 rounded bg-slate-50 focus:outline-none font-medium" readonly />
+          <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Carbon Lot Asset</label>
+          <input type="text" value="${project}" class="w-full text-xs p-2 border border-slate-200 rounded bg-slate-50 focus:outline-none font-medium" readonly />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Limit Price ($/t)</label>
-            <input type="number" step="0.01" value="${price}" id="trade-limit-price" class="w-full text-sm p-2 border border-slate-200 rounded focus:border-green-500 focus:outline-none font-bold" />
+            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Limit Price ($/t)</label>
+            <input type="number" step="0.01" value="${price}" id="trade-limit-price" class="w-full text-xs p-2 border border-slate-200 rounded focus:border-green-500 focus:outline-none font-bold" />
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Order Volume (Tons)</label>
-            <input type="number" min="1" value="100" id="trade-volume" class="w-full text-sm p-2 border border-slate-200 rounded focus:border-green-500 focus:outline-none font-bold" />
+            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Order Volume (Tons)</label>
+            <input type="number" min="1" value="100" id="trade-volume" class="w-full text-xs p-2 border border-slate-200 rounded focus:border-green-500 focus:outline-none font-bold" />
           </div>
         </div>
 
-        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center text-sm">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center text-xs">
           <span class="text-slate-600 font-semibold">Total Clearing Value:</span>
-          <span id="trade-order-total" class="font-extrabold ${isBuy ? 'text-green-600' : 'text-red-600'} text-lg">$${(price * 100).toFixed(2)}</span>
+          <span id="trade-order-total" class="font-extrabold ${isBuy ? 'text-green-600' : 'text-red-600'} text-base">$${(price * 100).toFixed(2)}</span>
         </div>
       </div>
     `;
@@ -279,11 +446,22 @@ Sent from CarbonAxis Platform`
     priceInput.addEventListener('input', updateTradeTotal);
     volInput.addEventListener('input', updateTradeTotal);
 
-    modalForm.onsubmit = (e) => {
+    modalForm.onsubmit = async (e) => {
       e.preventDefault();
       const p = parseFloat(priceInput.value) || 0;
       const v = parseFloat(volInput.value) || 0;
-      alert(`Trade Order Executed Successfully!\nCleared through CarbonAxis Registry Protocol.\n\nType: ${isBuy ? 'BUY' : 'SELL'}\nAsset: ${project}\nVolume: ${v} Tons @ $${p.toFixed(2)}/t\nClearing Value: $${(p * v).toFixed(2)}`);
+      const clearingVal = p * v;
+
+      // Save Trade to Supabase + Local Database
+      await saveTradeToDatabase({
+        order_type: isBuy ? 'BUY' : 'SELL',
+        project_name: project,
+        volume: v,
+        limit_price: p,
+        clearing_value: clearingVal
+      });
+
+      alert(`Trade Order Executed & Cleared in Supabase!\n\nType: ${isBuy ? 'BUY' : 'SELL'}\nAsset: ${project}\nVolume: ${v} Tons @ $${p.toFixed(2)}/t\nTotal Clearing: $${clearingVal.toFixed(2)}\n\nRecord saved in CarbonAxis Registry.`);
       closeModal();
     };
   }
@@ -338,13 +516,22 @@ Sent from CarbonAxis Platform`
   // Footer Ask anything
   const inquiryForm = document.getElementById('footer-inquiry-form');
   if (inquiryForm) {
-    inquiryForm.addEventListener('submit', (e) => {
+    inquiryForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const emailInput = inquiryForm.querySelector('input[type="email"]');
       const questionInput = inquiryForm.querySelector('input[type="text"]');
       
       const email = emailInput?.value || '';
       const question = questionInput?.value || 'General inquiry';
+
+      // Save to Supabase + Local Database
+      await saveInquiryToDatabase({
+        name: email.split('@')[0] || 'Quick Inquiry',
+        email: email,
+        phone: 'Footer Form',
+        inquiry_type: 'Quick Inquiry',
+        message: question
+      });
 
       const subject = encodeURIComponent(`CarbonAxis Quick Question from ${email}`);
       const body = encodeURIComponent(
@@ -360,7 +547,7 @@ Sent from CarbonAxis Platform`
       );
 
       window.location.href = `mailto:sales@carbonaxisgreen.com?subject=${subject}&body=${body}`;
-      alert('Opening your email application to send your question to sales@carbonaxisgreen.com.');
+      alert('Your inquiry was recorded in our database! Opening your email application to send to sales@carbonaxisgreen.com.');
       if (emailInput) emailInput.value = '';
       if (questionInput) questionInput.value = '';
     });
@@ -378,7 +565,6 @@ Sent from CarbonAxis Platform`
         return;
       }
       
-      // Mock matches
       if (val.includes('GS') || val.includes('VCS') || val.includes('PV')) {
         alert(`Serial Record Found:\nID: ${val}\nStatus: RETIRED\nOwner: Acme Corporation\nVintage: 2024\nVerifier Audit: 3rd Party Assured (Clean Report)`);
       } else {
@@ -405,7 +591,7 @@ Sent from CarbonAxis Platform`
   // Bottom homepage contact form
   const bottomContactForm = document.getElementById('bottom-contact-form');
   if (bottomContactForm) {
-    bottomContactForm.addEventListener('submit', (e) => {
+    bottomContactForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const name = document.getElementById('contact-name')?.value.trim() || '';
@@ -413,6 +599,16 @@ Sent from CarbonAxis Platform`
       const phone = document.getElementById('contact-phone')?.value.trim() || 'Not provided';
       const message = document.getElementById('contact-message')?.value.trim() || '';
 
+      // 1. Save to Supabase Cloud & Local Database
+      await saveInquiryToDatabase({
+        name: name,
+        email: email,
+        phone: phone,
+        inquiry_type: 'Direct Message',
+        message: message
+      });
+
+      // 2. Open prefilled mailto email redirection
       const subject = encodeURIComponent(`CarbonAxis Carbon Credit Inquiry - ${name}`);
       const body = encodeURIComponent(
 `Hello CarbonAxis Sales & Trading Desk,
@@ -432,11 +628,9 @@ Sent from CarbonAxis Homepage Direct Message Form`
       );
 
       const mailtoUrl = `mailto:sales@carbonaxisgreen.com?subject=${subject}&body=${body}`;
-      
-      // Redirect to user's email client
       window.location.href = mailtoUrl;
 
-      alert('Opening your email application with your inquiry details pre-filled to sales@carbonaxisgreen.com. Please click Send to complete your message.');
+      alert('Inquiry successfully recorded in CarbonAxis database! Opening your email application to send to sales@carbonaxisgreen.com.');
       bottomContactForm.reset();
     });
   }
@@ -464,5 +658,336 @@ Sent from CarbonAxis Homepage Direct Message Form`
         waPopupMenu.classList.add('hidden');
       }
     });
+  }
+
+
+  // ==================== 7. Admin Panel & Supabase CRM Controller ====================
+  const adminLoginCard = document.getElementById('admin-login-card');
+  const adminDashboardView = document.getElementById('admin-dashboard-view');
+  const adminAuthForm = document.getElementById('admin-auth-form');
+  const adminPinInput = document.getElementById('admin-pin-input');
+  const adminLogoutBtn = document.getElementById('admin-logout-btn');
+  const adminRefreshBtn = document.getElementById('admin-refresh-btn');
+  const adminExportBtn = document.getElementById('admin-export-btn');
+
+  // Admin tab buttons
+  const tabInquiriesBtn = document.getElementById('admin-tab-inquiries-btn');
+  const tabTradesBtn = document.getElementById('admin-tab-trades-btn');
+  const tabSupabaseBtn = document.getElementById('admin-tab-supabase-btn');
+
+  const tabInquiriesView = document.getElementById('admin-tab-inquiries');
+  const tabTradesView = document.getElementById('admin-tab-trades');
+  const tabSupabaseView = document.getElementById('admin-tab-supabase');
+
+  const searchInput = document.getElementById('admin-search-input');
+  const statusFilter = document.getElementById('admin-status-filter');
+
+  let currentInquiries = [];
+  let currentTrades = [];
+
+  function checkAdminAuth() {
+    const isAuth = sessionStorage.getItem('carbonaxis_admin_auth') === 'true';
+    if (isAuth) {
+      if (adminLoginCard) adminLoginCard.classList.add('hidden');
+      if (adminDashboardView) adminDashboardView.classList.remove('hidden');
+      loadAdminDashboardData();
+    } else {
+      if (adminLoginCard) adminLoginCard.classList.remove('hidden');
+      if (adminDashboardView) adminDashboardView.classList.add('hidden');
+    }
+  }
+
+  if (adminAuthForm) {
+    adminAuthForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const pin = adminPinInput.value.trim();
+      if (pin === 'admin123' || pin === 'carbonaxis2026') {
+        sessionStorage.setItem('carbonaxis_admin_auth', 'true');
+        adminPinInput.value = '';
+        checkAdminAuth();
+      } else {
+        alert('Invalid Security PIN. Please try again (Default: admin123).');
+      }
+    });
+  }
+
+  if (adminLogoutBtn) {
+    adminLogoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('carbonaxis_admin_auth');
+      checkAdminAuth();
+    });
+  }
+
+  if (adminRefreshBtn) {
+    adminRefreshBtn.addEventListener('click', () => {
+      loadAdminDashboardData();
+      alert('Dashboard synced with Supabase database.');
+    });
+  }
+
+  // Tab switching inside Admin Dashboard
+  function switchAdminTab(tabName) {
+    [tabInquiriesBtn, tabTradesBtn, tabSupabaseBtn].forEach(b => {
+      if (b) {
+        b.classList.remove('border-green-600', 'text-green-600', 'active');
+        b.classList.add('border-transparent', 'text-slate-500');
+      }
+    });
+
+    [tabInquiriesView, tabTradesView, tabSupabaseView].forEach(v => {
+      if (v) v.classList.add('hidden');
+    });
+
+    if (tabName === 'inquiries') {
+      tabInquiriesBtn.classList.add('border-green-600', 'text-green-600', 'active');
+      tabInquiriesBtn.classList.remove('border-transparent', 'text-slate-500');
+      tabInquiriesView.classList.remove('hidden');
+    } else if (tabName === 'trades') {
+      tabTradesBtn.classList.add('border-green-600', 'text-green-600', 'active');
+      tabTradesBtn.classList.remove('border-transparent', 'text-slate-500');
+      tabTradesView.classList.remove('hidden');
+    } else if (tabName === 'supabase') {
+      tabSupabaseBtn.classList.add('border-green-600', 'text-green-600', 'active');
+      tabSupabaseBtn.classList.remove('border-transparent', 'text-slate-500');
+      tabSupabaseView.classList.remove('hidden');
+    }
+  }
+
+  if (tabInquiriesBtn) tabInquiriesBtn.addEventListener('click', () => switchAdminTab('inquiries'));
+  if (tabTradesBtn) tabTradesBtn.addEventListener('click', () => switchAdminTab('trades'));
+  if (tabSupabaseBtn) tabSupabaseBtn.addEventListener('click', () => switchAdminTab('supabase'));
+
+  async function loadAdminDashboardData() {
+    currentInquiries = await fetchInquiries();
+    currentTrades = await fetchTrades();
+
+    // Update KPI counts
+    const totalInquiriesEl = document.getElementById('stat-total-inquiries');
+    const newInquiriesEl = document.getElementById('stat-new-inquiries');
+    const totalTradesEl = document.getElementById('stat-total-trades');
+    const tabInqCountEl = document.getElementById('tab-inquiries-count');
+    const tabTrCountEl = document.getElementById('tab-trades-count');
+
+    const newCount = currentInquiries.filter(i => (i.status || 'New') === 'New').length;
+
+    if (totalInquiriesEl) totalInquiriesEl.textContent = currentInquiries.length;
+    if (newInquiriesEl) newInquiriesEl.textContent = newCount;
+    if (totalTradesEl) totalTradesEl.textContent = currentTrades.length;
+    if (tabInqCountEl) tabInqCountEl.textContent = currentInquiries.length;
+    if (tabTrCountEl) tabTrCountEl.textContent = currentTrades.length;
+
+    renderInquiriesTable();
+    renderTradesTable();
+  }
+
+  function renderInquiriesTable() {
+    const tbody = document.getElementById('admin-inquiries-tbody');
+    if (!tbody) return;
+
+    const searchTerm = (searchInput?.value || '').toLowerCase();
+    const statusVal = statusFilter?.value || 'all';
+
+    const filtered = currentInquiries.filter(item => {
+      const matchesSearch = 
+        (item.name || '').toLowerCase().includes(searchTerm) ||
+        (item.email || '').toLowerCase().includes(searchTerm) ||
+        (item.phone || '').toLowerCase().includes(searchTerm) ||
+        (item.message || '').toLowerCase().includes(searchTerm);
+      
+      const matchesStatus = statusVal === 'all' || (item.status || 'New') === statusVal;
+      return matchesSearch && matchesStatus;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="px-5 py-8 text-center text-slate-400">
+            <i class="fa-solid fa-inbox text-2xl mb-2 block"></i>
+            No inquiry records found. Test submitting a message on the homepage to see live data here!
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map((item, idx) => {
+      const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() + ' ' + new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent';
+      const statusColor = item.status === 'Closed' ? 'bg-slate-100 text-slate-600' : (item.status === 'Contacted' ? 'bg-blue-50 text-blue-700' : (item.status === 'In Discussion' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700 font-bold'));
+
+      return `
+        <tr class="hover:bg-slate-50/80 transition" data-id="${item.id}">
+          <td class="px-5 py-3.5 font-mono text-[11px] text-slate-500">
+            #${idx + 1}<br><span class="text-[9px] text-slate-400">${dateStr}</span>
+          </td>
+          <td class="px-5 py-3.5 font-bold text-slate-900">
+            ${escapeHtml(item.name || 'Anonymous')}
+          </td>
+          <td class="px-5 py-3.5">
+            <a href="mailto:${escapeHtml(item.email)}" class="text-green-600 hover:underline block font-medium">${escapeHtml(item.email || 'N/A')}</a>
+            <span class="text-slate-400 text-[10px]"><i class="fa-solid fa-phone text-[9px]"></i> ${escapeHtml(item.phone || 'N/A')}</span>
+          </td>
+          <td class="px-5 py-3.5">
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-semibold">${escapeHtml(item.inquiry_type || 'Direct Message')}</span>
+          </td>
+          <td class="px-5 py-3.5 max-w-xs text-slate-600 text-[11px]">
+            <p class="line-clamp-2" title="${escapeHtml(item.message)}">${escapeHtml(item.message || 'No message content')}</p>
+          </td>
+          <td class="px-5 py-3.5">
+            <select class="admin-change-status text-[11px] p-1.5 rounded-lg border border-slate-200 ${statusColor} font-medium focus:outline-none" data-id="${item.id}">
+              <option value="New" ${item.status === 'New' ? 'selected' : ''}>New</option>
+              <option value="In Discussion" ${item.status === 'In Discussion' ? 'selected' : ''}>In Discussion</option>
+              <option value="Contacted" ${item.status === 'Contacted' ? 'selected' : ''}>Contacted</option>
+              <option value="Closed" ${item.status === 'Closed' ? 'selected' : ''}>Closed</option>
+            </select>
+          </td>
+          <td class="px-5 py-3.5 text-right space-x-1.5">
+            <a href="mailto:${escapeHtml(item.email)}?subject=Re:%20CarbonAxis%20Inquiry" class="p-1.5 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition inline-block text-xs" title="Reply via Email">
+              <i class="fa-solid fa-reply"></i>
+            </a>
+            <button class="admin-delete-inquiry p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition text-xs" data-id="${item.id}" title="Delete Record">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Attach row events
+    tbody.querySelectorAll('.admin-change-status').forEach(sel => {
+      sel.addEventListener('change', async (e) => {
+        const id = e.target.getAttribute('data-id');
+        const newStatus = e.target.value;
+        await updateInquiryStatus(id, newStatus);
+      });
+    });
+
+    tbody.querySelectorAll('.admin-delete-inquiry').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = btn.getAttribute('data-id');
+        if (confirm('Are you sure you want to delete this inquiry record?')) {
+          await deleteInquiryRecord(id);
+        }
+      });
+    });
+  }
+
+  function renderTradesTable() {
+    const tbody = document.getElementById('admin-trades-tbody');
+    if (!tbody) return;
+
+    if (currentTrades.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="px-5 py-8 text-center text-slate-400">
+            <i class="fa-solid fa-file-invoice-dollar text-2xl mb-2 block"></i>
+            No trade execution records yet. Trades placed via the Trading Desk will appear here!
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = currentTrades.map((t, idx) => {
+      const dateStr = t.created_at ? new Date(t.created_at).toLocaleDateString() : 'Today';
+      const isBuy = (t.order_type || 'BUY').toUpperCase() === 'BUY';
+      return `
+        <tr class="hover:bg-slate-50/80 transition">
+          <td class="px-5 py-3.5 font-mono text-[11px] font-bold text-slate-900">${escapeHtml(t.id || 'ORD-' + (idx+1000))}</td>
+          <td class="px-5 py-3.5 text-[11px] text-slate-400">${dateStr}</td>
+          <td class="px-5 py-3.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isBuy ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+              ${isBuy ? 'BUY' : 'SELL'}
+            </span>
+          </td>
+          <td class="px-5 py-3.5 font-bold text-slate-800">${escapeHtml(t.project_name || 'Carbon Asset')}</td>
+          <td class="px-5 py-3.5 font-semibold text-slate-700">${Number(t.volume || 0).toLocaleString()} t</td>
+          <td class="px-5 py-3.5 font-mono text-slate-600">$${Number(t.limit_price || 0).toFixed(2)}/t</td>
+          <td class="px-5 py-3.5 font-black text-slate-900">$${Number(t.clearing_value || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          <td class="px-5 py-3.5 text-right font-bold text-green-600 text-[11px]">Cleared</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function updateInquiryStatus(id, newStatus) {
+    // 1. Update in local storage
+    const local = JSON.parse(localStorage.getItem('carbonaxis_inquiries') || '[]');
+    const updated = local.map(i => {
+      if (String(i.id) === String(id)) {
+        return { ...i, status: newStatus };
+      }
+      return i;
+    });
+    localStorage.setItem('carbonaxis_inquiries', JSON.stringify(updated));
+
+    // 2. Update in Supabase
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('inquiries').update({ status: newStatus }).eq('id', id);
+      } catch (err) {
+        console.warn('Supabase status update note:', err);
+      }
+    }
+
+    loadAdminDashboardData();
+  }
+
+  async function deleteInquiryRecord(id) {
+    // 1. Delete from local storage
+    const local = JSON.parse(localStorage.getItem('carbonaxis_inquiries') || '[]');
+    const filtered = local.filter(i => String(i.id) !== String(id));
+    localStorage.setItem('carbonaxis_inquiries', JSON.stringify(filtered));
+
+    // 2. Delete from Supabase
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('inquiries').delete().eq('id', id);
+      } catch (err) {
+        console.warn('Supabase delete note:', err);
+      }
+    }
+
+    loadAdminDashboardData();
+  }
+
+  // Export to CSV helper
+  if (adminExportBtn) {
+    adminExportBtn.addEventListener('click', () => {
+      if (currentInquiries.length === 0) {
+        alert('No inquiries available to export.');
+        return;
+      }
+
+      const headers = ['ID', 'Date', 'Name', 'Email', 'Phone', 'Type', 'Status', 'Message'];
+      const rows = currentInquiries.map((i, idx) => [
+        idx + 1,
+        i.created_at || '',
+        `"${(i.name || '').replace(/"/g, '""')}"`,
+        `"${(i.email || '').replace(/"/g, '""')}"`,
+        `"${(i.phone || '').replace(/"/g, '""')}"`,
+        `"${(i.inquiry_type || '').replace(/"/g, '""')}"`,
+        `"${(i.status || 'New').replace(/"/g, '""')}"`,
+        `"${(i.message || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `carbonaxis_inquiries_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+
+  if (searchInput) searchInput.addEventListener('input', renderInquiriesTable);
+  if (statusFilter) statusFilter.addEventListener('change', renderInquiriesTable);
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 });

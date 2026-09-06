@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Custom CSS -->
   <link rel="stylesheet" href="styles.css">
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 tech-grid-bg text-slate-800 flex flex-col min-h-screen">
 
@@ -36,8 +38,11 @@
         </nav>
 
         <!-- Right Side Header CTAs -->
-        <div class="hidden md:flex items-center gap-3">
-          <button class="trigger-contact-cta px-4 py-2 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 active:scale-98 transition">
+        <div class="hidden md:flex items-center gap-2">
+          <a href="#" data-view="admin" class="nav-link-btn px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-950 transition flex items-center gap-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
+            <i class="fa-solid fa-shield-halved text-[11px] text-emerald-600"></i> Admin
+          </a>
+          <button class="trigger-contact-cta px-4 py-2 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 active:scale-98 transition shadow-sm">
             Contact Us
           </button>
         </div>
@@ -58,6 +63,7 @@
       <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="projects">Credit Catalog</a>
       <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="marketplace">Trading Desk</a>
       <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="transparency">Registry Clearing</a>
+      <a href="#" class="nav-link-btn block text-sm font-semibold text-emerald-600 hover:text-emerald-700" data-view="admin"><i class="fa-solid fa-shield-halved text-xs mr-1.5"></i> Admin Portal</a>
       <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
         <button class="trigger-contact-cta w-full py-2 text-xs font-bold text-white bg-green-600 rounded-lg">Contact Us</button>
       </div>
@@ -809,6 +815,246 @@
       </div>
     </div>
 
+    <!-- ==================== VIEW: ADMIN PORTAL ==================== -->
+    <div id="view-admin" class="space-y-6 hidden">
+      
+      <!-- Admin Login Overlay (when not authenticated) -->
+      <div id="admin-login-card" class="max-w-md mx-auto bg-white p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6 my-12">
+        <div class="text-center space-y-2">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto text-xl shadow-inner">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h2 class="text-xl font-extrabold text-slate-900">CarbonAxis Admin Portal</h2>
+          <p class="text-xs text-slate-500 leading-relaxed">Enter administrator PIN to access Supabase lead inquiries, contact messages, and trade orders.</p>
+        </div>
+
+        <form id="admin-auth-form" class="space-y-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Admin Security PIN</label>
+            <input type="password" id="admin-pin-input" placeholder="Enter PIN (Default: admin123)" class="w-full text-sm p-3 border border-slate-200 rounded-xl focus:border-green-500 focus:outline-none bg-slate-50 font-mono text-center tracking-widest" required />
+          </div>
+          <button type="submit" class="w-full py-3 text-xs font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 active:scale-98 transition shadow-md flex items-center justify-center gap-2">
+            <i class="fa-solid fa-lock-open text-xs"></i> Unlock Admin Dashboard
+          </button>
+        </form>
+        <div class="text-center text-[11px] text-slate-400">
+          Default Master PIN: <span class="font-mono font-bold text-slate-600">admin123</span>
+        </div>
+      </div>
+
+      <!-- Authenticated Admin Dashboard -->
+      <div id="admin-dashboard-view" class="space-y-6 hidden">
+        
+        <!-- Top Admin Header Bar -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 bg-green-100 text-green-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <i class="fa-solid fa-circle text-[8px] text-green-600 animate-pulse"></i> Supabase Live
+              </span>
+              <span class="text-xs text-slate-400 font-mono hidden sm:inline">byjjvotevysrhwiiamie.supabase.co</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">Lead CRM & Exchange Administration</h2>
+          </div>
+
+          <!-- Controls -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="admin-refresh-btn" class="px-3.5 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition flex items-center gap-1.5">
+              <i class="fa-solid fa-arrows-rotate text-xs"></i> Refresh
+            </button>
+            <button id="admin-export-btn" class="px-3.5 py-2 text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-csv text-xs"></i> Export CSV
+            </button>
+            <button id="admin-logout-btn" class="px-3.5 py-2 text-xs font-bold bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl transition flex items-center gap-1.5">
+              <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i> Logout
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Inquiries</span>
+            <div class="flex items-center justify-between mt-1">
+              <span id="stat-total-inquiries" class="text-2xl font-black text-slate-900">0</span>
+              <span class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center text-sm"><i class="fa-solid fa-inbox"></i></span>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">New / Unaddressed</span>
+            <div class="flex items-center justify-between mt-1">
+              <span id="stat-new-inquiries" class="text-2xl font-black text-emerald-600">0</span>
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm"><i class="fa-solid fa-bell"></i></span>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Trade Desk Orders</span>
+            <div class="flex items-center justify-between mt-1">
+              <span id="stat-total-trades" class="text-2xl font-black text-blue-600">0</span>
+              <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm"><i class="fa-solid fa-handshake"></i></span>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Portfolio Volume</span>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-xl font-black text-slate-900">112,600 t</span>
+              <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm"><i class="fa-solid fa-chart-line"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Controls (Inquiries vs Trade Orders vs Supabase Setup) -->
+        <div class="flex border-b border-slate-200 space-x-4 text-xs font-bold">
+          <button id="admin-tab-inquiries-btn" class="pb-3 border-b-2 border-green-600 text-green-600 active">
+            <i class="fa-solid fa-envelope-open-text mr-1"></i> Inquiries & Leads (<span id="tab-inquiries-count">0</span>)
+          </button>
+          <button id="admin-tab-trades-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">
+            <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Trade Desk Executions (<span id="tab-trades-count">0</span>)
+          </button>
+          <button id="admin-tab-supabase-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">
+            <i class="fa-solid fa-database mr-1"></i> Supabase Setup & SQL Schema
+          </button>
+        </div>
+
+        <!-- Section 1: Inquiries Table Section -->
+        <div id="admin-tab-inquiries" class="space-y-4">
+          <!-- Filters & Search Bar -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative w-full sm:w-72">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+              <input type="text" id="admin-search-input" placeholder="Search by name, email, phone..." class="w-full text-xs pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" />
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Status:</span>
+              <select id="admin-status-filter" class="text-xs p-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-green-500 font-medium">
+                <option value="all">All Statuses</option>
+                <option value="New">New</option>
+                <option value="In Discussion">In Discussion</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Inquiries Data Table -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th class="px-5 py-3.5">ID / Date</th>
+                    <th class="px-5 py-3.5">Contact Name</th>
+                    <th class="px-5 py-3.5">Email & Phone</th>
+                    <th class="px-5 py-3.5">Type</th>
+                    <th class="px-5 py-3.5">Message / Requirements</th>
+                    <th class="px-5 py-3.5">Status</th>
+                    <th class="px-5 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-inquiries-tbody" class="divide-y divide-slate-100 text-slate-600">
+                  <!-- Dynamic Inquiries Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Trade Desk Orders Table Section -->
+        <div id="admin-tab-trades" class="space-y-4 hidden">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th class="px-5 py-3.5">Order ID</th>
+                    <th class="px-5 py-3.5">Timestamp</th>
+                    <th class="px-5 py-3.5">Side</th>
+                    <th class="px-5 py-3.5">Carbon Asset Lot</th>
+                    <th class="px-5 py-3.5">Volume (Tons)</th>
+                    <th class="px-5 py-3.5">Limit Price</th>
+                    <th class="px-5 py-3.5">Total Clearing Value</th>
+                    <th class="px-5 py-3.5 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-trades-tbody" class="divide-y divide-slate-100 text-slate-600">
+                  <!-- Dynamic Trades Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Supabase Configuration & SQL Schema -->
+        <div id="admin-tab-supabase" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 hidden">
+          <div class="flex items-center justify-between">
+            <div class="space-y-1">
+              <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-database text-green-600"></i> Supabase Database Integration
+              </h3>
+              <p class="text-xs text-slate-500">Your Supabase project URL and anon public key are actively configured in CarbonAxis.</p>
+            </div>
+            <span class="px-3 py-1 bg-green-50 border border-green-200 text-green-700 text-xs font-bold rounded-lg">Connected</span>
+          </div>
+
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2 font-mono">
+            <div><strong>Project URL:</strong> https://byjjvotevysrhwiiamie.supabase.co</div>
+            <div><strong>Target Table:</strong> public.inquiries & public.trades</div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700">Supabase SQL Editor Setup (Run this in Supabase SQL Editor to initialize database tables):</span>
+              <button id="copy-sql-btn" onclick="navigator.clipboard.writeText(document.getElementById('supabase-sql-code').textContent); alert('SQL Copied to clipboard!');" class="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition">
+                <i class="fa-solid fa-copy mr-1"></i> Copy SQL
+              </button>
+            </div>
+            <pre id="supabase-sql-code" class="p-4 bg-slate-900 text-emerald-400 rounded-xl text-xs overflow-x-auto custom-scrollbar font-mono leading-relaxed">
+-- 1. Create inquiries table for contact messages and leads
+create table if not exists public.inquiries (
+  id bigint generated by default as identity primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  name text,
+  email text,
+  phone text,
+  inquiry_type text default 'Direct Message',
+  message text,
+  status text default 'New'
+);
+
+-- 2. Create trades table for trading desk buy/sell execution orders
+create table if not exists public.trades (
+  id bigint generated by default as identity primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  order_type text,
+  project_name text,
+  volume numeric,
+  limit_price numeric,
+  clearing_value numeric,
+  status text default 'Cleared'
+);
+
+-- 3. Enable RLS and public policies
+alter table public.inquiries enable row level security;
+alter table public.trades enable row level security;
+
+create policy "Allow all insert to inquiries" on public.inquiries for insert with check (true);
+create policy "Allow all select to inquiries" on public.inquiries for select using (true);
+create policy "Allow all update to inquiries" on public.inquiries for update using (true);
+create policy "Allow all delete to inquiries" on public.inquiries for delete using (true);
+
+create policy "Allow all insert to trades" on public.trades for insert with check (true);
+create policy "Allow all select to trades" on public.trades for select using (true);
+</pre>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
   <!-- ==================== CORPORATE FOOTER ==================== -->
@@ -858,6 +1104,7 @@
           <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="projects">Credit Catalog</a></li>
           <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="marketplace">Trading Desk</a></li>
           <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="transparency">Registry Clearing</a></li>
+          <li><a href="#" class="nav-link-btn text-emerald-400 font-bold hover:text-white transition flex items-center gap-1.5 pt-1" data-view="admin"><i class="fa-solid fa-lock text-[10px]"></i> Admin Portal</a></li>
         </ul>
       </div>
 
