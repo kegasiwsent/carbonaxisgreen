@@ -953,6 +953,9 @@
           <button id="admin-tab-logs-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition whitespace-nowrap">
             <i class="fa-solid fa-clock-rotate-left mr-1"></i> Employee Activity & Audit Logs (<span id="tab-logs-count">0</span>)
           </button>
+          <button id="admin-tab-sheet-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition whitespace-nowrap">
+            <i class="fa-solid fa-table-cells mr-1 text-emerald-600"></i> Staff Records Sheet (<span id="tab-sheet-count">0</span>)
+          </button>
         </div>
 
         <!-- Section 1: Inquiries Table Section -->
@@ -1127,6 +1130,127 @@
             </div>
           </div>
         </div>
+
+        <!-- Section 5: Staff Deal & Records Sheet (Live Excel / Google Sheet View for Admin) -->
+        <div id="admin-tab-sheet" class="space-y-4 hidden">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            
+            <!-- Excel / Google Sheets Header & Toolbar for Admin -->
+            <div class="bg-slate-900 text-white px-5 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white text-lg shadow-inner">
+                  <i class="fa-solid fa-table-cells"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
+                      <span>CarbonAxis Corporate Master Sheet (Excel / Google Sheet View)</span>
+                    </h3>
+                    <span class="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      <i class="fa-solid fa-shield-halved text-emerald-400"></i> Admin Master Control
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-0.5">
+                    Real-time consolidated view of all records, client deals, volumes, and pricing entered by all staff members.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Admin Toolbar Actions -->
+              <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <button id="admin-sheet-add-row-btn" class="px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition flex items-center gap-1.5 shadow-sm active:scale-98">
+                  <i class="fa-solid fa-plus text-xs"></i> Add Master Row
+                </button>
+                <button id="admin-sheet-export-btn" class="px-3 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-file-csv text-xs"></i> Export Company Sheet (.CSV)
+                </button>
+              </div>
+            </div>
+
+            <!-- Formula & Metrics Bar for Admin -->
+            <div class="bg-slate-50 border-y border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="font-mono text-[11px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-200">
+                  <span class="text-emerald-600 font-black">fx</span> COMPANY TOTALS
+                </span>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                  <span class="text-slate-400">Total Records:</span>
+                  <strong id="admin-sheet-stat-count" class="text-slate-900 font-mono">0</strong>
+                </div>
+                <span class="text-slate-300">•</span>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                  <span class="text-slate-400">Total Volume:</span>
+                  <strong id="admin-sheet-stat-volume" class="text-blue-700 font-mono">0 t</strong>
+                </div>
+                <span class="text-slate-300">•</span>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                  <span class="text-slate-400">Total Pipeline Value:</span>
+                  <strong id="admin-sheet-stat-value" class="text-emerald-700 font-mono font-black">$0.00</strong>
+                </div>
+                <span class="text-slate-300">•</span>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                  <span class="text-slate-400">Avg Price/t:</span>
+                  <strong id="admin-sheet-stat-avg" class="text-slate-800 font-mono">$0.00/t</strong>
+                </div>
+              </div>
+
+              <!-- Search & Filter Controls for Admin -->
+              <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                <div class="relative flex-1 sm:w-44">
+                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+                  <input type="text" id="admin-sheet-search" placeholder="Search sheet..." class="w-full text-xs pl-7 pr-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-white" />
+                </div>
+                <select id="admin-sheet-filter-broker" class="text-xs p-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 font-medium">
+                  <option value="all">All Brokers</option>
+                  <!-- Populated dynamically -->
+                </select>
+                <select id="admin-sheet-filter-stage" class="text-xs p-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 font-medium">
+                  <option value="all">All Stages</option>
+                  <option value="Lead Inbound">Lead Inbound</option>
+                  <option value="Call Scheduled">Call Scheduled</option>
+                  <option value="Term Sheet Sent">Term Sheet Sent</option>
+                  <option value="Negotiation">Negotiation</option>
+                  <option value="Closed Won">Closed Won</option>
+                  <option value="Closed Lost">Closed Lost</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Spreadsheet Table Container for Admin -->
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 text-slate-600 font-mono text-[11px] uppercase border-b border-slate-200 select-none">
+                  <tr>
+                    <th class="w-12 px-3 py-2.5 text-center border-r border-slate-200 text-slate-400">Row</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[170px]"><span class="text-emerald-700 font-bold">A</span> • Client / Company</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[180px]"><span class="text-emerald-700 font-bold">B</span> • Contact Email/Phone</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[190px]"><span class="text-emerald-700 font-bold">C</span> • Carbon Project Lot</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[110px]"><span class="text-emerald-700 font-bold">D</span> • Volume (t)</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[100px]"><span class="text-emerald-700 font-bold">E</span> • Price ($/t)</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[130px]"><span class="text-emerald-700 font-bold">F</span> • Deal Value ($)</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[140px]"><span class="text-emerald-700 font-bold">G</span> • Deal Stage</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[200px]"><span class="text-emerald-700 font-bold">H</span> • Notes & Remarks</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[130px]"><span class="text-emerald-700 font-bold">I</span> • Staff Broker</th>
+                    <th class="px-3 py-2.5 text-center w-16">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-sheet-tbody" class="divide-y divide-slate-200 bg-white text-slate-700">
+                  <!-- Rendered Spreadsheet Rows for Admin -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Administrator Master View • Real-time synchronization active across all staff portals</span>
+              </div>
+              <div class="text-slate-400">
+                CarbonAxis Corporate Database
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1250,16 +1374,146 @@
           </div>
 
           <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Available Volume</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sheet Pipeline Value</span>
             <div class="flex items-center justify-between mt-1">
-              <span class="text-xl font-black text-slate-900">112,600 t</span>
-              <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm"><i class="fa-solid fa-chart-pie"></i></span>
+              <span id="emp-kpi-pipeline" class="text-xl font-black text-emerald-600 font-mono">$0.00</span>
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm"><i class="fa-solid fa-file-invoice-dollar"></i></span>
             </div>
           </div>
         </div>
 
-        <!-- Main Workspace Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Staff Sub-Navigation Tabs: Google Sheet vs Inbound Leads -->
+        <div class="flex border-b border-slate-200 space-x-2 sm:space-x-4 text-xs font-bold overflow-x-auto custom-scrollbar">
+          <button id="emp-tab-sheet-btn" class="pb-3 border-b-2 border-emerald-600 text-emerald-600 active whitespace-nowrap flex items-center gap-1.5">
+            <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i> Live Records Spreadsheet (Excel / Google Sheet View) (<span id="emp-sheet-records-count">0</span>)
+          </button>
+          <button id="emp-tab-leads-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition whitespace-nowrap flex items-center gap-1.5">
+            <i class="fa-solid fa-address-book text-slate-400 text-sm"></i> Inbound Client Desk & Sourced Inventory (<span id="emp-leads-count-tab">0</span>)
+          </button>
+        </div>
+
+        <!-- Section 1: Live Records Spreadsheet (Excel / Google Sheet View for Staff) -->
+        <div id="emp-tab-sheet" class="space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            
+            <!-- Excel / Google Sheets Header & Toolbar -->
+            <div class="bg-emerald-800 text-white px-5 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-900/80 border border-emerald-700 flex items-center justify-center text-white text-lg shadow-inner">
+                  <i class="fa-solid fa-file-excel"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
+                      <span>CarbonAxis_Broker_Deals_Master.xlsx</span>
+                      <span class="text-[9px] bg-emerald-700/80 px-2 py-0.5 rounded font-mono font-normal">v2026.4</span>
+                    </h3>
+                    <span class="inline-flex items-center gap-1 bg-emerald-700/60 text-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-600">
+                      <i class="fa-solid fa-cloud-arrow-up text-emerald-300"></i> Cloud Synced with Admin
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-emerald-200/90 mt-0.5">
+                    Interactive Excel / Google Sheets Grid. Edit cells, type new records, and update deal numbers. All rows synchronize live with the Administrator.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Quick Toolbar Actions -->
+              <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <button id="emp-sheet-add-row-btn" class="px-3.5 py-2 text-xs font-bold text-emerald-950 bg-emerald-300 hover:bg-emerald-200 rounded-xl transition flex items-center gap-1.5 shadow-sm active:scale-98">
+                  <i class="fa-solid fa-plus text-xs"></i> Add Deal Row
+                </button>
+                <button id="emp-sheet-export-btn" class="px-3 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-600 border border-emerald-600 rounded-xl transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-file-csv text-xs"></i> Export Excel (.CSV)
+                </button>
+              </div>
+            </div>
+
+            <!-- Formula & Metrics Bar (Google Sheet Formula Bar Style) -->
+            <div class="bg-slate-50 border-y border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="font-mono text-[11px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-200">
+                  <span class="text-emerald-600 font-black">fx</span> SUM / STATS
+                </span>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                  <span class="text-slate-400">Total Deals:</span>
+                  <strong id="emp-sheet-stat-count" class="text-slate-900 font-mono">0</strong>
+                </div>
+                <span class="text-slate-300">•</span>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                  <span class="text-slate-400">Total Ton Volume:</span>
+                  <strong id="emp-sheet-stat-volume" class="text-blue-700 font-mono">0 t</strong>
+                </div>
+                <span class="text-slate-300">•</span>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                  <span class="text-slate-400">Total Pipeline Value:</span>
+                  <strong id="emp-sheet-stat-value" class="text-emerald-700 font-mono font-black">$0.00</strong>
+                </div>
+                <span class="text-slate-300">•</span>
+                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                  <span class="text-slate-400">Avg Price/Ton:</span>
+                  <strong id="emp-sheet-stat-avg" class="text-slate-800 font-mono">$0.00/t</strong>
+                </div>
+              </div>
+
+              <!-- Search & Filter Controls -->
+              <div class="flex items-center gap-2 w-full lg:w-auto">
+                <div class="relative flex-1 sm:w-48">
+                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+                  <input type="text" id="emp-sheet-search" placeholder="Search sheet..." class="w-full text-xs pl-7 pr-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-white" />
+                </div>
+                <select id="emp-sheet-filter-stage" class="text-xs p-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 font-medium">
+                  <option value="all">All Stages</option>
+                  <option value="Lead Inbound">Lead Inbound</option>
+                  <option value="Call Scheduled">Call Scheduled</option>
+                  <option value="Term Sheet Sent">Term Sheet Sent</option>
+                  <option value="Negotiation">Negotiation</option>
+                  <option value="Closed Won">Closed Won</option>
+                  <option value="Closed Lost">Closed Lost</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Spreadsheet Table Container -->
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 text-slate-600 font-mono text-[11px] uppercase border-b border-slate-200 select-none">
+                  <tr>
+                    <th class="w-12 px-3 py-2.5 text-center border-r border-slate-200 text-slate-400">Row</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[170px]"><span class="text-emerald-700 font-bold">A</span> • Client / Company</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[180px]"><span class="text-emerald-700 font-bold">B</span> • Contact Email/Phone</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[190px]"><span class="text-emerald-700 font-bold">C</span> • Carbon Project Lot</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[110px]"><span class="text-emerald-700 font-bold">D</span> • Volume (t)</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[100px]"><span class="text-emerald-700 font-bold">E</span> • Price ($/t)</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[130px]"><span class="text-emerald-700 font-bold">F</span> • Deal Value ($)</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[140px]"><span class="text-emerald-700 font-bold">G</span> • Deal Stage</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[200px]"><span class="text-emerald-700 font-bold">H</span> • Notes & Remarks</th>
+                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[130px]"><span class="text-emerald-700 font-bold">I</span> • Staff Broker</th>
+                    <th class="px-3 py-2.5 text-center w-16">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="emp-sheet-tbody" class="divide-y divide-slate-200 bg-white text-slate-700">
+                  <!-- Rendered Spreadsheet Rows -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Live Spreadsheet Grid • Click any cell to edit directly • Auto-calculates values</span>
+              </div>
+              <div class="text-slate-400">
+                Synchronized with Administrator Audit Ledger
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Inbound Leads & Desk Tools (Collapsible / Toggable) -->
+        <div id="emp-tab-leads" class="space-y-6 hidden">
+          <!-- Main Workspace Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           <!-- Left Column (7 cols): Leads Management & Client Interaction Logger -->
           <div class="lg:col-span-7 space-y-6">
@@ -1431,7 +1685,9 @@
         </div>
 
       </div>
+
     </div>
+  </div>
 
   </main>
 

@@ -628,11 +628,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabTradesBtn = document.getElementById('admin-tab-trades-btn');
   const tabEmployeesBtn = document.getElementById('admin-tab-employees-btn');
   const tabLogsBtn = document.getElementById('admin-tab-logs-btn');
+  const tabSheetBtn = document.getElementById('admin-tab-sheet-btn');
 
   const tabInquiriesView = document.getElementById('admin-tab-inquiries');
   const tabTradesView = document.getElementById('admin-tab-trades');
   const tabEmployeesView = document.getElementById('admin-tab-employees');
   const tabLogsView = document.getElementById('admin-tab-logs');
+  const tabSheetView = document.getElementById('admin-tab-sheet');
 
   const searchInput = document.getElementById('admin-search-input');
   const statusFilter = document.getElementById('admin-status-filter');
@@ -692,14 +694,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Tab switching inside Admin Dashboard
   function switchAdminTab(tabName) {
-    [tabInquiriesBtn, tabTradesBtn, tabEmployeesBtn, tabLogsBtn].forEach(b => {
+    [tabInquiriesBtn, tabTradesBtn, tabEmployeesBtn, tabLogsBtn, tabSheetBtn].forEach(b => {
       if (b) {
         b.classList.remove('border-green-600', 'text-green-600', 'active');
         b.classList.add('border-transparent', 'text-slate-500');
       }
     });
 
-    [tabInquiriesView, tabTradesView, tabEmployeesView, tabLogsView].forEach(v => {
+    [tabInquiriesView, tabTradesView, tabEmployeesView, tabLogsView, tabSheetView].forEach(v => {
       if (v) v.classList.add('hidden');
     });
 
@@ -729,6 +731,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (tabLogsView) tabLogsView.classList.remove('hidden');
       renderAdminEmployeeLogs();
+    } else if (tabName === 'sheet') {
+      if (tabSheetBtn) {
+        tabSheetBtn.classList.add('border-green-600', 'text-green-600', 'active');
+        tabSheetBtn.classList.remove('border-transparent', 'text-slate-500');
+      }
+      if (tabSheetView) tabSheetView.classList.remove('hidden');
+      renderAdminSpreadsheet();
     }
   }
 
@@ -736,12 +745,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (tabTradesBtn) tabTradesBtn.addEventListener('click', () => switchAdminTab('trades'));
   if (tabEmployeesBtn) tabEmployeesBtn.addEventListener('click', () => switchAdminTab('employees'));
   if (tabLogsBtn) tabLogsBtn.addEventListener('click', () => switchAdminTab('logs'));
+  if (tabSheetBtn) tabSheetBtn.addEventListener('click', () => switchAdminTab('sheet'));
 
   async function loadAdminDashboardData() {
     currentInquiries = await fetchInquiries();
     currentTrades = await fetchTrades();
     const employees = getEmployees();
     const logs = getEmployeeLogs();
+    const sheetRecords = getSheetRecords();
 
     // Update KPI counts
     const totalInquiriesEl = document.getElementById('stat-total-inquiries');
@@ -751,6 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabTrCountEl = document.getElementById('tab-trades-count');
     const tabEmpCountEl = document.getElementById('tab-employees-count');
     const tabLogsCountEl = document.getElementById('tab-logs-count');
+    const tabSheetCountEl = document.getElementById('tab-sheet-count');
     const adminEmpCountDisplay = document.getElementById('admin-emp-count-display');
 
     const newCount = currentInquiries.filter(i => (i.status || 'New') === 'New').length;
@@ -763,11 +775,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabEmpCountEl) tabEmpCountEl.textContent = `${employees.length}/10`;
     if (adminEmpCountDisplay) adminEmpCountDisplay.textContent = employees.length;
     if (tabLogsCountEl) tabLogsCountEl.textContent = logs.length;
+    if (tabSheetCountEl) tabSheetCountEl.textContent = sheetRecords.length;
 
     renderInquiriesTable();
     renderTradesTable();
     renderAdminEmployeesTable();
     renderAdminEmployeeLogs();
+    renderAdminSpreadsheet();
   }
 
   function renderInquiriesTable() {
@@ -1678,9 +1692,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadEmployeeWorkspace() {
+    renderEmployeeSpreadsheet();
     await renderEmployeeLeads();
     renderEmployeeSessionFeed();
     updateEmployeeKPIs();
+
+    const inquiries = await fetchInquiries();
+    const leadsCountTab = document.getElementById('emp-leads-count-tab');
+    if (leadsCountTab) leadsCountTab.textContent = inquiries.length;
   }
 
   async function renderEmployeeLeads() {
@@ -1926,6 +1945,516 @@ document.addEventListener('DOMContentLoaded', () => {
       if (kpiInteractions) kpiInteractions.textContent = myInteractions.length;
     }
   }
+
+  // ==================== 10. Live Spreadsheet Grid System (Google Sheet / Excel Style) ====================
+  const empTabSheetBtn = document.getElementById('emp-tab-sheet-btn');
+  const empTabLeadsBtn = document.getElementById('emp-tab-leads-btn');
+  const empTabSheetView = document.getElementById('emp-tab-sheet');
+  const empTabLeadsView = document.getElementById('emp-tab-leads');
+
+  function switchEmpSubTab(tab) {
+    if (empTabSheetBtn && empTabLeadsBtn) {
+      if (tab === 'sheet') {
+        empTabSheetBtn.classList.add('border-emerald-600', 'text-emerald-600', 'active');
+        empTabSheetBtn.classList.remove('border-transparent', 'text-slate-500');
+        empTabLeadsBtn.classList.remove('border-emerald-600', 'text-emerald-600', 'active');
+        empTabLeadsBtn.classList.add('border-transparent', 'text-slate-500');
+        if (empTabSheetView) empTabSheetView.classList.remove('hidden');
+        if (empTabLeadsView) empTabLeadsView.classList.add('hidden');
+        renderEmployeeSpreadsheet();
+      } else {
+        empTabLeadsBtn.classList.add('border-emerald-600', 'text-emerald-600', 'active');
+        empTabLeadsBtn.classList.remove('border-transparent', 'text-slate-500');
+        empTabSheetBtn.classList.remove('border-emerald-600', 'text-emerald-600', 'active');
+        empTabSheetBtn.classList.add('border-transparent', 'text-slate-500');
+        if (empTabLeadsView) empTabLeadsView.classList.remove('hidden');
+        if (empTabSheetView) empTabSheetView.classList.add('hidden');
+        renderEmployeeLeads();
+      }
+    }
+  }
+
+  if (empTabSheetBtn) empTabSheetBtn.addEventListener('click', () => switchEmpSubTab('sheet'));
+  if (empTabLeadsBtn) empTabLeadsBtn.addEventListener('click', () => switchEmpSubTab('leads'));
+
+  const SPREADSHEET_PROJECT_OPTIONS = [
+    'Acre Canopy Protection (PRJ-GS-0104)',
+    'Sahara Solar Lot (PRJ-VCS-0218)',
+    'Mombasa Mangrove Replanting (PRJ-PV-0342)',
+    'Icelandic Direct Air Capture (PRJ-DAC-0419)',
+    'Gujarat Wind Corridor (PRJ-VCS-0552)',
+    'Andean Cloud Forest (PRJ-GS-0681)',
+    'Custom Carbon Offset Lot'
+  ];
+
+  const SPREADSHEET_STAGE_OPTIONS = [
+    'Lead Inbound',
+    'Call Scheduled',
+    'Term Sheet Sent',
+    'Negotiation',
+    'Closed Won',
+    'Closed Lost'
+  ];
+
+  function getSheetRecords() {
+    let list = [];
+    try {
+      const stored = localStorage.getItem('carbonaxis_deal_sheet_records');
+      if (stored) list = JSON.parse(stored);
+    } catch (e) {
+      console.warn('Error reading sheet records:', e);
+    }
+
+    if (!list || list.length === 0) {
+      list = [
+        {
+          id: "REC-101",
+          client: "Microsoft Sustainability Fund",
+          contact: "carbon-procure@microsoft.com",
+          project: "Icelandic Direct Air Capture (PRJ-DAC-0419)",
+          volume: 5200,
+          price: 48.00,
+          stage: "Term Sheet Sent",
+          notes: "Requires Gold Standard retirement serial numbers for 2026 fiscal ESG audit.",
+          broker: "Alex Morgan",
+          broker_username: "alex_broker",
+          updated_at: new Date(Date.now() - 3600000 * 2).toISOString()
+        },
+        {
+          id: "REC-102",
+          client: "Delta Global Logistics",
+          contact: "esg-offsets@deltaglobal.com",
+          project: "Acre Canopy Protection (PRJ-GS-0104)",
+          volume: 12000,
+          price: 15.00,
+          stage: "Negotiation",
+          notes: "Negotiating long-term forward off-take agreement for vintage 2024-2025.",
+          broker: "Alex Morgan",
+          broker_username: "alex_broker",
+          updated_at: new Date(Date.now() - 3600000 * 5).toISOString()
+        },
+        {
+          id: "REC-103",
+          client: "Starlight Energy Group",
+          contact: "trading@starlightenergy.co.uk",
+          project: "Sahara Solar Lot (PRJ-VCS-0218)",
+          volume: 18500,
+          price: 12.00,
+          stage: "Closed Won",
+          notes: "First tranche clearing complete. Escrow verified via standard registry ledger.",
+          broker: "Sarah Jenkins",
+          broker_username: "sarah_broker",
+          updated_at: new Date(Date.now() - 3600000 * 12).toISOString()
+        },
+        {
+          id: "REC-104",
+          client: "Amazon Climate Pledge Partner",
+          contact: "netzero@amazonofftake.com",
+          project: "Gujarat Wind Corridor (PRJ-VCS-0552)",
+          volume: 25000,
+          price: 9.80,
+          stage: "In Discussion",
+          notes: "Requested technical documentation on additionality and local community co-benefits.",
+          broker: "Alex Morgan",
+          broker_username: "alex_broker",
+          updated_at: new Date(Date.now() - 3600000 * 24).toISOString()
+        },
+        {
+          id: "REC-105",
+          client: "Nordic Clean Maritime",
+          contact: "offsets@nordicmaritime.no",
+          project: "Mombasa Mangrove Replanting (PRJ-PV-0342)",
+          volume: 8400,
+          price: 18.50,
+          stage: "Call Scheduled",
+          notes: "Blue carbon credits desired to meet EU FuelMaritime emission quota.",
+          broker: "Alex Morgan",
+          broker_username: "alex_broker",
+          updated_at: new Date(Date.now() - 3600000 * 36).toISOString()
+        }
+      ];
+      localStorage.setItem('carbonaxis_deal_sheet_records', JSON.stringify(list));
+    }
+    return list;
+  }
+
+  function saveSheetRecords(list) {
+    localStorage.setItem('carbonaxis_deal_sheet_records', JSON.stringify(list));
+  }
+
+  function updateSheetStatsElements(prefix, records) {
+    const totalCount = records.length;
+    let totalVolume = 0;
+    let totalValue = 0;
+
+    records.forEach(r => {
+      const vol = Number(r.volume || 0);
+      const prc = Number(r.price || 0);
+      totalVolume += vol;
+      totalValue += (vol * prc);
+    });
+
+    const avgPrice = totalVolume > 0 ? (totalValue / totalVolume) : 0;
+
+    const countEl = document.getElementById(`${prefix}-sheet-stat-count`);
+    const volEl = document.getElementById(`${prefix}-sheet-stat-volume`);
+    const valEl = document.getElementById(`${prefix}-sheet-stat-value`);
+    const avgEl = document.getElementById(`${prefix}-sheet-stat-avg`);
+
+    if (countEl) countEl.textContent = totalCount;
+    if (volEl) volEl.textContent = totalVolume.toLocaleString() + ' t';
+    if (valEl) valEl.textContent = '$' + totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (avgEl) avgEl.textContent = '$' + avgPrice.toFixed(2) + '/t';
+
+    if (prefix === 'emp') {
+      const recCountEl = document.getElementById('emp-sheet-records-count');
+      const pipelineKpi = document.getElementById('emp-kpi-pipeline');
+      if (recCountEl) recCountEl.textContent = totalCount;
+      if (pipelineKpi) pipelineKpi.textContent = '$' + totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else if (prefix === 'admin') {
+      const tabCount = document.getElementById('tab-sheet-count');
+      if (tabCount) tabCount.textContent = totalCount;
+    }
+  }
+
+  function renderEmployeeSpreadsheet() {
+    renderSpreadsheetGrid('emp-sheet-tbody', 'emp');
+  }
+
+  function renderAdminSpreadsheet() {
+    renderSpreadsheetGrid('admin-sheet-tbody', 'admin');
+  }
+
+  function renderSpreadsheetGrid(tbodyId, mode) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+
+    const records = getSheetRecords();
+    updateSheetStatsElements(mode, records);
+
+    // If admin mode, populate broker filter
+    if (mode === 'admin') {
+      const brokerSelect = document.getElementById('admin-sheet-filter-broker');
+      if (brokerSelect) {
+        const curVal = brokerSelect.value;
+        const employees = getEmployees();
+        brokerSelect.innerHTML = '<option value="all">All Brokers</option>' +
+          employees.map(e => `<option value="${escapeHtml(e.username)}" ${curVal === e.username ? 'selected' : ''}>${escapeHtml(e.name)} (@${escapeHtml(e.username)})</option>`).join('');
+      }
+    }
+
+    const searchInput = document.getElementById(`${mode}-sheet-search`);
+    const stageSelect = document.getElementById(`${mode}-sheet-filter-stage`);
+    const brokerSelect = mode === 'admin' ? document.getElementById('admin-sheet-filter-broker') : null;
+
+    const searchTerm = (searchInput?.value || '').toLowerCase();
+    const stageFilter = stageSelect?.value || 'all';
+    const brokerFilter = brokerSelect?.value || 'all';
+
+    const filtered = records.filter(r => {
+      const matchesSearch = 
+        (r.client || '').toLowerCase().includes(searchTerm) ||
+        (r.contact || '').toLowerCase().includes(searchTerm) ||
+        (r.project || '').toLowerCase().includes(searchTerm) ||
+        (r.notes || '').toLowerCase().includes(searchTerm) ||
+        (r.broker || '').toLowerCase().includes(searchTerm) ||
+        (r.broker_username || '').toLowerCase().includes(searchTerm);
+
+      const matchesStage = stageFilter === 'all' || r.stage === stageFilter;
+      const matchesBroker = brokerFilter === 'all' || r.broker_username === brokerFilter;
+
+      return matchesSearch && matchesStage && matchesBroker;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="11" class="px-5 py-10 text-center text-slate-400">
+            <i class="fa-solid fa-table-cells text-3xl mb-2 block text-slate-300"></i>
+            No deal records matching filter. Click "+ Add Deal Row" to create a new spreadsheet record.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map((r, idx) => {
+      const vol = Number(r.volume || 0);
+      const prc = Number(r.price || 0);
+      const dealVal = vol * prc;
+
+      // Project options
+      const projectOptionsHtml = SPREADSHEET_PROJECT_OPTIONS.map(opt => 
+        `<option value="${escapeHtml(opt)}" ${r.project === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`
+      ).join('');
+
+      // Stage options with colors
+      const stageOptionsHtml = SPREADSHEET_STAGE_OPTIONS.map(opt => 
+        `<option value="${escapeHtml(opt)}" ${r.stage === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`
+      ).join('');
+
+      let stageBadgeBg = 'bg-slate-100 text-slate-700';
+      if (r.stage === 'Closed Won') stageBadgeBg = 'bg-emerald-100 text-emerald-800 font-bold';
+      else if (r.stage === 'Negotiation') stageBadgeBg = 'bg-blue-100 text-blue-800 font-bold';
+      else if (r.stage === 'Term Sheet Sent') stageBadgeBg = 'bg-purple-100 text-purple-800 font-bold';
+      else if (r.stage === 'Call Scheduled') stageBadgeBg = 'bg-amber-100 text-amber-800';
+      else if (r.stage === 'Closed Lost') stageBadgeBg = 'bg-rose-100 text-rose-800';
+
+      return `
+        <tr class="hover:bg-emerald-50/30 transition border-b border-slate-100 sheet-data-row" data-id="${r.id}">
+          <!-- Row Num -->
+          <td class="w-12 px-3 py-2 text-center font-mono text-[11px] text-slate-400 bg-slate-50/70 border-r border-slate-200">
+            ${idx + 1}
+          </td>
+
+          <!-- Col A: Client / Company -->
+          <td class="px-2 py-1.5 border-r border-slate-200">
+            <input type="text" class="sheet-cell-field font-bold text-slate-900 w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none text-xs" data-field="client" value="${escapeHtml(r.client)}" placeholder="Client Name..." />
+          </td>
+
+          <!-- Col B: Contact Email/Phone -->
+          <td class="px-2 py-1.5 border-r border-slate-200">
+            <input type="text" class="sheet-cell-field text-slate-600 font-mono text-[11px] w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none" data-field="contact" value="${escapeHtml(r.contact)}" placeholder="contact@domain.com" />
+          </td>
+
+          <!-- Col C: Carbon Project Lot -->
+          <td class="px-2 py-1.5 border-r border-slate-200">
+            <select class="sheet-cell-field text-slate-800 font-medium text-xs w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-1.5 py-1 outline-none cursor-pointer" data-field="project">
+              ${projectOptionsHtml}
+            </select>
+          </td>
+
+          <!-- Col D: Volume (Tons) -->
+          <td class="px-2 py-1.5 border-r border-slate-200">
+            <input type="number" step="100" min="0" class="sheet-cell-field sheet-calc-trigger font-mono font-bold text-blue-700 text-right w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none text-xs" data-field="volume" value="${vol}" />
+          </td>
+
+          <!-- Col E: Price ($/t) -->
+          <td class="px-2 py-1.5 border-r border-slate-200">
+            <input type="number" step="0.10" min="0" class="sheet-cell-field sheet-calc-trigger font-mono font-semibold text-slate-800 text-right w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none text-xs" data-field="price" value="${prc.toFixed(2)}" />
+          </td>
+
+          <!-- Col F: Deal Value ($) (Auto Calculated) -->
+          <td class="px-3 py-1.5 border-r border-slate-200 text-right font-mono font-black text-emerald-700 text-xs whitespace-nowrap bg-emerald-50/20 sheet-row-deal-value">
+            $${dealVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </td>
+
+          <!-- Col G: Deal Stage -->
+          <td class="px-2 py-1.5 border-r border-slate-200">
+            <select class="sheet-cell-field text-xs font-semibold rounded px-2 py-1 w-full border-0 outline-none cursor-pointer ${stageBadgeBg}" data-field="stage">
+              ${stageOptionsHtml}
+            </select>
+          </td>
+
+          <!-- Col H: Notes & Remarks -->
+          <td class="px-2 py-1.5 border-r border-slate-200">
+            <input type="text" class="sheet-cell-field text-slate-600 text-[11px] w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none" data-field="notes" value="${escapeHtml(r.notes || '')}" placeholder="Add deal notes, terms, requirements..." />
+          </td>
+
+          <!-- Col I: Staff Broker -->
+          <td class="px-3 py-1.5 border-r border-slate-200 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 font-mono text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+              <i class="fa-solid fa-user-check text-[9px] text-emerald-600"></i> @${escapeHtml(r.broker_username || 'alex_broker')}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="px-2 py-1.5 text-center">
+            <button class="sheet-delete-row-btn p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition text-xs" data-id="${r.id}" title="Delete Deal Row">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Attach row events
+    attachSpreadsheetRowEvents(tbody, mode);
+  }
+
+  function attachSpreadsheetRowEvents(tbody, mode) {
+    const rows = tbody.querySelectorAll('.sheet-data-row');
+
+    rows.forEach(row => {
+      const id = row.getAttribute('data-id');
+      const inputs = row.querySelectorAll('.sheet-cell-field');
+      const valDisplay = row.querySelector('.sheet-row-deal-value');
+
+      // Live Calculation on volume or price change
+      const volInput = row.querySelector('[data-field="volume"]');
+      const prcInput = row.querySelector('[data-field="price"]');
+
+      function updateRowCalculation() {
+        const vol = Number(volInput?.value || 0);
+        const prc = Number(prcInput?.value || 0);
+        const total = vol * prc;
+        if (valDisplay) {
+          valDisplay.textContent = '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+      }
+
+      if (volInput) volInput.addEventListener('input', updateRowCalculation);
+      if (prcInput) prcInput.addEventListener('input', updateRowCalculation);
+
+      // Save on change/blur
+      inputs.forEach(input => {
+        input.addEventListener('change', async (e) => {
+          const field = e.target.getAttribute('data-field');
+          let newVal = e.target.value;
+          if (field === 'volume' || field === 'price') {
+            newVal = Number(newVal || 0);
+          }
+
+          const records = getSheetRecords();
+          const rec = records.find(r => r.id === id);
+          if (rec) {
+            const oldVal = rec[field];
+            rec[field] = newVal;
+            rec.updated_at = new Date().toISOString();
+
+            // Set current editor if staff
+            const curEmp = getCurrentEmployee();
+            if (curEmp && mode === 'emp') {
+              rec.broker = curEmp.name;
+              rec.broker_username = curEmp.username;
+            }
+
+            saveSheetRecords(records);
+
+            // Log activity to audit trail
+            await logEmployeeActivity({
+              employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
+              action_type: 'SHEET_ROW_EDIT',
+              action_label: 'Spreadsheet Record Edited',
+              details: `Edited [${field}] for deal "${rec.client}" from "${oldVal}" to "${newVal}". Current deal value: $${(Number(rec.volume || 0) * Number(rec.price || 0)).toLocaleString()}.`
+            });
+
+            // Update stats
+            updateSheetStatsElements('emp', records);
+            updateSheetStatsElements('admin', records);
+          }
+        });
+      });
+
+      // Delete Row
+      const delBtn = row.querySelector('.sheet-delete-row-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', async () => {
+          const records = getSheetRecords();
+          const rec = records.find(r => r.id === id);
+          if (rec && confirm(`Are you sure you want to delete deal record for "${rec.client}"?`)) {
+            const filtered = records.filter(r => r.id !== id);
+            saveSheetRecords(filtered);
+
+            const curEmp = getCurrentEmployee();
+            await logEmployeeActivity({
+              employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
+              action_type: 'SHEET_ROW_DELETE',
+              action_label: 'Spreadsheet Record Deleted',
+              details: `Deleted deal record #${id} ("${rec.client}") of volume ${rec.volume}t.`
+            });
+
+            renderEmployeeSpreadsheet();
+            renderAdminSpreadsheet();
+          }
+        });
+      }
+    });
+  }
+
+  async function addSpreadsheetRow(mode) {
+    const records = getSheetRecords();
+    const curEmp = getCurrentEmployee();
+    const newId = 'REC-' + Math.floor(100 + Math.random() * 900);
+
+    const newRecord = {
+      id: newId,
+      client: 'New Enterprise Client',
+      contact: 'procurement@client.com',
+      project: SPREADSHEET_PROJECT_OPTIONS[0],
+      volume: 5000,
+      price: 15.00,
+      stage: 'Lead Inbound',
+      notes: 'Initial requirement inquiry and credit batch allocation.',
+      broker: curEmp?.name || (mode === 'admin' ? 'Administrator' : 'Alex Morgan'),
+      broker_username: curEmp?.username || (mode === 'admin' ? 'admin' : 'alex_broker'),
+      updated_at: new Date().toISOString()
+    };
+
+    records.unshift(newRecord);
+    saveSheetRecords(records);
+
+    await logEmployeeActivity({
+      employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
+      action_type: 'SHEET_ROW_ADD',
+      action_label: 'New Spreadsheet Row Added',
+      details: `Added new deal record #${newId} for "${newRecord.client}" (5,000t @ $15.00/t).`
+    });
+
+    renderEmployeeSpreadsheet();
+    renderAdminSpreadsheet();
+  }
+
+  function exportSpreadsheetCSV() {
+    const records = getSheetRecords();
+    if (records.length === 0) {
+      alert('No spreadsheet records to export.');
+      return;
+    }
+
+    const headers = ['Row', 'ID', 'Client / Company', 'Contact Email/Phone', 'Carbon Project Lot', 'Volume (Tons)', 'Price ($/t)', 'Deal Value ($)', 'Deal Stage', 'Notes & Remarks', 'Staff Broker', 'Last Updated'];
+    const rows = records.map((r, idx) => {
+      const vol = Number(r.volume || 0);
+      const prc = Number(r.price || 0);
+      const val = vol * prc;
+      return [
+        idx + 1,
+        `"${r.id || ''}"`,
+        `"${(r.client || '').replace(/"/g, '""')}"`,
+        `"${(r.contact || '').replace(/"/g, '""')}"`,
+        `"${(r.project || '').replace(/"/g, '""')}"`,
+        vol,
+        prc.toFixed(2),
+        val.toFixed(2),
+        `"${(r.stage || '').replace(/"/g, '""')}"`,
+        `"${(r.notes || '').replace(/"/g, '""')}"`,
+        `"${(r.broker || '').replace(/"/g, '""')} (@${r.broker_username || ''})"`,
+        `"${r.updated_at || ''}"`
+      ];
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `CarbonAxis_Master_Deals_Sheet_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Hook toolbar buttons
+  const empSheetAddBtn = document.getElementById('emp-sheet-add-row-btn');
+  const empSheetExportBtn = document.getElementById('emp-sheet-export-btn');
+  const empSheetSearch = document.getElementById('emp-sheet-search');
+  const empSheetStage = document.getElementById('emp-sheet-filter-stage');
+
+  if (empSheetAddBtn) empSheetAddBtn.addEventListener('click', () => addSpreadsheetRow('emp'));
+  if (empSheetExportBtn) empSheetExportBtn.addEventListener('click', exportSpreadsheetCSV);
+  if (empSheetSearch) empSheetSearch.addEventListener('input', renderEmployeeSpreadsheet);
+  if (empSheetStage) empSheetStage.addEventListener('change', renderEmployeeSpreadsheet);
+
+  const adminSheetAddBtn = document.getElementById('admin-sheet-add-row-btn');
+  const adminSheetExportBtn = document.getElementById('admin-sheet-export-btn');
+  const adminSheetSearch = document.getElementById('admin-sheet-search');
+  const adminSheetStage = document.getElementById('admin-sheet-filter-stage');
+  const adminSheetBroker = document.getElementById('admin-sheet-filter-broker');
+
+  if (adminSheetAddBtn) adminSheetAddBtn.addEventListener('click', () => addSpreadsheetRow('admin'));
+  if (adminSheetExportBtn) adminSheetExportBtn.addEventListener('click', exportSpreadsheetCSV);
+  if (adminSheetSearch) adminSheetSearch.addEventListener('input', renderAdminSpreadsheet);
+  if (adminSheetStage) adminSheetStage.addEventListener('change', renderAdminSpreadsheet);
+  if (adminSheetBroker) adminSheetBroker.addEventListener('change', renderAdminSpreadsheet);
 
   function escapeHtml(text) {
     if (!text) return '';
