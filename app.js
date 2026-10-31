@@ -1977,484 +1977,1057 @@ document.addEventListener('DOMContentLoaded', () => {
   if (empTabSheetBtn) empTabSheetBtn.addEventListener('click', () => switchEmpSubTab('sheet'));
   if (empTabLeadsBtn) empTabLeadsBtn.addEventListener('click', () => switchEmpSubTab('leads'));
 
-  const SPREADSHEET_PROJECT_OPTIONS = [
-    'Acre Canopy Protection (PRJ-GS-0104)',
-    'Sahara Solar Lot (PRJ-VCS-0218)',
-    'Mombasa Mangrove Replanting (PRJ-PV-0342)',
-    'Icelandic Direct Air Capture (PRJ-DAC-0419)',
-    'Gujarat Wind Corridor (PRJ-VCS-0552)',
-    'Andean Cloud Forest (PRJ-GS-0681)',
-    'Custom Carbon Offset Lot'
-  ];
+  // ==================== 10. Authentic Google Sheets Web App Engine ====================
+  const GS_COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
+  const GS_DEFAULT_ROWS = 35;
 
-  const SPREADSHEET_STAGE_OPTIONS = [
-    'Lead Inbound',
-    'Call Scheduled',
-    'Term Sheet Sent',
-    'Negotiation',
-    'Closed Won',
-    'Closed Lost'
-  ];
+  let gsheetState = null;
+  let empSelectedCell = { col: 'A', row: 1 };
+  let adminSelectedCell = { col: 'A', row: 1 };
+  let empInlineEditor = null;
+  let adminInlineEditor = null;
 
-  function getSheetRecords() {
-    let list = [];
-    try {
-      const stored = localStorage.getItem('carbonaxis_deal_sheet_records');
-      if (stored) list = JSON.parse(stored);
-    } catch (e) {
-      console.warn('Error reading sheet records:', e);
-    }
-
-    if (!list || list.length === 0) {
-      list = [
-        {
-          id: "REC-101",
-          client: "Microsoft Sustainability Fund",
-          contact: "carbon-procure@microsoft.com",
-          project: "Icelandic Direct Air Capture (PRJ-DAC-0419)",
-          volume: 5200,
-          price: 48.00,
-          stage: "Term Sheet Sent",
-          notes: "Requires Gold Standard retirement serial numbers for 2026 fiscal ESG audit.",
-          broker: "Alex Morgan",
-          broker_username: "alex_broker",
-          updated_at: new Date(Date.now() - 3600000 * 2).toISOString()
-        },
-        {
-          id: "REC-102",
-          client: "Delta Global Logistics",
-          contact: "esg-offsets@deltaglobal.com",
-          project: "Acre Canopy Protection (PRJ-GS-0104)",
-          volume: 12000,
-          price: 15.00,
-          stage: "Negotiation",
-          notes: "Negotiating long-term forward off-take agreement for vintage 2024-2025.",
-          broker: "Alex Morgan",
-          broker_username: "alex_broker",
-          updated_at: new Date(Date.now() - 3600000 * 5).toISOString()
-        },
-        {
-          id: "REC-103",
-          client: "Starlight Energy Group",
-          contact: "trading@starlightenergy.co.uk",
-          project: "Sahara Solar Lot (PRJ-VCS-0218)",
-          volume: 18500,
-          price: 12.00,
-          stage: "Closed Won",
-          notes: "First tranche clearing complete. Escrow verified via standard registry ledger.",
-          broker: "Sarah Jenkins",
-          broker_username: "sarah_broker",
-          updated_at: new Date(Date.now() - 3600000 * 12).toISOString()
-        },
-        {
-          id: "REC-104",
-          client: "Amazon Climate Pledge Partner",
-          contact: "netzero@amazonofftake.com",
-          project: "Gujarat Wind Corridor (PRJ-VCS-0552)",
-          volume: 25000,
-          price: 9.80,
-          stage: "In Discussion",
-          notes: "Requested technical documentation on additionality and local community co-benefits.",
-          broker: "Alex Morgan",
-          broker_username: "alex_broker",
-          updated_at: new Date(Date.now() - 3600000 * 24).toISOString()
-        },
-        {
-          id: "REC-105",
-          client: "Nordic Clean Maritime",
-          contact: "offsets@nordicmaritime.no",
-          project: "Mombasa Mangrove Replanting (PRJ-PV-0342)",
-          volume: 8400,
-          price: 18.50,
-          stage: "Call Scheduled",
-          notes: "Blue carbon credits desired to meet EU FuelMaritime emission quota.",
-          broker: "Alex Morgan",
-          broker_username: "alex_broker",
-          updated_at: new Date(Date.now() - 3600000 * 36).toISOString()
-        }
-      ];
-      localStorage.setItem('carbonaxis_deal_sheet_records', JSON.stringify(list));
-    }
-    return list;
-  }
-
-  function saveSheetRecords(list) {
-    localStorage.setItem('carbonaxis_deal_sheet_records', JSON.stringify(list));
-  }
-
-  function updateSheetStatsElements(prefix, records) {
-    const totalCount = records.length;
-    let totalVolume = 0;
-    let totalValue = 0;
-
-    records.forEach(r => {
-      const vol = Number(r.volume || 0);
-      const prc = Number(r.price || 0);
-      totalVolume += vol;
-      totalValue += (vol * prc);
-    });
-
-    const avgPrice = totalVolume > 0 ? (totalValue / totalVolume) : 0;
-
-    const countEl = document.getElementById(`${prefix}-sheet-stat-count`);
-    const volEl = document.getElementById(`${prefix}-sheet-stat-volume`);
-    const valEl = document.getElementById(`${prefix}-sheet-stat-value`);
-    const avgEl = document.getElementById(`${prefix}-sheet-stat-avg`);
-
-    if (countEl) countEl.textContent = totalCount;
-    if (volEl) volEl.textContent = totalVolume.toLocaleString() + ' t';
-    if (valEl) valEl.textContent = '$' + totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (avgEl) avgEl.textContent = '$' + avgPrice.toFixed(2) + '/t';
-
-    if (prefix === 'emp') {
-      const recCountEl = document.getElementById('emp-sheet-records-count');
-      const pipelineKpi = document.getElementById('emp-kpi-pipeline');
-      if (recCountEl) recCountEl.textContent = totalCount;
-      if (pipelineKpi) pipelineKpi.textContent = '$' + totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    } else if (prefix === 'admin') {
-      const tabCount = document.getElementById('tab-sheet-count');
-      if (tabCount) tabCount.textContent = totalCount;
-    }
-  }
-
-  function renderEmployeeSpreadsheet() {
-    renderSpreadsheetGrid('emp-sheet-tbody', 'emp');
-  }
-
-  function renderAdminSpreadsheet() {
-    renderSpreadsheetGrid('admin-sheet-tbody', 'admin');
-  }
-
-  function renderSpreadsheetGrid(tbodyId, mode) {
-    const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
-
-    const records = getSheetRecords();
-    updateSheetStatsElements(mode, records);
-
-    // If admin mode, populate broker filter
-    if (mode === 'admin') {
-      const brokerSelect = document.getElementById('admin-sheet-filter-broker');
-      if (brokerSelect) {
-        const curVal = brokerSelect.value;
-        const employees = getEmployees();
-        brokerSelect.innerHTML = '<option value="all">All Brokers</option>' +
-          employees.map(e => `<option value="${escapeHtml(e.username)}" ${curVal === e.username ? 'selected' : ''}>${escapeHtml(e.name)} (@${escapeHtml(e.username)})</option>`).join('');
-      }
-    }
-
-    const searchInput = document.getElementById(`${mode}-sheet-search`);
-    const stageSelect = document.getElementById(`${mode}-sheet-filter-stage`);
-    const brokerSelect = mode === 'admin' ? document.getElementById('admin-sheet-filter-broker') : null;
-
-    const searchTerm = (searchInput?.value || '').toLowerCase();
-    const stageFilter = stageSelect?.value || 'all';
-    const brokerFilter = brokerSelect?.value || 'all';
-
-    const filtered = records.filter(r => {
-      const matchesSearch = 
-        (r.client || '').toLowerCase().includes(searchTerm) ||
-        (r.contact || '').toLowerCase().includes(searchTerm) ||
-        (r.project || '').toLowerCase().includes(searchTerm) ||
-        (r.notes || '').toLowerCase().includes(searchTerm) ||
-        (r.broker || '').toLowerCase().includes(searchTerm) ||
-        (r.broker_username || '').toLowerCase().includes(searchTerm);
-
-      const matchesStage = stageFilter === 'all' || r.stage === stageFilter;
-      const matchesBroker = brokerFilter === 'all' || r.broker_username === brokerFilter;
-
-      return matchesSearch && matchesStage && matchesBroker;
-    });
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="11" class="px-5 py-10 text-center text-slate-400">
-            <i class="fa-solid fa-table-cells text-3xl mb-2 block text-slate-300"></i>
-            No deal records matching filter. Click "+ Add Deal Row" to create a new spreadsheet record.
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = filtered.map((r, idx) => {
-      const vol = Number(r.volume || 0);
-      const prc = Number(r.price || 0);
-      const dealVal = vol * prc;
-
-      // Project options
-      const projectOptionsHtml = SPREADSHEET_PROJECT_OPTIONS.map(opt => 
-        `<option value="${escapeHtml(opt)}" ${r.project === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`
-      ).join('');
-
-      // Stage options with colors
-      const stageOptionsHtml = SPREADSHEET_STAGE_OPTIONS.map(opt => 
-        `<option value="${escapeHtml(opt)}" ${r.stage === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`
-      ).join('');
-
-      let stageBadgeBg = 'bg-slate-100 text-slate-700';
-      if (r.stage === 'Closed Won') stageBadgeBg = 'bg-emerald-100 text-emerald-800 font-bold';
-      else if (r.stage === 'Negotiation') stageBadgeBg = 'bg-blue-100 text-blue-800 font-bold';
-      else if (r.stage === 'Term Sheet Sent') stageBadgeBg = 'bg-purple-100 text-purple-800 font-bold';
-      else if (r.stage === 'Call Scheduled') stageBadgeBg = 'bg-amber-100 text-amber-800';
-      else if (r.stage === 'Closed Lost') stageBadgeBg = 'bg-rose-100 text-rose-800';
-
-      return `
-        <tr class="hover:bg-emerald-50/30 transition border-b border-slate-100 sheet-data-row" data-id="${r.id}">
-          <!-- Row Num -->
-          <td class="w-12 px-3 py-2 text-center font-mono text-[11px] text-slate-400 bg-slate-50/70 border-r border-slate-200">
-            ${idx + 1}
-          </td>
-
-          <!-- Col A: Client / Company -->
-          <td class="px-2 py-1.5 border-r border-slate-200">
-            <input type="text" class="sheet-cell-field font-bold text-slate-900 w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none text-xs" data-field="client" value="${escapeHtml(r.client)}" placeholder="Client Name..." />
-          </td>
-
-          <!-- Col B: Contact Email/Phone -->
-          <td class="px-2 py-1.5 border-r border-slate-200">
-            <input type="text" class="sheet-cell-field text-slate-600 font-mono text-[11px] w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none" data-field="contact" value="${escapeHtml(r.contact)}" placeholder="contact@domain.com" />
-          </td>
-
-          <!-- Col C: Carbon Project Lot -->
-          <td class="px-2 py-1.5 border-r border-slate-200">
-            <select class="sheet-cell-field text-slate-800 font-medium text-xs w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-1.5 py-1 outline-none cursor-pointer" data-field="project">
-              ${projectOptionsHtml}
-            </select>
-          </td>
-
-          <!-- Col D: Volume (Tons) -->
-          <td class="px-2 py-1.5 border-r border-slate-200">
-            <input type="number" step="100" min="0" class="sheet-cell-field sheet-calc-trigger font-mono font-bold text-blue-700 text-right w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none text-xs" data-field="volume" value="${vol}" />
-          </td>
-
-          <!-- Col E: Price ($/t) -->
-          <td class="px-2 py-1.5 border-r border-slate-200">
-            <input type="number" step="0.10" min="0" class="sheet-cell-field sheet-calc-trigger font-mono font-semibold text-slate-800 text-right w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none text-xs" data-field="price" value="${prc.toFixed(2)}" />
-          </td>
-
-          <!-- Col F: Deal Value ($) (Auto Calculated) -->
-          <td class="px-3 py-1.5 border-r border-slate-200 text-right font-mono font-black text-emerald-700 text-xs whitespace-nowrap bg-emerald-50/20 sheet-row-deal-value">
-            $${dealVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </td>
-
-          <!-- Col G: Deal Stage -->
-          <td class="px-2 py-1.5 border-r border-slate-200">
-            <select class="sheet-cell-field text-xs font-semibold rounded px-2 py-1 w-full border-0 outline-none cursor-pointer ${stageBadgeBg}" data-field="stage">
-              ${stageOptionsHtml}
-            </select>
-          </td>
-
-          <!-- Col H: Notes & Remarks -->
-          <td class="px-2 py-1.5 border-r border-slate-200">
-            <input type="text" class="sheet-cell-field text-slate-600 text-[11px] w-full bg-transparent hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 outline-none" data-field="notes" value="${escapeHtml(r.notes || '')}" placeholder="Add deal notes, terms, requirements..." />
-          </td>
-
-          <!-- Col I: Staff Broker -->
-          <td class="px-3 py-1.5 border-r border-slate-200 whitespace-nowrap">
-            <span class="inline-flex items-center gap-1 font-mono text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-              <i class="fa-solid fa-user-check text-[9px] text-emerald-600"></i> @${escapeHtml(r.broker_username || 'alex_broker')}
-            </span>
-          </td>
-
-          <!-- Actions -->
-          <td class="px-2 py-1.5 text-center">
-            <button class="sheet-delete-row-btn p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition text-xs" data-id="${r.id}" title="Delete Deal Row">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-
-    // Attach row events
-    attachSpreadsheetRowEvents(tbody, mode);
-  }
-
-  function attachSpreadsheetRowEvents(tbody, mode) {
-    const rows = tbody.querySelectorAll('.sheet-data-row');
-
-    rows.forEach(row => {
-      const id = row.getAttribute('data-id');
-      const inputs = row.querySelectorAll('.sheet-cell-field');
-      const valDisplay = row.querySelector('.sheet-row-deal-value');
-
-      // Live Calculation on volume or price change
-      const volInput = row.querySelector('[data-field="volume"]');
-      const prcInput = row.querySelector('[data-field="price"]');
-
-      function updateRowCalculation() {
-        const vol = Number(volInput?.value || 0);
-        const prc = Number(prcInput?.value || 0);
-        const total = vol * prc;
-        if (valDisplay) {
-          valDisplay.textContent = '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-      }
-
-      if (volInput) volInput.addEventListener('input', updateRowCalculation);
-      if (prcInput) prcInput.addEventListener('input', updateRowCalculation);
-
-      // Save on change/blur
-      inputs.forEach(input => {
-        input.addEventListener('change', async (e) => {
-          const field = e.target.getAttribute('data-field');
-          let newVal = e.target.value;
-          if (field === 'volume' || field === 'price') {
-            newVal = Number(newVal || 0);
-          }
-
-          const records = getSheetRecords();
-          const rec = records.find(r => r.id === id);
-          if (rec) {
-            const oldVal = rec[field];
-            rec[field] = newVal;
-            rec.updated_at = new Date().toISOString();
-
-            // Set current editor if staff
-            const curEmp = getCurrentEmployee();
-            if (curEmp && mode === 'emp') {
-              rec.broker = curEmp.name;
-              rec.broker_username = curEmp.username;
-            }
-
-            saveSheetRecords(records);
-
-            // Log activity to audit trail
-            await logEmployeeActivity({
-              employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
-              action_type: 'SHEET_ROW_EDIT',
-              action_label: 'Spreadsheet Record Edited',
-              details: `Edited [${field}] for deal "${rec.client}" from "${oldVal}" to "${newVal}". Current deal value: $${(Number(rec.volume || 0) * Number(rec.price || 0)).toLocaleString()}.`
-            });
-
-            // Update stats
-            updateSheetStatsElements('emp', records);
-            updateSheetStatsElements('admin', records);
-          }
-        });
-      });
-
-      // Delete Row
-      const delBtn = row.querySelector('.sheet-delete-row-btn');
-      if (delBtn) {
-        delBtn.addEventListener('click', async () => {
-          const records = getSheetRecords();
-          const rec = records.find(r => r.id === id);
-          if (rec && confirm(`Are you sure you want to delete deal record for "${rec.client}"?`)) {
-            const filtered = records.filter(r => r.id !== id);
-            saveSheetRecords(filtered);
-
-            const curEmp = getCurrentEmployee();
-            await logEmployeeActivity({
-              employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
-              action_type: 'SHEET_ROW_DELETE',
-              action_label: 'Spreadsheet Record Deleted',
-              details: `Deleted deal record #${id} ("${rec.client}") of volume ${rec.volume}t.`
-            });
-
-            renderEmployeeSpreadsheet();
-            renderAdminSpreadsheet();
-          }
-        });
-      }
-    });
-  }
-
-  async function addSpreadsheetRow(mode) {
-    const records = getSheetRecords();
-    const curEmp = getCurrentEmployee();
-    const newId = 'REC-' + Math.floor(100 + Math.random() * 900);
-
-    const newRecord = {
-      id: newId,
-      client: 'New Enterprise Client',
-      contact: 'procurement@client.com',
-      project: SPREADSHEET_PROJECT_OPTIONS[0],
-      volume: 5000,
-      price: 15.00,
-      stage: 'Lead Inbound',
-      notes: 'Initial requirement inquiry and credit batch allocation.',
-      broker: curEmp?.name || (mode === 'admin' ? 'Administrator' : 'Alex Morgan'),
-      broker_username: curEmp?.username || (mode === 'admin' ? 'admin' : 'alex_broker'),
-      updated_at: new Date().toISOString()
+  function initDefaultGSheetState() {
+    const state = {
+      title: 'CarbonAxis Master Deals 2026',
+      rows: GS_DEFAULT_ROWS,
+      starred: true,
+      cells: {}
     };
 
-    records.unshift(newRecord);
-    saveSheetRecords(records);
+    // Row 1: Column Headers
+    const headers = [
+      { col: 'A', val: 'Client / Organization', align: 'left', minW: 190 },
+      { col: 'B', val: 'Contact / Email / Phone', align: 'left', minW: 180 },
+      { col: 'C', val: 'Carbon Registry & Project', align: 'left', minW: 220 },
+      { col: 'D', val: 'Volume (tCO2e)', align: 'right', minW: 120 },
+      { col: 'E', val: 'Price ($/t)', align: 'right', minW: 100 },
+      { col: 'F', val: 'Deal Value ($)', align: 'right', minW: 130 },
+      { col: 'G', val: 'Deal Stage', align: 'center', minW: 140 },
+      { col: 'H', val: 'Notes & ESG Terms', align: 'left', minW: 230 },
+      { col: 'I', val: 'Assigned Broker', align: 'left', minW: 160 },
+      { col: 'J', val: 'Vintage', align: 'center', minW: 90 },
+      { col: 'K', val: 'Registry Status', align: 'center', minW: 140 },
+      { col: 'L', val: 'Closing Date', align: 'center', minW: 110 },
+      { col: 'M', val: 'Internal Ref', align: 'center', minW: 110 },
+      { col: 'N', val: 'Broker Fee ($)', align: 'right', minW: 120 }
+    ];
 
-    await logEmployeeActivity({
-      employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
-      action_type: 'SHEET_ROW_ADD',
-      action_label: 'New Spreadsheet Row Added',
-      details: `Added new deal record #${newId} for "${newRecord.client}" (5,000t @ $15.00/t).`
+    headers.forEach(h => {
+      state.cells[h.col + '1'] = {
+        raw: h.val,
+        bold: true,
+        bg: '#f8fafd',
+        color: '#1f1f1f',
+        align: h.align
+      };
     });
 
-    renderEmployeeSpreadsheet();
-    renderAdminSpreadsheet();
+    // Row 2: Microsoft
+    state.cells['A2'] = { raw: 'Microsoft Sustainability Fund', bold: true };
+    state.cells['B2'] = { raw: 'carbon-procure@microsoft.com' };
+    state.cells['C2'] = { raw: 'Icelandic Direct Air Capture (PRJ-DAC-0419)' };
+    state.cells['D2'] = { raw: '5200', align: 'right', fmt: 'number' };
+    state.cells['E2'] = { raw: '48.00', align: 'right', fmt: 'currency' };
+    state.cells['F2'] = { raw: '=D2*E2', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    state.cells['G2'] = { raw: 'Term Sheet Sent', align: 'center', bold: true, color: '#6b21a8', bg: '#f3e8ff' };
+    state.cells['H2'] = { raw: 'Requires Gold Standard retirement serial numbers for 2026 fiscal ESG audit.' };
+    state.cells['I2'] = { raw: 'Alex Morgan (@alex_broker)' };
+    state.cells['J2'] = { raw: '2025-2026', align: 'center' };
+    state.cells['K2'] = { raw: 'Gold Standard Verified', align: 'center', color: '#047857' };
+    state.cells['L2'] = { raw: '2026-11-15', align: 'center' };
+    state.cells['M2'] = { raw: 'CA-MSFT-09', align: 'center' };
+    state.cells['N2'] = { raw: '=F2*0.03', align: 'right', fmt: 'currency' };
+
+    // Row 3: Delta Global
+    state.cells['A3'] = { raw: 'Delta Global Logistics', bold: true };
+    state.cells['B3'] = { raw: 'esg-offsets@deltaglobal.com' };
+    state.cells['C3'] = { raw: 'Acre Canopy Protection (PRJ-GS-0104)' };
+    state.cells['D3'] = { raw: '12000', align: 'right', fmt: 'number' };
+    state.cells['E3'] = { raw: '15.00', align: 'right', fmt: 'currency' };
+    state.cells['F3'] = { raw: '=D3*E3', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    state.cells['G3'] = { raw: 'Negotiation', align: 'center', bold: true, color: '#1d4ed8', bg: '#eff6ff' };
+    state.cells['H3'] = { raw: 'Negotiating long-term forward off-take agreement for vintage 2024-2025.' };
+    state.cells['I3'] = { raw: 'Alex Morgan (@alex_broker)' };
+    state.cells['J3'] = { raw: '2024', align: 'center' };
+    state.cells['K3'] = { raw: 'Verra VCS Active', align: 'center', color: '#047857' };
+    state.cells['L3'] = { raw: '2026-11-20', align: 'center' };
+    state.cells['M3'] = { raw: 'CA-DLT-41', align: 'center' };
+    state.cells['N3'] = { raw: '=F3*0.03', align: 'right', fmt: 'currency' };
+
+    // Row 4: Starlight Energy
+    state.cells['A4'] = { raw: 'Starlight Energy Group', bold: true };
+    state.cells['B4'] = { raw: 'trading@starlightenergy.co.uk' };
+    state.cells['C4'] = { raw: 'Sahara Solar Lot (PRJ-VCS-0218)' };
+    state.cells['D4'] = { raw: '18500', align: 'right', fmt: 'number' };
+    state.cells['E4'] = { raw: '12.00', align: 'right', fmt: 'currency' };
+    state.cells['F4'] = { raw: '=D4*E4', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    state.cells['G4'] = { raw: 'Closed Won', align: 'center', bold: true, color: '#15803d', bg: '#dcfce7' };
+    state.cells['H4'] = { raw: 'First tranche clearing complete. Escrow verified via standard registry ledger.' };
+    state.cells['I4'] = { raw: 'Sarah Jenkins (@sarah_broker)' };
+    state.cells['J4'] = { raw: '2025', align: 'center' };
+    state.cells['K4'] = { raw: 'Registry Confirmed', align: 'center', color: '#047857' };
+    state.cells['L4'] = { raw: '2026-10-28', align: 'center' };
+    state.cells['M4'] = { raw: 'CA-SLT-18', align: 'center' };
+    state.cells['N4'] = { raw: '=F4*0.03', align: 'right', fmt: 'currency' };
+
+    // Row 5: Amazon Climate Partner
+    state.cells['A5'] = { raw: 'Amazon Climate Partner', bold: true };
+    state.cells['B5'] = { raw: 'netzero@amazonofftake.com' };
+    state.cells['C5'] = { raw: 'Gujarat Wind Corridor (PRJ-VCS-0552)' };
+    state.cells['D5'] = { raw: '25000', align: 'right', fmt: 'number' };
+    state.cells['E5'] = { raw: '9.80', align: 'right', fmt: 'currency' };
+    state.cells['F5'] = { raw: '=D5*E5', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    state.cells['G5'] = { raw: 'Lead Inbound', align: 'center', bold: true, color: '#475569', bg: '#f1f5f9' };
+    state.cells['H5'] = { raw: 'Requested technical documentation on additionality and local community co-benefits.' };
+    state.cells['I2'] = { raw: 'Alex Morgan (@alex_broker)' };
+    state.cells['J5'] = { raw: '2025', align: 'center' };
+    state.cells['K5'] = { raw: 'VCS Registered', align: 'center', color: '#047857' };
+    state.cells['L5'] = { raw: '2026-12-01', align: 'center' };
+    state.cells['M5'] = { raw: 'CA-AMZ-77', align: 'center' };
+    state.cells['N5'] = { raw: '=F5*0.03', align: 'right', fmt: 'currency' };
+
+    // Row 6: Nordic Clean Maritime
+    state.cells['A6'] = { raw: 'Nordic Clean Maritime', bold: true };
+    state.cells['B6'] = { raw: 'offsets@nordicmaritime.no' };
+    state.cells['C6'] = { raw: 'Mombasa Mangrove Replanting (PRJ-PV-0342)' };
+    state.cells['D6'] = { raw: '8400', align: 'right', fmt: 'number' };
+    state.cells['E6'] = { raw: '18.50', align: 'right', fmt: 'currency' };
+    state.cells['F6'] = { raw: '=D6*E6', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    state.cells['G6'] = { raw: 'Call Scheduled', align: 'center', bold: true, color: '#b45309', bg: '#fef3c7' };
+    state.cells['H6'] = { raw: 'Blue carbon credits desired to meet EU FuelMaritime emission quota.' };
+    state.cells['I6'] = { raw: 'Alex Morgan (@alex_broker)' };
+    state.cells['J6'] = { raw: '2025', align: 'center' };
+    state.cells['K6'] = { raw: 'Plan Vivo Verified', align: 'center', color: '#047857' };
+    state.cells['L6'] = { raw: '2026-11-30', align: 'center' };
+    state.cells['M6'] = { raw: 'CA-NDM-03', align: 'center' };
+    state.cells['N6'] = { raw: '=F6*0.03', align: 'right', fmt: 'currency' };
+
+    // Row 7: Portfolio Summary Totals (Google Sheet Functions)
+    state.cells['A7'] = { raw: 'PORTFOLIO TOTALS', bold: true, bg: '#ecfdf5', color: '#065f46' };
+    state.cells['B7'] = { raw: '', bg: '#ecfdf5' };
+    state.cells['C7'] = { raw: '', bg: '#ecfdf5' };
+    state.cells['D7'] = { raw: '=SUM(D2:D6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#1e40af', fmt: 'number' };
+    state.cells['E7'] = { raw: '=AVERAGE(E2:E6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#065f46', fmt: 'currency' };
+    state.cells['F7'] = { raw: '=SUM(F2:F6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#047857', fmt: 'currency' };
+    state.cells['G7'] = { raw: 'ACTIVE PIPELINE', bold: true, bg: '#ecfdf5', align: 'center', color: '#065f46' };
+    state.cells['H7'] = { raw: 'Verified CarbonAxis Deal Desk Ledger', bg: '#ecfdf5', color: '#047857' };
+    state.cells['I7'] = { raw: 'All Active Brokers', bg: '#ecfdf5', color: '#065f46' };
+    state.cells['J7'] = { raw: '', bg: '#ecfdf5' };
+    state.cells['K7'] = { raw: '', bg: '#ecfdf5' };
+    state.cells['L7'] = { raw: '', bg: '#ecfdf5' };
+    state.cells['M7'] = { raw: '', bg: '#ecfdf5' };
+    state.cells['N7'] = { raw: '=SUM(N2:N6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#047857', fmt: 'currency' };
+
+    return state;
   }
 
-  function exportSpreadsheetCSV() {
-    const records = getSheetRecords();
-    if (records.length === 0) {
-      alert('No spreadsheet records to export.');
+  function getGSheetState() {
+    if (!gsheetState) {
+      try {
+        const stored = localStorage.getItem('carbonaxis_gsheet_state_v3');
+        if (stored) {
+          gsheetState = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.warn('Error reading gsheet state:', e);
+      }
+      if (!gsheetState || !gsheetState.cells) {
+        gsheetState = initDefaultGSheetState();
+        localStorage.setItem('carbonaxis_gsheet_state_v3', JSON.stringify(gsheetState));
+      }
+    }
+    return gsheetState;
+  }
+
+  function saveGSheetState(state, editorRole, cellKey, oldVal, newVal) {
+    gsheetState = state;
+    localStorage.setItem('carbonaxis_gsheet_state_v3', JSON.stringify(state));
+
+    // Update cloud status
+    ['emp', 'admin'].forEach(prefix => {
+      const statusText = document.getElementById(`${prefix}-gs-status-text`);
+      if (statusText) {
+        statusText.textContent = 'Saving...';
+        setTimeout(() => {
+          if (statusText) statusText.textContent = 'All changes saved to Drive';
+        }, 350);
+      }
+    });
+
+    // Log employee action if a cell was edited
+    if (cellKey && oldVal !== newVal) {
+      const curEmp = getCurrentEmployee();
+      logEmployeeActivity({
+        employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
+        action_type: 'GSHEET_CELL_EDIT',
+        action_label: 'Google Sheet Cell Edited',
+        details: `Updated [${cellKey}] from "${oldVal || ''}" to "${newVal || ''}".`
+      });
+    }
+
+    updateGSheetKPIs();
+  }
+
+  // Range and Cell evaluation
+  function parseCellCoord(coord) {
+    const m = coord.match(/^([A-Z]+)([0-9]+)$/i);
+    if (!m) return null;
+    return {
+      col: m[1].toUpperCase(),
+      row: parseInt(m[2], 10)
+    };
+  }
+
+  function getRangeCells(startCoord, endCoord) {
+    const s = parseCellCoord(startCoord);
+    const e = parseCellCoord(endCoord);
+    if (!s || !e) return [];
+
+    const colStartIdx = GS_COLS.indexOf(s.col);
+    const colEndIdx = GS_COLS.indexOf(e.col);
+    if (colStartIdx === -1 || colEndIdx === -1) return [];
+
+    const cMin = Math.min(colStartIdx, colEndIdx);
+    const cMax = Math.max(colStartIdx, colEndIdx);
+    const rMin = Math.min(s.row, e.row);
+    const rMax = Math.max(s.row, e.row);
+
+    const result = [];
+    for (let r = rMin; r <= rMax; r++) {
+      for (let c = cMin; c <= cMax; c++) {
+        result.push(GS_COLS[c] + r);
+      }
+    }
+    return result;
+  }
+
+  function evalGSheetCell(key, state, visited = new Set()) {
+    if (visited.has(key)) return '#CIRCULAR!';
+    visited.add(key);
+
+    const cell = state.cells[key];
+    if (!cell || cell.raw === undefined || cell.raw === null) return '';
+    let raw = String(cell.raw).trim();
+    if (!raw.startsWith('=')) {
+      // Auto-formatting for plain numbers
+      if (cell.fmt === 'currency' && !isNaN(Number(raw)) && raw !== '') {
+        return '$' + Number(raw).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      if (cell.fmt === 'number' && !isNaN(Number(raw)) && raw !== '') {
+        return Number(raw).toLocaleString();
+      }
+      return raw;
+    }
+
+    // Formula execution
+    try {
+      const formula = raw.substring(1).trim();
+
+      // Range Function: =SUM(D2:D6)
+      const sumMatch = formula.match(/^SUM\s*\(\s*([A-Z]+[0-9]+)\s*:\s*([A-Z]+[0-9]+)\s*\)$/i);
+      if (sumMatch) {
+        const cells = getRangeCells(sumMatch[1], sumMatch[2]);
+        let total = 0;
+        cells.forEach(k => {
+          const val = evalGSheetCell(k, state, new Set(visited));
+          const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]/g, ''));
+          if (!isNaN(num)) total += num;
+        });
+        if (cell.fmt === 'currency' || key.startsWith('F') || key.startsWith('N')) {
+          return '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        if (cell.fmt === 'number' || key.startsWith('D')) {
+          return total.toLocaleString();
+        }
+        return total;
+      }
+
+      // Range Function: =AVERAGE(E2:E6)
+      const avgMatch = formula.match(/^AVERAGE\s*\(\s*([A-Z]+[0-9]+)\s*:\s*([A-Z]+[0-9]+)\s*\)$/i);
+      if (avgMatch) {
+        const cells = getRangeCells(avgMatch[1], avgMatch[2]);
+        let total = 0;
+        let count = 0;
+        cells.forEach(k => {
+          const val = evalGSheetCell(k, state, new Set(visited));
+          const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]/g, ''));
+          if (!isNaN(num) && num !== 0) {
+            total += num;
+            count++;
+          }
+        });
+        const avg = count > 0 ? (total / count) : 0;
+        if (cell.fmt === 'currency' || key.startsWith('E')) {
+          return '$' + avg.toFixed(2);
+        }
+        return avg.toFixed(2);
+      }
+
+      // Range Function: =COUNT(D2:D6)
+      const countMatch = formula.match(/^COUNT\s*\(\s*([A-Z]+[0-9]+)\s*:\s*([A-Z]+[0-9]+)\s*\)$/i);
+      if (countMatch) {
+        const cells = getRangeCells(countMatch[1], countMatch[2]);
+        let count = 0;
+        cells.forEach(k => {
+          const val = evalGSheetCell(k, state, new Set(visited));
+          if (val !== '' && val !== null && val !== undefined) count++;
+        });
+        return count;
+      }
+
+      // Basic arithmetic: =D2*E2 or =D2+E2 or =F2*0.03
+      let expr = formula;
+      const refMatches = formula.match(/([A-Z]+[0-9]+)/gi) || [];
+      for (const ref of refMatches) {
+        const refVal = evalGSheetCell(ref.toUpperCase(), state, new Set(visited));
+        const num = typeof refVal === 'number' ? refVal : Number(String(refVal).replace(/[^0-9.-]/g, ''));
+        expr = expr.replace(new RegExp('\\b' + ref + '\\b', 'gi'), isNaN(num) ? 0 : num);
+      }
+
+      // Safe arithmetic evaluator
+      if (/^[0-9+\-*/().\s]+$/.test(expr)) {
+        // eslint-disable-next-line no-eval
+        const calc = Function('"use strict"; return (' + expr + ')')();
+        if (typeof calc === 'number' && !isNaN(calc)) {
+          if (cell.fmt === 'currency' || key.startsWith('F') || key.startsWith('N')) {
+            return '$' + calc.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          }
+          if (cell.fmt === 'number') {
+            return calc.toLocaleString();
+          }
+          return calc;
+        }
+      }
+
+      return raw;
+    } catch (e) {
+      return '#VALUE!';
+    }
+  }
+
+  function updateGSheetKPIs() {
+    const state = getGSheetState();
+    let totalDeals = 0;
+    let totalPipeline = 0;
+
+    // Calculate deals count and volume from rows 2..35
+    for (let r = 2; r <= state.rows; r++) {
+      if (r === 7) continue; // skip portfolio totals row
+      const clientCell = state.cells['A' + r];
+      if (clientCell && clientCell.raw && String(clientCell.raw).trim() !== '') {
+        totalDeals++;
+        const fVal = evalGSheetCell('F' + r, state);
+        const num = typeof fVal === 'number' ? fVal : Number(String(fVal).replace(/[^0-9.-]/g, ''));
+        if (!isNaN(num)) totalPipeline += num;
+      }
+    }
+
+    const valFormatted = '$' + totalPipeline.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const empCountEl = document.getElementById('emp-sheet-records-count');
+    const empKpiVal = document.getElementById('emp-gs-kpi-val');
+    const empPipelineKpi = document.getElementById('emp-kpi-pipeline');
+    const adminCountEl = document.getElementById('tab-sheet-count');
+    const adminKpiVal = document.getElementById('admin-gs-kpi-val');
+
+    if (empCountEl) empCountEl.textContent = totalDeals;
+    if (empKpiVal) empKpiVal.textContent = valFormatted;
+    if (empPipelineKpi) empPipelineKpi.textContent = valFormatted;
+    if (adminCountEl) adminCountEl.textContent = totalDeals;
+    if (adminKpiVal) adminKpiVal.textContent = valFormatted;
+  }
+
+  // Render Google Sheet Table
+  function renderGSheet(mode) {
+    const table = document.getElementById(`${mode}-gs-table`);
+    if (!table) return;
+
+    const state = getGSheetState();
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+
+    let html = '<thead><tr>';
+    // Corner header
+    html += `<th class="gs-corner-header" id="${mode}-gs-corner"></th>`;
+
+    // Column Headers A to N
+    GS_COLS.forEach(col => {
+      const isActive = sel.col === col;
+      html += `<th class="gs-col-header ${isActive ? 'gs-active' : ''}" data-col="${col}" id="${mode}-gs-col-${col}">${col}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // Grid Rows
+    for (let r = 1; r <= state.rows; r++) {
+      const isRowActive = sel.row === r;
+      html += `<tr><td class="gs-row-header ${isRowActive ? 'gs-active' : ''}" data-row="${r}" id="${mode}-gs-row-${r}">${r}</td>`;
+
+      GS_COLS.forEach(col => {
+        const key = col + r;
+        const cell = state.cells[key] || {};
+        const isSelected = sel.col === col && sel.row === r;
+        const displayVal = evalGSheetCell(key, state);
+
+        let style = '';
+        if (cell.bold) style += 'font-weight:bold;';
+        if (cell.italic) style += 'font-style:italic;';
+        if (cell.strike) style += 'text-decoration:line-through;';
+        if (cell.align) style += `text-align:${cell.align};`;
+        if (cell.color) style += `color:${cell.color};`;
+        if (cell.bg) style += `background-color:${cell.bg};`;
+        if (cell.size) style += `font-size:${cell.size}px;`;
+
+        html += `<td class="gs-cell ${isSelected ? 'gs-selected' : ''}" data-cell="${key}" data-col="${col}" data-row="${r}" style="${style}" title="${key}: ${escapeHtml(String(cell.raw || ''))}">`;
+        html += escapeHtml(String(displayVal));
+        if (isSelected) {
+          html += `<div class="gs-drag-handle"></div>`;
+        }
+        html += '</td>';
+      });
+
+      html += '</tr>';
+    }
+
+    html += '</tbody>';
+    table.innerHTML = html;
+
+    // Update Name Box and Formula input
+    const curKey = sel.col + sel.row;
+    const curCell = state.cells[curKey] || {};
+    const nameBox = document.getElementById(`${mode}-gs-name-box`);
+    const formulaInput = document.getElementById(`${mode}-gs-formula-input`);
+    const docTitle = document.getElementById(`${mode}-gs-doc-title`);
+
+    if (nameBox) nameBox.textContent = curKey;
+    if (formulaInput && document.activeElement !== formulaInput) {
+      formulaInput.value = curCell.raw || '';
+    }
+    if (docTitle && document.activeElement !== docTitle) {
+      docTitle.value = state.title || 'CarbonAxis Master Deals 2026';
+    }
+
+    updateGSheetKPIs();
+    attachGSheetEvents(mode);
+  }
+
+  function attachGSheetEvents(mode) {
+    const table = document.getElementById(`${mode}-gs-table`);
+    if (!table) return;
+
+    // Click cell to select
+    const cells = table.querySelectorAll('.gs-cell');
+    cells.forEach(cellEl => {
+      cellEl.addEventListener('click', (e) => {
+        const key = cellEl.getAttribute('data-cell');
+        const col = cellEl.getAttribute('data-col');
+        const row = parseInt(cellEl.getAttribute('data-row'), 10);
+        selectGSheetCell(mode, col, row);
+      });
+
+      // Double click to inline edit
+      cellEl.addEventListener('dblclick', (e) => {
+        const col = cellEl.getAttribute('data-col');
+        const row = parseInt(cellEl.getAttribute('data-row'), 10);
+        startInlineEditing(mode, col, row);
+      });
+    });
+  }
+
+  function selectGSheetCell(mode, col, row) {
+    if (mode === 'emp') {
+      empSelectedCell = { col, row };
+    } else {
+      adminSelectedCell = { col, row };
+    }
+
+    const state = getGSheetState();
+    const key = col + row;
+    const cell = state.cells[key] || {};
+
+    const nameBox = document.getElementById(`${mode}-gs-name-box`);
+    const formulaInput = document.getElementById(`${mode}-gs-formula-input`);
+
+    if (nameBox) nameBox.textContent = key;
+    if (formulaInput) formulaInput.value = cell.raw || '';
+
+    // Update active highlight classes without re-rendering entire table for speed
+    const table = document.getElementById(`${mode}-gs-table`);
+    if (table) {
+      table.querySelectorAll('.gs-cell.gs-selected').forEach(c => {
+        c.classList.remove('gs-selected');
+        const handle = c.querySelector('.gs-drag-handle');
+        if (handle) handle.remove();
+      });
+
+      table.querySelectorAll('.gs-col-header.gs-active').forEach(c => c.classList.remove('gs-active'));
+      table.querySelectorAll('.gs-row-header.gs-active').forEach(r => r.classList.remove('gs-active'));
+
+      const targetCell = table.querySelector(`[data-cell="${key}"]`);
+      if (targetCell) {
+        targetCell.classList.add('gs-selected');
+        const handle = document.createElement('div');
+        handle.className = 'gs-drag-handle';
+        targetCell.appendChild(handle);
+      }
+
+      const colHeader = document.getElementById(`${mode}-gs-col-${col}`);
+      const rowHeader = document.getElementById(`${mode}-gs-row-${row}`);
+      if (colHeader) colHeader.classList.add('gs-active');
+      if (rowHeader) rowHeader.classList.add('gs-active');
+    }
+  }
+
+  function startInlineEditing(mode, col, row) {
+    const table = document.getElementById(`${mode}-gs-table`);
+    if (!table) return;
+    const key = col + row;
+    const cellEl = table.querySelector(`[data-cell="${key}"]`);
+    if (!cellEl) return;
+
+    const state = getGSheetState();
+    const cell = state.cells[key] || {};
+    const oldRaw = cell.raw || '';
+
+    // Remove old editor if any
+    const existingInput = cellEl.querySelector('.gs-cell-editor');
+    if (existingInput) return;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'gs-cell-editor';
+    input.value = oldRaw;
+    cellEl.appendChild(input);
+    input.focus();
+    input.select();
+
+    const formulaInput = document.getElementById(`${mode}-gs-formula-input`);
+
+    input.addEventListener('input', () => {
+      if (formulaInput) formulaInput.value = input.value;
+    });
+
+    function commitEdit() {
+      const newVal = input.value;
+      if (!state.cells[key]) state.cells[key] = {};
+      state.cells[key].raw = newVal;
+      saveGSheetState(state, mode, key, oldRaw, newVal);
+      renderGSheet('emp');
+      renderGSheet('admin');
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commitEdit();
+        // Move to next row
+        selectGSheetCell(mode, col, Math.min(row + 1, state.rows));
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        commitEdit();
+        // Move to next col
+        const curIdx = GS_COLS.indexOf(col);
+        const nextCol = GS_COLS[Math.min(curIdx + 1, GS_COLS.length - 1)];
+        selectGSheetCell(mode, nextCol, row);
+      } else if (e.key === 'Escape') {
+        input.remove();
+        renderGSheet(mode);
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      commitEdit();
+    });
+  }
+
+  // Keyboard navigation on spreadsheet
+  document.addEventListener('keydown', (e) => {
+    // Only capture if active element is not an input/textarea (unless it's cell editor)
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (activeTag === 'textarea' || (activeTag === 'input' && !document.activeElement.classList.contains('gs-cell-editor'))) {
       return;
     }
 
-    const headers = ['Row', 'ID', 'Client / Company', 'Contact Email/Phone', 'Carbon Project Lot', 'Volume (Tons)', 'Price ($/t)', 'Deal Value ($)', 'Deal Stage', 'Notes & Remarks', 'Staff Broker', 'Last Updated'];
-    const rows = records.map((r, idx) => {
-      const vol = Number(r.volume || 0);
-      const prc = Number(r.price || 0);
-      const val = vol * prc;
-      return [
-        idx + 1,
-        `"${r.id || ''}"`,
-        `"${(r.client || '').replace(/"/g, '""')}"`,
-        `"${(r.contact || '').replace(/"/g, '""')}"`,
-        `"${(r.project || '').replace(/"/g, '""')}"`,
-        vol,
-        prc.toFixed(2),
-        val.toFixed(2),
-        `"${(r.stage || '').replace(/"/g, '""')}"`,
-        `"${(r.notes || '').replace(/"/g, '""')}"`,
-        `"${(r.broker || '').replace(/"/g, '""')} (@${r.broker_username || ''})"`,
-        `"${r.updated_at || ''}"`
-      ];
+    // Determine which view is currently open
+    const isEmpVisible = empTabSheetView && !empTabSheetView.classList.contains('hidden') && viewEmployee && !viewEmployee.classList.contains('hidden');
+    const isAdminVisible = tabSheetView && !tabSheetView.classList.contains('hidden') && adminDashboardView && !adminDashboardView.classList.contains('hidden');
+
+    if (!isEmpVisible && !isAdminVisible) return;
+    const mode = isEmpVisible ? 'emp' : 'admin';
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const state = getGSheetState();
+    const colIdx = GS_COLS.indexOf(sel.col);
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectGSheetCell(mode, sel.col, Math.max(1, sel.row - 1));
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectGSheetCell(mode, sel.col, Math.min(state.rows, sel.row + 1));
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      selectGSheetCell(mode, GS_COLS[Math.max(0, colIdx - 1)], sel.row);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      selectGSheetCell(mode, GS_COLS[Math.min(GS_COLS.length - 1, colIdx + 1)], sel.row);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      startInlineEditing(mode, sel.col, sel.row);
+    } else if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (document.activeElement && document.activeElement.classList.contains('gs-cell-editor')) return;
+      e.preventDefault();
+      const key = sel.col + sel.row;
+      if (state.cells[key]) {
+        const oldVal = state.cells[key].raw;
+        state.cells[key].raw = '';
+        saveGSheetState(state, mode, key, oldVal, '');
+        renderGSheet('emp');
+        renderGSheet('admin');
+      }
+    }
+  });
+
+  // Setup toolbar & formula bar handlers for both Emp & Admin
+  ['emp', 'admin'].forEach(mode => {
+    // Formula bar input sync
+    const formulaInput = document.getElementById(`${mode}-gs-formula-input`);
+    if (formulaInput) {
+      formulaInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+          const key = sel.col + sel.row;
+          const state = getGSheetState();
+          const oldVal = state.cells[key] ? state.cells[key].raw : '';
+          const newVal = formulaInput.value;
+          if (!state.cells[key]) state.cells[key] = {};
+          state.cells[key].raw = newVal;
+          saveGSheetState(state, mode, key, oldVal, newVal);
+          renderGSheet('emp');
+          renderGSheet('admin');
+          // Move down
+          selectGSheetCell(mode, sel.col, Math.min(sel.row + 1, state.rows));
+        }
+      });
+    }
+
+    // Document title renaming
+    const docTitle = document.getElementById(`${mode}-gs-doc-title`);
+    if (docTitle) {
+      docTitle.addEventListener('change', () => {
+        const state = getGSheetState();
+        state.title = docTitle.value || 'CarbonAxis Master Deals 2026';
+        saveGSheetState(state, mode);
+      });
+    }
+
+    // Star button
+    const starBtn = document.getElementById(`${mode}-gs-star-btn`);
+    if (starBtn) {
+      starBtn.addEventListener('click', () => {
+        const state = getGSheetState();
+        state.starred = !state.starred;
+        starBtn.classList.toggle('active', state.starred);
+        saveGSheetState(state, mode);
+      });
+    }
+
+    // Formatting Toolbar: Bold
+    const boldBtn = document.getElementById(`${mode}-gs-bold-btn`);
+    if (boldBtn) {
+      boldBtn.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        state.cells[key].bold = !state.cells[key].bold;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Formatting Toolbar: Italic
+    const italicBtn = document.getElementById(`${mode}-gs-italic-btn`);
+    if (italicBtn) {
+      italicBtn.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        state.cells[key].italic = !state.cells[key].italic;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Formatting Toolbar: Strikethrough
+    const strikeBtn = document.getElementById(`${mode}-gs-strike-btn`);
+    if (strikeBtn) {
+      strikeBtn.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        state.cells[key].strike = !state.cells[key].strike;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Text Color
+    const textColor = document.getElementById(`${mode}-gs-color-text`);
+    if (textColor) {
+      textColor.addEventListener('input', (e) => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        state.cells[key].color = e.target.value;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Fill Color
+    const bgColor = document.getElementById(`${mode}-gs-color-bg`);
+    if (bgColor) {
+      bgColor.addEventListener('input', (e) => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        state.cells[key].bg = e.target.value;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Currency format ($)
+    const fmtCurrency = document.getElementById(`${mode}-gs-fmt-currency`);
+    if (fmtCurrency) {
+      fmtCurrency.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        state.cells[key].fmt = 'currency';
+        state.cells[key].align = 'right';
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Percent format (%)
+    const fmtPercent = document.getElementById(`${mode}-gs-fmt-percent`);
+    if (fmtPercent) {
+      fmtPercent.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        state.cells[key].fmt = 'percent';
+        state.cells[key].align = 'right';
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Alignments
+    ['left', 'center', 'right'].forEach(align => {
+      const btn = document.getElementById(`${mode}-gs-align-${align}`);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+          const key = sel.col + sel.row;
+          const state = getGSheetState();
+          if (!state.cells[key]) state.cells[key] = {};
+          state.cells[key].align = align;
+          saveGSheetState(state, mode);
+          renderGSheet('emp');
+          renderGSheet('admin');
+        });
+      }
     });
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    // Font size +/-
+    const fontPlus = document.getElementById(`${mode}-gs-font-up`);
+    const fontMinus = document.getElementById(`${mode}-gs-font-down`);
+    const fontSizeVal = document.getElementById(`${mode}-gs-font-size-val`);
+
+    if (fontPlus) {
+      fontPlus.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        const curSize = state.cells[key].size || 11;
+        state.cells[key].size = curSize + 1;
+        if (fontSizeVal) fontSizeVal.textContent = state.cells[key].size;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    if (fontMinus) {
+      fontMinus.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        const curSize = state.cells[key].size || 11;
+        state.cells[key].size = Math.max(9, curSize - 1);
+        if (fontSizeVal) fontSizeVal.textContent = state.cells[key].size;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Formulas: SUM, AVG, COUNT
+    const fnSum = document.getElementById(`${mode}-gs-fn-sum`);
+    if (fnSum) {
+      fnSum.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        const startRow = Math.max(2, sel.row - 5);
+        const endRow = Math.max(2, sel.row - 1);
+        const formula = `=SUM(${sel.col}${startRow}:${sel.col}${endRow})`;
+        state.cells[key].raw = formula;
+        state.cells[key].bold = true;
+        state.cells[key].align = 'right';
+        saveGSheetState(state, mode, key, '', formula);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    const fnAvg = document.getElementById(`${mode}-gs-fn-avg`);
+    if (fnAvg) {
+      fnAvg.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        const startRow = Math.max(2, sel.row - 5);
+        const endRow = Math.max(2, sel.row - 1);
+        const formula = `=AVERAGE(${sel.col}${startRow}:${sel.col}${endRow})`;
+        state.cells[key].raw = formula;
+        state.cells[key].align = 'right';
+        saveGSheetState(state, mode, key, '', formula);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    const fnCount = document.getElementById(`${mode}-gs-fn-count`);
+    if (fnCount) {
+      fnCount.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (!state.cells[key]) state.cells[key] = {};
+        const startRow = Math.max(2, sel.row - 5);
+        const endRow = Math.max(2, sel.row - 1);
+        const formula = `=COUNT(${sel.col}${startRow}:${sel.col}${endRow})`;
+        state.cells[key].raw = formula;
+        saveGSheetState(state, mode, key, '', formula);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Add Row button
+    const addRowBtn = document.getElementById(`${mode}-gs-add-row-btn`);
+    if (addRowBtn) {
+      addRowBtn.addEventListener('click', () => {
+        const state = getGSheetState();
+        state.rows += 1;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      });
+    }
+
+    // Clear Cell button
+    const clearCellBtn = document.getElementById(`${mode}-gs-clear-cell-btn`);
+    if (clearCellBtn) {
+      clearCellBtn.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        const key = sel.col + sel.row;
+        const state = getGSheetState();
+        if (state.cells[key]) {
+          const oldVal = state.cells[key].raw;
+          state.cells[key].raw = '';
+          saveGSheetState(state, mode, key, oldVal, '');
+          renderGSheet('emp');
+          renderGSheet('admin');
+        }
+      });
+    }
+
+    // Add 20 more rows at bottom
+    const addMoreRowsBtn = document.getElementById(`${mode}-gs-add-more-rows`);
+    if (addMoreRowsBtn) {
+      addMoreRowsBtn.addEventListener('click', () => {
+        const state = getGSheetState();
+        state.rows += 20;
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+        alert('Added 20 new rows to the spreadsheet grid.');
+      });
+    }
+
+    // Print
+    const printBtn = document.getElementById(`${mode}-gs-print-btn`);
+    if (printBtn) {
+      printBtn.addEventListener('click', () => window.print());
+    }
+
+    // Export CSV
+    const exportBtn = document.getElementById(`${mode}-gs-export-btn`);
+    if (exportBtn) {
+      exportBtn.addEventListener('click', exportGSheetCSV);
+    }
+
+    // Google Drive Embed modal trigger
+    const embedToggleBtn = document.getElementById(`${mode}-gs-embed-toggle-btn`);
+    if (embedToggleBtn) {
+      embedToggleBtn.addEventListener('click', openGSheetEmbedModal);
+    }
+  });
+
+  // Export CSV Function
+  function exportGSheetCSV() {
+    const state = getGSheetState();
+    const rows = [];
+
+    for (let r = 1; r <= state.rows; r++) {
+      const rowVals = [];
+      let hasData = false;
+      GS_COLS.forEach(col => {
+        const key = col + r;
+        const val = evalGSheetCell(key, state);
+        if (val !== '' && val !== null && val !== undefined) hasData = true;
+        rowVals.push(`"${String(val).replace(/"/g, '""')}"`);
+      });
+      if (hasData || r <= 10) {
+        rows.push(rowVals.join(','));
+      }
+    }
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + rows.join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `CarbonAxis_Master_Deals_Sheet_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `${(state.title || 'CarbonAxis_Master_Deals').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }
 
-  // Hook toolbar buttons
-  const empSheetAddBtn = document.getElementById('emp-sheet-add-row-btn');
-  const empSheetExportBtn = document.getElementById('emp-sheet-export-btn');
-  const empSheetSearch = document.getElementById('emp-sheet-search');
-  const empSheetStage = document.getElementById('emp-sheet-filter-stage');
+  // Google Drive Modal Functions
+  const gsheetEmbedModal = document.getElementById('gsheet-embed-modal');
+  const closeGSheetEmbedModal = document.getElementById('close-gsheet-embed-modal');
+  const gsheetEmbedInput = document.getElementById('gsheet-embed-url-input');
+  const gsheetEmbedSaveBtn = document.getElementById('gsheet-embed-save-btn');
+  const gsheetEmbedResetBtn = document.getElementById('gsheet-embed-reset-btn');
 
-  if (empSheetAddBtn) empSheetAddBtn.addEventListener('click', () => addSpreadsheetRow('emp'));
-  if (empSheetExportBtn) empSheetExportBtn.addEventListener('click', exportSpreadsheetCSV);
-  if (empSheetSearch) empSheetSearch.addEventListener('input', renderEmployeeSpreadsheet);
-  if (empSheetStage) empSheetStage.addEventListener('change', renderEmployeeSpreadsheet);
+  function openGSheetEmbedModal() {
+    if (gsheetEmbedModal) {
+      const savedUrl = localStorage.getItem('carbonaxis_gsheet_embed_url') || '';
+      if (gsheetEmbedInput) gsheetEmbedInput.value = savedUrl;
+      gsheetEmbedModal.classList.remove('hidden');
+    }
+  }
 
-  const adminSheetAddBtn = document.getElementById('admin-sheet-add-row-btn');
-  const adminSheetExportBtn = document.getElementById('admin-sheet-export-btn');
-  const adminSheetSearch = document.getElementById('admin-sheet-search');
-  const adminSheetStage = document.getElementById('admin-sheet-filter-stage');
-  const adminSheetBroker = document.getElementById('admin-sheet-filter-broker');
+  if (closeGSheetEmbedModal && gsheetEmbedModal) {
+    closeGSheetEmbedModal.addEventListener('click', () => {
+      gsheetEmbedModal.classList.add('hidden');
+    });
+  }
 
-  if (adminSheetAddBtn) adminSheetAddBtn.addEventListener('click', () => addSpreadsheetRow('admin'));
-  if (adminSheetExportBtn) adminSheetExportBtn.addEventListener('click', exportSpreadsheetCSV);
-  if (adminSheetSearch) adminSheetSearch.addEventListener('input', renderAdminSpreadsheet);
-  if (adminSheetStage) adminSheetStage.addEventListener('change', renderAdminSpreadsheet);
-  if (adminSheetBroker) adminSheetBroker.addEventListener('change', renderAdminSpreadsheet);
+  if (gsheetEmbedSaveBtn) {
+    gsheetEmbedSaveBtn.addEventListener('click', () => {
+      const url = (gsheetEmbedInput?.value || '').trim();
+      if (!url) {
+        alert('Please enter a valid Google Sheets URL.');
+        return;
+      }
+      localStorage.setItem('carbonaxis_gsheet_embed_url', url);
+      applyGoogleDriveEmbed(url);
+      if (gsheetEmbedModal) gsheetEmbedModal.classList.add('hidden');
+      alert('Google Drive Sheet successfully connected! Viewport updated.');
+    });
+  }
+
+  if (gsheetEmbedResetBtn) {
+    gsheetEmbedResetBtn.addEventListener('click', () => {
+      localStorage.removeItem('carbonaxis_gsheet_embed_url');
+      if (gsheetEmbedModal) gsheetEmbedModal.classList.add('hidden');
+      renderGSheet('emp');
+      renderGSheet('admin');
+      alert('Switched back to Native Google Sheets Editor.');
+    });
+  }
+
+  function applyGoogleDriveEmbed(url) {
+    let embedUrl = url;
+    if (embedUrl.includes('/edit')) {
+      embedUrl = embedUrl.replace('/edit.*', '/preview');
+    }
+    const empViewport = document.getElementById('emp-gs-viewport');
+    const adminViewport = document.getElementById('admin-gs-viewport');
+
+    const iframeHtml = `
+      <div class="w-full h-[520px] bg-slate-50 flex flex-col">
+        <div class="p-2 bg-slate-100 border-b border-slate-200 flex items-center justify-between text-xs text-slate-600">
+          <span class="font-bold flex items-center gap-1.5"><i class="fa-brands fa-google-drive text-blue-600"></i> Embedded Live Google Workspace Sheet</span>
+          <a href="${escapeHtml(url)}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">Open in Google Sheets <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+        </div>
+        <iframe src="${escapeHtml(embedUrl)}" class="w-full flex-1 border-0" allowfullscreen></iframe>
+      </div>
+    `;
+
+    if (empViewport) empViewport.innerHTML = iframeHtml;
+    if (adminViewport) adminViewport.innerHTML = iframeHtml;
+  }
+
+  // Global render functions
+  window.renderEmployeeSpreadsheet = function() {
+    const embedUrl = localStorage.getItem('carbonaxis_gsheet_embed_url');
+    if (embedUrl) {
+      applyGoogleDriveEmbed(embedUrl);
+    } else {
+      renderGSheet('emp');
+    }
+  };
+
+  window.renderAdminSpreadsheet = function() {
+    const embedUrl = localStorage.getItem('carbonaxis_gsheet_embed_url');
+    if (embedUrl) {
+      applyGoogleDriveEmbed(embedUrl);
+    } else {
+      renderGSheet('admin');
+    }
+  };
+
+  function renderEmployeeSpreadsheet() {
+    window.renderEmployeeSpreadsheet();
+  }
+
+  function renderAdminSpreadsheet() {
+    window.renderAdminSpreadsheet();
+  }
 
   function escapeHtml(text) {
     if (!text) return '';

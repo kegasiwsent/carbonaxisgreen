@@ -1132,121 +1132,207 @@
         </div>
 
         <!-- Section 5: Staff Deal & Records Sheet (Live Excel / Google Sheet View for Admin) -->
+        <!-- Section 5: Staff Deal & Records Sheet (Google Sheet Master View for Admin) -->
         <div id="admin-tab-sheet" class="space-y-4 hidden">
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            
-            <!-- Excel / Google Sheets Header & Toolbar for Admin -->
-            <div class="bg-slate-900 text-white px-5 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white text-lg shadow-inner">
+          <!-- Quick Status & Metric Bar for Admin -->
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-xs">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300">
+                <i class="fa-solid fa-shield-halved text-purple-600"></i> Admin Master Control Active
+              </span>
+              <span class="text-slate-300 hidden sm:inline">|</span>
+              <span class="text-slate-600 font-medium hidden sm:inline">Direct two-way synchronization with all 10 employee accounts. Edits are recorded in the security audit ledger.</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="admin-gs-embed-toggle-btn" class="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold transition flex items-center gap-1.5 text-xs">
+                <i class="fa-brands fa-google-drive text-blue-600"></i> Connect Google Drive Sheet
+              </button>
+              <button id="admin-gs-export-btn" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition flex items-center gap-1.5 text-xs shadow-sm">
+                <i class="fa-solid fa-file-csv text-emerald-400"></i> Export Master (.CSV)
+              </button>
+            </div>
+          </div>
+
+          <!-- Authentic Google Sheets Web App Shell for Admin -->
+          <div class="gs-app-container">
+            <!-- 1. Top Header App Bar -->
+            <div class="gs-topbar">
+              <div class="gs-brand-group">
+                <div class="gs-sheets-icon" title="Google Sheets">
                   <i class="fa-solid fa-table-cells"></i>
                 </div>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <h3 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
-                      <span>CarbonAxis Corporate Master Sheet (Excel / Google Sheet View)</span>
-                    </h3>
-                    <span class="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                      <i class="fa-solid fa-shield-halved text-emerald-400"></i> Admin Master Control
+                <div class="gs-title-area">
+                  <div class="gs-title-row">
+                    <input type="text" id="admin-gs-doc-title" class="gs-doc-title" value="CarbonAxis Corporate Master Sheet 2026" spellcheck="false" title="Rename Spreadsheet" />
+                    <button id="admin-gs-star-btn" class="gs-star-btn active" title="Star spreadsheet" type="button"><i class="fa-solid fa-star"></i></button>
+                    <button class="gs-star-btn" title="Move to folder" type="button"><i class="fa-regular fa-folder"></i></button>
+                    <span id="admin-gs-cloud-status" class="gs-cloud-status" title="Cloud document sync status">
+                      <i class="fa-solid fa-cloud-check text-emerald-600"></i>
+                      <span id="admin-gs-status-text">All changes saved to Drive</span>
                     </span>
                   </div>
-                  <p class="text-[11px] text-slate-400 mt-0.5">
-                    Real-time consolidated view of all records, client deals, volumes, and pricing entered by all staff members.
-                  </p>
+                  <!-- Menu Bar -->
+                  <div class="gs-menu-bar">
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-file">File</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-edit">Edit</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-view">View</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-insert">Insert</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-format">Format</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-data">Data</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-tools">Tools</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-gemini">Gemini</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-extensions">Extensions</button>
+                    <button class="gs-menu-item" type="button" id="admin-gs-menu-help">Help</button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Admin Toolbar Actions -->
-              <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                <button id="admin-sheet-add-row-btn" class="px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition flex items-center gap-1.5 shadow-sm active:scale-98">
-                  <i class="fa-solid fa-plus text-xs"></i> Add Master Row
+              <!-- Top Bar Right Controls -->
+              <div class="gs-topbar-actions">
+                <button class="gs-comment-btn" title="Open comment history" type="button">
+                  <i class="fa-regular fa-comment-dots"></i>
                 </button>
-                <button id="admin-sheet-export-btn" class="px-3 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition flex items-center gap-1.5">
-                  <i class="fa-solid fa-file-csv text-xs"></i> Export Company Sheet (.CSV)
+                <button id="admin-gs-share-btn" class="gs-share-btn" type="button" title="Share Spreadsheet">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                  <span>Share</span>
+                  <i class="fa-solid fa-caret-down text-[10px]"></i>
                 </button>
-              </div>
-            </div>
-
-            <!-- Formula & Metrics Bar for Admin -->
-            <div class="bg-slate-50 border-y border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div class="flex flex-wrap items-center gap-3">
-                <span class="font-mono text-[11px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-200">
-                  <span class="text-emerald-600 font-black">fx</span> COMPANY TOTALS
+                <span class="gs-gemini-spark" title="Ask Gemini AI in Sheets">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </span>
-                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span class="text-slate-400">Total Records:</span>
-                  <strong id="admin-sheet-stat-count" class="text-slate-900 font-mono">0</strong>
-                </div>
-                <span class="text-slate-300">•</span>
-                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span class="text-slate-400">Total Volume:</span>
-                  <strong id="admin-sheet-stat-volume" class="text-blue-700 font-mono">0 t</strong>
-                </div>
-                <span class="text-slate-300">•</span>
-                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span class="text-slate-400">Total Pipeline Value:</span>
-                  <strong id="admin-sheet-stat-value" class="text-emerald-700 font-mono font-black">$0.00</strong>
-                </div>
-                <span class="text-slate-300">•</span>
-                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span class="text-slate-400">Avg Price/t:</span>
-                  <strong id="admin-sheet-stat-avg" class="text-slate-800 font-mono">$0.00/t</strong>
-                </div>
-              </div>
-
-              <!-- Search & Filter Controls for Admin -->
-              <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                <div class="relative flex-1 sm:w-44">
-                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
-                  <input type="text" id="admin-sheet-search" placeholder="Search sheet..." class="w-full text-xs pl-7 pr-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-white" />
-                </div>
-                <select id="admin-sheet-filter-broker" class="text-xs p-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 font-medium">
-                  <option value="all">All Brokers</option>
-                  <!-- Populated dynamically -->
-                </select>
-                <select id="admin-sheet-filter-stage" class="text-xs p-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 font-medium">
-                  <option value="all">All Stages</option>
-                  <option value="Lead Inbound">Lead Inbound</option>
-                  <option value="Call Scheduled">Call Scheduled</option>
-                  <option value="Term Sheet Sent">Term Sheet Sent</option>
-                  <option value="Negotiation">Negotiation</option>
-                  <option value="Closed Won">Closed Won</option>
-                  <option value="Closed Lost">Closed Lost</option>
-                </select>
+                <div class="gs-avatar-badge !bg-emerald-700" title="Administrator Account">PA</div>
               </div>
             </div>
 
-            <!-- Spreadsheet Table Container for Admin -->
-            <div class="overflow-x-auto custom-scrollbar">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-slate-100 text-slate-600 font-mono text-[11px] uppercase border-b border-slate-200 select-none">
-                  <tr>
-                    <th class="w-12 px-3 py-2.5 text-center border-r border-slate-200 text-slate-400">Row</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[170px]"><span class="text-emerald-700 font-bold">A</span> • Client / Company</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[180px]"><span class="text-emerald-700 font-bold">B</span> • Contact Email/Phone</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[190px]"><span class="text-emerald-700 font-bold">C</span> • Carbon Project Lot</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[110px]"><span class="text-emerald-700 font-bold">D</span> • Volume (t)</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[100px]"><span class="text-emerald-700 font-bold">E</span> • Price ($/t)</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[130px]"><span class="text-emerald-700 font-bold">F</span> • Deal Value ($)</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[140px]"><span class="text-emerald-700 font-bold">G</span> • Deal Stage</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[200px]"><span class="text-emerald-700 font-bold">H</span> • Notes & Remarks</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[130px]"><span class="text-emerald-700 font-bold">I</span> • Staff Broker</th>
-                    <th class="px-3 py-2.5 text-center w-16">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-sheet-tbody" class="divide-y divide-slate-200 bg-white text-slate-700">
-                  <!-- Rendered Spreadsheet Rows for Admin -->
-                </tbody>
+            <!-- 2. Action / Formatting Ribbon Toolbar -->
+            <div class="gs-toolbar custom-scrollbar">
+              <button id="admin-gs-search-btn" class="gs-tb-btn" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+              <button id="admin-gs-undo-btn" class="gs-tb-btn" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+              <button id="admin-gs-redo-btn" class="gs-tb-btn" title="Redo (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
+              <button id="admin-gs-print-btn" class="gs-tb-btn" title="Print Spreadsheet"><i class="fa-solid fa-print"></i></button>
+              <button class="gs-tb-btn" title="Paint format"><i class="fa-solid fa-paintbrush"></i></button>
+              <div class="gs-tb-divider"></div>
+
+              <select class="gs-tb-select" title="Zoom">
+                <option>100%</option>
+                <option>90%</option>
+                <option>125%</option>
+              </select>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Currency & Formatting -->
+              <button id="admin-gs-fmt-currency" class="gs-tb-btn font-bold text-xs" title="Format as currency ($)">$</button>
+              <button id="admin-gs-fmt-percent" class="gs-tb-btn font-bold text-xs" title="Format as percent (%)">%</button>
+              <button id="admin-gs-fmt-dec-down" class="gs-tb-btn font-mono text-[11px]" title="Decrease decimal places">.0</button>
+              <button id="admin-gs-fmt-dec-up" class="gs-tb-btn font-mono text-[11px]" title="Increase decimal places">.00</button>
+              <select id="admin-gs-fmt-type" class="gs-tb-select font-mono text-xs" title="More formats">
+                <option value="auto">123 ▾</option>
+                <option value="number">Number</option>
+                <option value="currency">Currency ($)</option>
+                <option value="percent">Percent (%)</option>
+                <option value="text">Plain text</option>
+              </select>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Font & Size -->
+              <select id="admin-gs-font-fam" class="gs-tb-select" title="Font family">
+                <option value="Arial">Arial</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Courier New">Courier</option>
+                <option value="Georgia">Georgia</option>
+              </select>
+              <div class="gs-font-size-control">
+                <button id="admin-gs-font-down" class="gs-tb-btn" title="Decrease font size" type="button"><i class="fa-solid fa-minus text-[9px]"></i></button>
+                <span id="admin-gs-font-size-val" class="gs-font-size-val font-mono">10</span>
+                <button id="admin-gs-font-up" class="gs-tb-btn" title="Increase font size" type="button"><i class="fa-solid fa-plus text-[9px]"></i></button>
+              </div>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Styling Buttons -->
+              <button id="admin-gs-bold-btn" class="gs-tb-btn font-black text-sm" title="Bold (Ctrl+B)" type="button">B</button>
+              <button id="admin-gs-italic-btn" class="gs-tb-btn italic font-serif text-sm" title="Italic (Ctrl+I)" type="button">I</button>
+              <button id="admin-gs-strike-btn" class="gs-tb-btn line-through text-sm" title="Strikethrough" type="button">S</button>
+              
+              <!-- Text Color Picker -->
+              <label class="gs-tb-btn relative cursor-pointer" title="Text color">
+                <span class="font-bold border-b-2 border-slate-900 leading-none">A</span>
+                <input type="color" id="admin-gs-color-text" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" value="#000000" />
+              </label>
+
+              <!-- Fill Bucket Color Picker -->
+              <label class="gs-tb-btn relative cursor-pointer" title="Fill color">
+                <i class="fa-solid fa-fill-drip text-xs"></i>
+                <input type="color" id="admin-gs-color-bg" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" value="#ffffff" />
+              </label>
+
+              <button id="admin-gs-borders-btn" class="gs-tb-btn" title="Borders" type="button"><i class="fa-solid fa-border-all"></i></button>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Alignments -->
+              <button id="admin-gs-align-left" class="gs-tb-btn active" title="Left align" type="button"><i class="fa-solid fa-align-left"></i></button>
+              <button id="admin-gs-align-center" class="gs-tb-btn" title="Center align" type="button"><i class="fa-solid fa-align-center"></i></button>
+              <button id="admin-gs-align-right" class="gs-tb-btn" title="Right align" type="button"><i class="fa-solid fa-align-right"></i></button>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Functions Dropdowns (Σ SUM, AVERAGE, COUNT) -->
+              <button id="admin-gs-fn-sum" class="gs-tb-btn font-mono font-bold text-xs gap-1" title="Insert =SUM() Formula" type="button">
+                <span class="text-emerald-700 font-black">Σ</span> SUM
+              </button>
+              <button id="admin-gs-fn-avg" class="gs-tb-btn font-mono font-bold text-xs gap-1" title="Insert =AVERAGE() Formula" type="button">
+                <span class="text-blue-700 font-black">Σ</span> AVG
+              </button>
+              <button id="admin-gs-fn-count" class="gs-tb-btn font-mono font-bold text-xs gap-1" title="Insert =COUNT() Formula" type="button">
+                <span class="text-purple-700 font-black">Σ</span> COUNT
+              </button>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Row & Cell Tools -->
+              <button id="admin-gs-add-row-btn" class="gs-tb-btn font-bold text-xs text-emerald-800 bg-emerald-100 hover:bg-emerald-200 gap-1 px-2.5 rounded-lg" title="Add Row Below" type="button">
+                <i class="fa-solid fa-plus text-xs"></i> Add Row
+              </button>
+              <button id="admin-gs-clear-cell-btn" class="gs-tb-btn text-xs text-rose-700 hover:bg-rose-50 gap-1 px-2 rounded-lg" title="Clear Cell (Delete)" type="button">
+                <i class="fa-solid fa-delete-left"></i> Clear
+              </button>
+            </div>
+
+            <!-- 3. Google Sheets Formula Bar -->
+            <div class="gs-formula-bar">
+              <div id="admin-gs-name-box" class="gs-name-box" title="Active Cell Address">A1</div>
+              <span class="gs-fx-symbol" title="Formula Symbol">fx</span>
+              <input type="text" id="admin-gs-formula-input" class="gs-formula-input" placeholder="Enter text or formula (e.g. =SUM(D2:D6), =D2*E2, =AVERAGE(E2:E6))" autocomplete="off" spellcheck="false" />
+            </div>
+
+            <!-- 4. Interactive Spreadsheet Grid Viewport -->
+            <div id="admin-gs-viewport" class="gs-grid-viewport custom-scrollbar">
+              <table id="admin-gs-table" class="gs-sheet-table">
+                <!-- Dynamically rendered table headers and grid cells -->
               </table>
             </div>
 
-            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Administrator Master View • Real-time synchronization active across all staff portals</span>
+            <!-- 5. Bottom Sheet Tabs Bar -->
+            <div class="gs-bottom-bar">
+              <div class="gs-tabs-left">
+                <button class="gs-add-tab-btn" title="Add sheet" type="button" id="admin-gs-add-tab"><i class="fa-solid fa-plus"></i></button>
+                <button class="gs-all-tabs-btn" title="All sheets" type="button"><i class="fa-solid fa-bars"></i></button>
+                <div class="gs-sheet-tab">
+                  <i class="fa-solid fa-table text-emerald-600 text-xs"></i>
+                  <span>Sheet1</span>
+                  <i class="fa-solid fa-caret-down text-[9px] text-slate-400"></i>
+                </div>
               </div>
-              <div class="text-slate-400">
-                CarbonAxis Corporate Database
+
+              <div class="gs-tabs-right">
+                <span class="text-[11px] text-slate-500 hidden md:inline">Admin Master Grid • Real-time live synchronization</span>
+                <button id="admin-gs-add-more-rows" class="gs-add-rows-btn" type="button">
+                  <i class="fa-solid fa-plus text-[10px]"></i> Add 20 more rows
+                </button>
+                <div class="flex items-center gap-1.5 ml-2 font-mono text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                  <span>Deals:</span>
+                  <span id="tab-sheet-count">0</span>
+                  <span class="text-slate-300">|</span>
+                  <span>Pipeline:</span>
+                  <span id="admin-gs-kpi-val">$0.00</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1392,119 +1478,207 @@
           </button>
         </div>
 
-        <!-- Section 1: Live Records Spreadsheet (Excel / Google Sheet View for Staff) -->
+        <!-- Section 1: Live Records Spreadsheet (Google Sheet View for Staff) -->
         <div id="emp-tab-sheet" class="space-y-4">
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            
-            <!-- Excel / Google Sheets Header & Toolbar -->
-            <div class="bg-emerald-800 text-white px-5 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-emerald-900/80 border border-emerald-700 flex items-center justify-center text-white text-lg shadow-inner">
-                  <i class="fa-solid fa-file-excel"></i>
+          <!-- Quick Status & Metric Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm text-xs">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                <i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i> Google Sheets Live Sync Active
+              </span>
+              <span class="text-slate-300 hidden sm:inline">|</span>
+              <span class="text-slate-600 font-medium hidden sm:inline">Click any cell, type values or formulas (=SUM, =D2*E2), format, or navigate with Arrow keys. All edits sync live with the Admin.</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="emp-gs-embed-toggle-btn" class="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold transition flex items-center gap-1.5 text-xs">
+                <i class="fa-brands fa-google-drive text-blue-600"></i> Connect Google Drive Sheet
+              </button>
+              <button id="emp-gs-export-btn" class="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold transition flex items-center gap-1.5 text-xs shadow-sm">
+                <i class="fa-solid fa-file-csv"></i> Export (.CSV)
+              </button>
+            </div>
+          </div>
+
+          <!-- Authentic Google Sheets Web App Shell -->
+          <div class="gs-app-container">
+            <!-- 1. Top Header App Bar -->
+            <div class="gs-topbar">
+              <div class="gs-brand-group">
+                <div class="gs-sheets-icon" title="Google Sheets">
+                  <i class="fa-solid fa-table-cells"></i>
                 </div>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <h3 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
-                      <span>CarbonAxis_Broker_Deals_Master.xlsx</span>
-                      <span class="text-[9px] bg-emerald-700/80 px-2 py-0.5 rounded font-mono font-normal">v2026.4</span>
-                    </h3>
-                    <span class="inline-flex items-center gap-1 bg-emerald-700/60 text-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-600">
-                      <i class="fa-solid fa-cloud-arrow-up text-emerald-300"></i> Cloud Synced with Admin
+                <div class="gs-title-area">
+                  <div class="gs-title-row">
+                    <input type="text" id="emp-gs-doc-title" class="gs-doc-title" value="CarbonAxis Master Deals 2026" spellcheck="false" title="Rename Spreadsheet" />
+                    <button id="emp-gs-star-btn" class="gs-star-btn active" title="Star spreadsheet" type="button"><i class="fa-solid fa-star"></i></button>
+                    <button class="gs-star-btn" title="Move to folder" type="button"><i class="fa-regular fa-folder"></i></button>
+                    <span id="emp-gs-cloud-status" class="gs-cloud-status" title="Cloud document sync status">
+                      <i class="fa-solid fa-cloud-check text-emerald-600"></i>
+                      <span id="emp-gs-status-text">All changes saved to Drive</span>
                     </span>
                   </div>
-                  <p class="text-[11px] text-emerald-200/90 mt-0.5">
-                    Interactive Excel / Google Sheets Grid. Edit cells, type new records, and update deal numbers. All rows synchronize live with the Administrator.
-                  </p>
+                  <!-- Menu Bar (Google Sheets Menu) -->
+                  <div class="gs-menu-bar">
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-file">File</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-edit">Edit</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-view">View</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-insert">Insert</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-format">Format</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-data">Data</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-tools">Tools</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-gemini">Gemini</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-extensions">Extensions</button>
+                    <button class="gs-menu-item" type="button" id="emp-gs-menu-help">Help</button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Quick Toolbar Actions -->
-              <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                <button id="emp-sheet-add-row-btn" class="px-3.5 py-2 text-xs font-bold text-emerald-950 bg-emerald-300 hover:bg-emerald-200 rounded-xl transition flex items-center gap-1.5 shadow-sm active:scale-98">
-                  <i class="fa-solid fa-plus text-xs"></i> Add Deal Row
+              <!-- Top Bar Right Controls -->
+              <div class="gs-topbar-actions">
+                <button class="gs-comment-btn" title="Open comment history" type="button">
+                  <i class="fa-regular fa-comment-dots"></i>
                 </button>
-                <button id="emp-sheet-export-btn" class="px-3 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-600 border border-emerald-600 rounded-xl transition flex items-center gap-1.5">
-                  <i class="fa-solid fa-file-csv text-xs"></i> Export Excel (.CSV)
+                <button id="emp-gs-share-btn" class="gs-share-btn" type="button" title="Share Spreadsheet">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                  <span>Share</span>
+                  <i class="fa-solid fa-caret-down text-[10px]"></i>
                 </button>
-              </div>
-            </div>
-
-            <!-- Formula & Metrics Bar (Google Sheet Formula Bar Style) -->
-            <div class="bg-slate-50 border-y border-slate-200 px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div class="flex flex-wrap items-center gap-3">
-                <span class="font-mono text-[11px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-200">
-                  <span class="text-emerald-600 font-black">fx</span> SUM / STATS
+                <span class="gs-gemini-spark" title="Ask Gemini AI in Sheets">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </span>
-                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span class="text-slate-400">Total Deals:</span>
-                  <strong id="emp-sheet-stat-count" class="text-slate-900 font-mono">0</strong>
-                </div>
-                <span class="text-slate-300">•</span>
-                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span class="text-slate-400">Total Ton Volume:</span>
-                  <strong id="emp-sheet-stat-volume" class="text-blue-700 font-mono">0 t</strong>
-                </div>
-                <span class="text-slate-300">•</span>
-                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span class="text-slate-400">Total Pipeline Value:</span>
-                  <strong id="emp-sheet-stat-value" class="text-emerald-700 font-mono font-black">$0.00</strong>
-                </div>
-                <span class="text-slate-300">•</span>
-                <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span class="text-slate-400">Avg Price/Ton:</span>
-                  <strong id="emp-sheet-stat-avg" class="text-slate-800 font-mono">$0.00/t</strong>
-                </div>
-              </div>
-
-              <!-- Search & Filter Controls -->
-              <div class="flex items-center gap-2 w-full lg:w-auto">
-                <div class="relative flex-1 sm:w-48">
-                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
-                  <input type="text" id="emp-sheet-search" placeholder="Search sheet..." class="w-full text-xs pl-7 pr-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 bg-white" />
-                </div>
-                <select id="emp-sheet-filter-stage" class="text-xs p-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 font-medium">
-                  <option value="all">All Stages</option>
-                  <option value="Lead Inbound">Lead Inbound</option>
-                  <option value="Call Scheduled">Call Scheduled</option>
-                  <option value="Term Sheet Sent">Term Sheet Sent</option>
-                  <option value="Negotiation">Negotiation</option>
-                  <option value="Closed Won">Closed Won</option>
-                  <option value="Closed Lost">Closed Lost</option>
-                </select>
+                <div id="emp-gs-avatar" class="gs-avatar-badge" title="Active Employee Account">AM</div>
               </div>
             </div>
 
-            <!-- Spreadsheet Table Container -->
-            <div class="overflow-x-auto custom-scrollbar">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-slate-100 text-slate-600 font-mono text-[11px] uppercase border-b border-slate-200 select-none">
-                  <tr>
-                    <th class="w-12 px-3 py-2.5 text-center border-r border-slate-200 text-slate-400">Row</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[170px]"><span class="text-emerald-700 font-bold">A</span> • Client / Company</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[180px]"><span class="text-emerald-700 font-bold">B</span> • Contact Email/Phone</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[190px]"><span class="text-emerald-700 font-bold">C</span> • Carbon Project Lot</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[110px]"><span class="text-emerald-700 font-bold">D</span> • Volume (t)</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[100px]"><span class="text-emerald-700 font-bold">E</span> • Price ($/t)</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[130px]"><span class="text-emerald-700 font-bold">F</span> • Deal Value ($)</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[140px]"><span class="text-emerald-700 font-bold">G</span> • Deal Stage</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[200px]"><span class="text-emerald-700 font-bold">H</span> • Notes & Remarks</th>
-                    <th class="px-4 py-2.5 border-r border-slate-200 min-w-[130px]"><span class="text-emerald-700 font-bold">I</span> • Staff Broker</th>
-                    <th class="px-3 py-2.5 text-center w-16">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="emp-sheet-tbody" class="divide-y divide-slate-200 bg-white text-slate-700">
-                  <!-- Rendered Spreadsheet Rows -->
-                </tbody>
+            <!-- 2. Action / Formatting Ribbon Toolbar -->
+            <div class="gs-toolbar custom-scrollbar">
+              <button id="emp-gs-search-btn" class="gs-tb-btn" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+              <button id="emp-gs-undo-btn" class="gs-tb-btn" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+              <button id="emp-gs-redo-btn" class="gs-tb-btn" title="Redo (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
+              <button id="emp-gs-print-btn" class="gs-tb-btn" title="Print Spreadsheet"><i class="fa-solid fa-print"></i></button>
+              <button class="gs-tb-btn" title="Paint format"><i class="fa-solid fa-paintbrush"></i></button>
+              <div class="gs-tb-divider"></div>
+
+              <select class="gs-tb-select" title="Zoom">
+                <option>100%</option>
+                <option>90%</option>
+                <option>125%</option>
+              </select>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Currency & Formatting -->
+              <button id="emp-gs-fmt-currency" class="gs-tb-btn font-bold text-xs" title="Format as currency ($)">$</button>
+              <button id="emp-gs-fmt-percent" class="gs-tb-btn font-bold text-xs" title="Format as percent (%)">%</button>
+              <button id="emp-gs-fmt-dec-down" class="gs-tb-btn font-mono text-[11px]" title="Decrease decimal places">.0</button>
+              <button id="emp-gs-fmt-dec-up" class="gs-tb-btn font-mono text-[11px]" title="Increase decimal places">.00</button>
+              <select id="emp-gs-fmt-type" class="gs-tb-select font-mono text-xs" title="More formats">
+                <option value="auto">123 ▾</option>
+                <option value="number">Number</option>
+                <option value="currency">Currency ($)</option>
+                <option value="percent">Percent (%)</option>
+                <option value="text">Plain text</option>
+              </select>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Font & Size -->
+              <select id="emp-gs-font-fam" class="gs-tb-select" title="Font family">
+                <option value="Arial">Arial</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Courier New">Courier</option>
+                <option value="Georgia">Georgia</option>
+              </select>
+              <div class="gs-font-size-control">
+                <button id="emp-gs-font-down" class="gs-tb-btn" title="Decrease font size" type="button"><i class="fa-solid fa-minus text-[9px]"></i></button>
+                <span id="emp-gs-font-size-val" class="gs-font-size-val font-mono">10</span>
+                <button id="emp-gs-font-up" class="gs-tb-btn" title="Increase font size" type="button"><i class="fa-solid fa-plus text-[9px]"></i></button>
+              </div>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Styling Buttons -->
+              <button id="emp-gs-bold-btn" class="gs-tb-btn font-black text-sm" title="Bold (Ctrl+B)" type="button">B</button>
+              <button id="emp-gs-italic-btn" class="gs-tb-btn italic font-serif text-sm" title="Italic (Ctrl+I)" type="button">I</button>
+              <button id="emp-gs-strike-btn" class="gs-tb-btn line-through text-sm" title="Strikethrough" type="button">S</button>
+              
+              <!-- Text Color Picker -->
+              <label class="gs-tb-btn relative cursor-pointer" title="Text color">
+                <span class="font-bold border-b-2 border-slate-900 leading-none">A</span>
+                <input type="color" id="emp-gs-color-text" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" value="#000000" />
+              </label>
+
+              <!-- Fill Bucket Color Picker -->
+              <label class="gs-tb-btn relative cursor-pointer" title="Fill color">
+                <i class="fa-solid fa-fill-drip text-xs"></i>
+                <input type="color" id="emp-gs-color-bg" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer" value="#ffffff" />
+              </label>
+
+              <button id="emp-gs-borders-btn" class="gs-tb-btn" title="Borders" type="button"><i class="fa-solid fa-border-all"></i></button>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Alignments -->
+              <button id="emp-gs-align-left" class="gs-tb-btn active" title="Left align" type="button"><i class="fa-solid fa-align-left"></i></button>
+              <button id="emp-gs-align-center" class="gs-tb-btn" title="Center align" type="button"><i class="fa-solid fa-align-center"></i></button>
+              <button id="emp-gs-align-right" class="gs-tb-btn" title="Right align" type="button"><i class="fa-solid fa-align-right"></i></button>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Functions Dropdowns (Σ SUM, AVERAGE, COUNT, MAX, MIN) -->
+              <button id="emp-gs-fn-sum" class="gs-tb-btn font-mono font-bold text-xs gap-1" title="Insert =SUM() Formula" type="button">
+                <span class="text-emerald-700 font-black">Σ</span> SUM
+              </button>
+              <button id="emp-gs-fn-avg" class="gs-tb-btn font-mono font-bold text-xs gap-1" title="Insert =AVERAGE() Formula" type="button">
+                <span class="text-blue-700 font-black">Σ</span> AVG
+              </button>
+              <button id="emp-gs-fn-count" class="gs-tb-btn font-mono font-bold text-xs gap-1" title="Insert =COUNT() Formula" type="button">
+                <span class="text-purple-700 font-black">Σ</span> COUNT
+              </button>
+              <div class="gs-tb-divider"></div>
+
+              <!-- Row & Cell Tools -->
+              <button id="emp-gs-add-row-btn" class="gs-tb-btn font-bold text-xs text-emerald-800 bg-emerald-100 hover:bg-emerald-200 gap-1 px-2.5 rounded-lg" title="Add Row Below" type="button">
+                <i class="fa-solid fa-plus text-xs"></i> Add Row
+              </button>
+              <button id="emp-gs-clear-cell-btn" class="gs-tb-btn text-xs text-rose-700 hover:bg-rose-50 gap-1 px-2 rounded-lg" title="Clear Cell (Delete)" type="button">
+                <i class="fa-solid fa-delete-left"></i> Clear
+              </button>
+            </div>
+
+            <!-- 3. Google Sheets Formula Bar -->
+            <div class="gs-formula-bar">
+              <div id="emp-gs-name-box" class="gs-name-box" title="Active Cell Address">A1</div>
+              <span class="gs-fx-symbol" title="Formula Symbol">fx</span>
+              <input type="text" id="emp-gs-formula-input" class="gs-formula-input" placeholder="Enter text or formula (e.g. =SUM(D2:D6), =D2*E2, =AVERAGE(E2:E6))" autocomplete="off" spellcheck="false" />
+            </div>
+
+            <!-- 4. Interactive Spreadsheet Grid Viewport -->
+            <div id="emp-gs-viewport" class="gs-grid-viewport custom-scrollbar">
+              <table id="emp-gs-table" class="gs-sheet-table">
+                <!-- Dynamically rendered table headers and grid cells -->
               </table>
             </div>
 
-            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Live Spreadsheet Grid • Click any cell to edit directly • Auto-calculates values</span>
+            <!-- 5. Bottom Sheet Tabs Bar -->
+            <div class="gs-bottom-bar">
+              <div class="gs-tabs-left">
+                <button class="gs-add-tab-btn" title="Add sheet" type="button" id="emp-gs-add-tab"><i class="fa-solid fa-plus"></i></button>
+                <button class="gs-all-tabs-btn" title="All sheets" type="button"><i class="fa-solid fa-bars"></i></button>
+                <div class="gs-sheet-tab">
+                  <i class="fa-solid fa-table text-emerald-600 text-xs"></i>
+                  <span>Sheet1</span>
+                  <i class="fa-solid fa-caret-down text-[9px] text-slate-400"></i>
+                </div>
               </div>
-              <div class="text-slate-400">
-                Synchronized with Administrator Audit Ledger
+
+              <div class="gs-tabs-right">
+                <span class="text-[11px] text-slate-500 hidden md:inline">Navigate: Arrow keys, Tab, Enter • Formula: =SUM(D2:D6)</span>
+                <button id="emp-gs-add-more-rows" class="gs-add-rows-btn" type="button">
+                  <i class="fa-solid fa-plus text-[10px]"></i> Add 20 more rows
+                </button>
+                <div class="flex items-center gap-1.5 ml-2 font-mono text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                  <span>Deals:</span>
+                  <span id="emp-sheet-records-count">0</span>
+                  <span class="text-slate-300">|</span>
+                  <span>Pipeline:</span>
+                  <span id="emp-gs-kpi-val">$0.00</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1982,6 +2156,51 @@
             </div>
             <i class="fa-brands fa-whatsapp text-[#25D366] text-sm"></i>
           </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GOOGLE DRIVE LIVE SPREADSHEET MODAL ==================== -->
+  <div id="gsheet-embed-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-overlay flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+            <i class="fa-brands fa-google-drive text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Connect Google Drive Spreadsheet</h3>
+            <p class="text-[11px] text-slate-500">Embed a live Google Sheets doc or keep using the native spreadsheet editor</p>
+          </div>
+        </div>
+        <button id="close-gsheet-embed-modal" class="text-slate-400 hover:text-slate-600 text-lg p-1.5 transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Google Sheet Public / Edit URL</label>
+          <input type="url" id="gsheet-embed-url-input" placeholder="https://docs.google.com/spreadsheets/d/.../edit?usp=sharing" class="w-full p-2.5 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-blue-500" />
+          <p class="text-[10px] text-slate-400 mt-1">
+            Tip: In Google Sheets, click <strong>File &gt; Share &gt; Publish to web</strong> or set Share to "Anyone with the link can edit/view".
+          </p>
+        </div>
+
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] space-y-1">
+          <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-amber-600"></i> Two Modes Available:</span>
+          <p>1. <strong>Native Google Sheets Mode:</strong> Full interactive in-app Google Sheets grid with instant auto-save, live admin sync, formula calculation, and keyboard shortcuts.</p>
+          <p>2. <strong>Embedded Google Drive Mode:</strong> Embeds your external Google Workspace document via secure iframe.</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button id="gsheet-embed-reset-btn" class="w-full sm:w-auto px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">
+            Use Native Google Sheet Grid
+          </button>
+          <button id="gsheet-embed-save-btn" class="w-full sm:w-auto px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-md">
+            Save & Connect Link
+          </button>
         </div>
       </div>
     </div>

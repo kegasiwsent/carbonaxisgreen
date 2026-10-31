@@ -111,3 +111,550 @@ body {
   background: #CBD5E1;
   border-radius: 3px;
 }
+
+/* ==========================================================================
+   Google Sheets Authentic Interface Styling
+   Matches Google Sheets Web UI (media_1793460731574_84963101.png)
+   ========================================================================== */
+
+.gs-app-container {
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: Roboto, Arial, sans-serif;
+  color: #1f1f1f;
+}
+
+/* Top App Bar */
+.gs-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 4px 16px;
+  background: #f9fbfd;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.gs-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gs-sheets-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #0f9d58;
+  color: #ffffff;
+  font-size: 19px;
+  box-shadow: 0 1px 3px rgba(15, 157, 88, 0.3);
+}
+
+.gs-title-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.gs-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gs-doc-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f1f1f;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
+  transition: all 0.15s ease;
+  max-width: 280px;
+}
+.gs-doc-title:hover {
+  border-color: #dadce0;
+}
+.gs-doc-title:focus {
+  border-color: #1a73e8;
+  background: #ffffff;
+}
+
+.gs-star-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #5f6368;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+.gs-star-btn:hover {
+  color: #fbbc04;
+}
+.gs-star-btn.active {
+  color: #fbbc04;
+}
+
+.gs-cloud-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #5f6368;
+  margin-left: 6px;
+  font-weight: 400;
+}
+.gs-cloud-status i {
+  color: #0f9d58;
+  font-size: 12px;
+}
+
+.gs-menu-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.gs-menu-item {
+  font-size: 12px;
+  color: #444746;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease;
+  background: transparent;
+  border: none;
+}
+.gs-menu-item:hover {
+  background: #edf2fc;
+  color: #1f1f1f;
+}
+
+/* Top Bar Right Controls */
+.gs-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gs-comment-btn {
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #444746;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.gs-comment-btn:hover {
+  background: #edf2fc;
+}
+
+.gs-share-btn {
+  background: #c2e7ff;
+  color: #001d35;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.gs-share-btn:hover {
+  background: #b3d7ef;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.gs-gemini-spark {
+  color: #7c3aed;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.gs-avatar-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1e3a8a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* Ribbon Toolbar */
+.gs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #edf2fc;
+  border-radius: 24px;
+  padding: 3px 8px;
+  margin: 6px 14px 6px 14px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.gs-tb-btn {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #444746;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+.gs-tb-btn:hover {
+  background: #dfe4ec;
+  color: #1f1f1f;
+}
+.gs-tb-btn.active {
+  background: #d3e3fd;
+  color: #0b57d0;
+  font-weight: bold;
+}
+.gs-tb-btn i {
+  font-size: 11px;
+}
+
+.gs-tb-divider {
+  width: 1px;
+  height: 18px;
+  background: #c4c7c5;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.gs-tb-select {
+  height: 24px;
+  font-size: 11px;
+  border: none;
+  background: transparent;
+  color: #444746;
+  padding: 0 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+.gs-tb-select:hover {
+  background: #dfe4ec;
+}
+
+.gs-font-size-control {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border-radius: 4px;
+}
+.gs-font-size-val {
+  min-width: 22px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: #1f1f1f;
+}
+
+/* Formula Bar */
+.gs-formula-bar {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-top: 1px solid #e1e3e1;
+  border-bottom: 1px solid #e1e3e1;
+  height: 32px;
+  padding: 0 8px;
+}
+
+.gs-name-box {
+  width: 68px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid #e1e3e1;
+  font-family: Roboto Mono, monospace;
+  font-weight: 700;
+  font-size: 12px;
+  color: #1f1f1f;
+  text-align: center;
+  padding-right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.gs-fx-symbol {
+  font-style: italic;
+  font-weight: 700;
+  color: #747775;
+  font-size: 13px;
+  padding: 0 8px;
+  user-select: none;
+}
+
+.gs-formula-input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 12px;
+  color: #1f1f1f;
+  padding: 0 8px;
+  background: transparent;
+}
+.gs-formula-input:focus {
+  background: #fbfcfe;
+}
+
+/* Spreadsheet Grid Viewport */
+.gs-grid-viewport {
+  position: relative;
+  overflow: auto;
+  max-height: 540px;
+  min-height: 360px;
+  background: #ffffff;
+}
+
+.gs-sheet-table {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  font-family: Arial, Roboto, sans-serif;
+  font-size: 12px;
+  color: #1f1f1f;
+  width: max-content;
+  user-select: none;
+}
+
+/* Header Cells */
+.gs-corner-header {
+  width: 44px;
+  min-width: 44px;
+  height: 24px;
+  background: #f8fafd;
+  border-right: 1px solid #c0c0c0;
+  border-bottom: 1px solid #c0c0c0;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 30;
+}
+
+.gs-col-header {
+  height: 24px;
+  min-width: 120px;
+  max-width: 240px;
+  background: #f8fafd;
+  border-right: 1px solid #c0c0c0;
+  border-bottom: 1px solid #c0c0c0;
+  text-align: center;
+  font-weight: 600;
+  color: #5f6368;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  user-select: none;
+  font-size: 11px;
+  transition: background 0.1s;
+}
+
+.gs-col-header.gs-active {
+  background: #e8f0fe !important;
+  color: #1a73e8 !important;
+  border-bottom: 2px solid #1a73e8 !important;
+  font-weight: 700 !important;
+}
+
+.gs-row-header {
+  width: 44px;
+  min-width: 44px;
+  height: 24px;
+  background: #f8fafd;
+  border-right: 1px solid #c0c0c0;
+  border-bottom: 1px solid #e1e3e1;
+  text-align: center;
+  font-weight: 500;
+  color: #5f6368;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  user-select: none;
+  font-size: 11px;
+  transition: background 0.1s;
+}
+
+.gs-row-header.gs-active {
+  background: #e8f0fe !important;
+  color: #1a73e8 !important;
+  border-right: 2px solid #1a73e8 !important;
+  font-weight: 700 !important;
+}
+
+/* Grid Data Cells */
+.gs-cell {
+  height: 24px;
+  border-right: 1px solid #e1e3e1;
+  border-bottom: 1px solid #e1e3e1;
+  padding: 0 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  outline: none;
+  position: relative;
+  background: #ffffff;
+  font-size: 12px;
+  line-height: 23px;
+  user-select: none;
+  cursor: cell;
+}
+
+.gs-cell.gs-selected {
+  outline: 2px solid #1a73e8 !important;
+  outline-offset: -1px;
+  z-index: 15;
+}
+
+/* Fill Handle (Blue resize/drag square in Google Sheets) */
+.gs-drag-handle {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 6px;
+  height: 6px;
+  background: #1a73e8;
+  border: 1px solid #ffffff;
+  cursor: crosshair;
+  z-index: 25;
+  pointer-events: none;
+}
+
+/* In-place cell editor */
+.gs-cell-editor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  background: #ffffff;
+  padding: 0 5px;
+  box-sizing: border-box;
+  z-index: 20;
+}
+
+/* Bottom Sheet Tabs Bar */
+.gs-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  background: #f8fafd;
+  border-top: 1px solid #e1e3e1;
+  padding: 0 10px;
+  user-select: none;
+}
+
+.gs-tabs-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gs-add-tab-btn, .gs-all-tabs-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: #444746;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.12s;
+}
+.gs-add-tab-btn:hover, .gs-all-tabs-btn:hover {
+  background: #dfe4ec;
+}
+
+.gs-sheet-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px 6px 0 0;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-bottom: 2px solid #1a73e8;
+  color: #1a73e8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.gs-tabs-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #5f6368;
+}
+
+.gs-add-rows-btn {
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #1f1f1f;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.gs-add-rows-btn:hover {
+  background: #f1f3f4;
+  border-color: #c4c7c5;
+}
+
