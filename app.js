@@ -161,7 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
     projects: document.getElementById('view-projects'),
     marketplace: document.getElementById('view-marketplace'),
     transparency: document.getElementById('view-transparency'),
-    admin: document.getElementById('view-admin')
+    admin: document.getElementById('view-admin'),
+    employee: document.getElementById('view-employee')
   };
 
   const navLinks = document.querySelectorAll('.nav-link-btn');
@@ -202,6 +203,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // If switching to admin view, initialize check
     if (viewKey === 'admin') {
       checkAdminAuth();
+    }
+
+    // If switching to employee view, initialize check
+    if (viewKey === 'employee') {
+      checkEmployeeAuth();
     }
   }
 
@@ -617,9 +623,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Admin tab buttons
   const tabInquiriesBtn = document.getElementById('admin-tab-inquiries-btn');
   const tabTradesBtn = document.getElementById('admin-tab-trades-btn');
+  const tabEmployeesBtn = document.getElementById('admin-tab-employees-btn');
+  const tabLogsBtn = document.getElementById('admin-tab-logs-btn');
 
   const tabInquiriesView = document.getElementById('admin-tab-inquiries');
   const tabTradesView = document.getElementById('admin-tab-trades');
+  const tabEmployeesView = document.getElementById('admin-tab-employees');
+  const tabLogsView = document.getElementById('admin-tab-logs');
 
   const searchInput = document.getElementById('admin-search-input');
   const statusFilter = document.getElementById('admin-status-filter');
@@ -679,34 +689,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Tab switching inside Admin Dashboard
   function switchAdminTab(tabName) {
-    [tabInquiriesBtn, tabTradesBtn].forEach(b => {
+    [tabInquiriesBtn, tabTradesBtn, tabEmployeesBtn, tabLogsBtn].forEach(b => {
       if (b) {
         b.classList.remove('border-green-600', 'text-green-600', 'active');
         b.classList.add('border-transparent', 'text-slate-500');
       }
     });
 
-    [tabInquiriesView, tabTradesView].forEach(v => {
+    [tabInquiriesView, tabTradesView, tabEmployeesView, tabLogsView].forEach(v => {
       if (v) v.classList.add('hidden');
     });
 
     if (tabName === 'inquiries') {
-      tabInquiriesBtn.classList.add('border-green-600', 'text-green-600', 'active');
-      tabInquiriesBtn.classList.remove('border-transparent', 'text-slate-500');
-      tabInquiriesView.classList.remove('hidden');
+      if (tabInquiriesBtn) {
+        tabInquiriesBtn.classList.add('border-green-600', 'text-green-600', 'active');
+        tabInquiriesBtn.classList.remove('border-transparent', 'text-slate-500');
+      }
+      if (tabInquiriesView) tabInquiriesView.classList.remove('hidden');
     } else if (tabName === 'trades') {
-      tabTradesBtn.classList.add('border-green-600', 'text-green-600', 'active');
-      tabTradesBtn.classList.remove('border-transparent', 'text-slate-500');
-      tabTradesView.classList.remove('hidden');
+      if (tabTradesBtn) {
+        tabTradesBtn.classList.add('border-green-600', 'text-green-600', 'active');
+        tabTradesBtn.classList.remove('border-transparent', 'text-slate-500');
+      }
+      if (tabTradesView) tabTradesView.classList.remove('hidden');
+    } else if (tabName === 'employees') {
+      if (tabEmployeesBtn) {
+        tabEmployeesBtn.classList.add('border-green-600', 'text-green-600', 'active');
+        tabEmployeesBtn.classList.remove('border-transparent', 'text-slate-500');
+      }
+      if (tabEmployeesView) tabEmployeesView.classList.remove('hidden');
+      renderAdminEmployeesTable();
+    } else if (tabName === 'logs') {
+      if (tabLogsBtn) {
+        tabLogsBtn.classList.add('border-green-600', 'text-green-600', 'active');
+        tabLogsBtn.classList.remove('border-transparent', 'text-slate-500');
+      }
+      if (tabLogsView) tabLogsView.classList.remove('hidden');
+      renderAdminEmployeeLogs();
     }
   }
 
   if (tabInquiriesBtn) tabInquiriesBtn.addEventListener('click', () => switchAdminTab('inquiries'));
   if (tabTradesBtn) tabTradesBtn.addEventListener('click', () => switchAdminTab('trades'));
+  if (tabEmployeesBtn) tabEmployeesBtn.addEventListener('click', () => switchAdminTab('employees'));
+  if (tabLogsBtn) tabLogsBtn.addEventListener('click', () => switchAdminTab('logs'));
 
   async function loadAdminDashboardData() {
     currentInquiries = await fetchInquiries();
     currentTrades = await fetchTrades();
+    const employees = getEmployees();
+    const logs = getEmployeeLogs();
 
     // Update KPI counts
     const totalInquiriesEl = document.getElementById('stat-total-inquiries');
@@ -714,6 +746,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalTradesEl = document.getElementById('stat-total-trades');
     const tabInqCountEl = document.getElementById('tab-inquiries-count');
     const tabTrCountEl = document.getElementById('tab-trades-count');
+    const tabEmpCountEl = document.getElementById('tab-employees-count');
+    const tabLogsCountEl = document.getElementById('tab-logs-count');
+    const adminEmpCountDisplay = document.getElementById('admin-emp-count-display');
 
     const newCount = currentInquiries.filter(i => (i.status || 'New') === 'New').length;
 
@@ -722,9 +757,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (totalTradesEl) totalTradesEl.textContent = currentTrades.length;
     if (tabInqCountEl) tabInqCountEl.textContent = currentInquiries.length;
     if (tabTrCountEl) tabTrCountEl.textContent = currentTrades.length;
+    if (tabEmpCountEl) tabEmpCountEl.textContent = `${employees.length}/10`;
+    if (adminEmpCountDisplay) adminEmpCountDisplay.textContent = employees.length;
+    if (tabLogsCountEl) tabLogsCountEl.textContent = logs.length;
 
     renderInquiriesTable();
     renderTradesTable();
+    renderAdminEmployeesTable();
+    renderAdminEmployeeLogs();
   }
 
   function renderInquiriesTable() {
@@ -930,6 +970,951 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (searchInput) searchInput.addEventListener('input', renderInquiriesTable);
   if (statusFilter) statusFilter.addEventListener('change', renderInquiriesTable);
+
+  // ==================== 8. Staff / Employee Account Provisioning & Activity Audit System ====================
+  const adminOpenAddEmpBtn = document.getElementById('admin-open-add-emp-btn');
+  const adminEmpModal = document.getElementById('admin-employee-modal');
+  const adminCloseEmpModalBtn = document.getElementById('admin-close-emp-modal-btn');
+  const adminCancelEmpModalBtn = document.getElementById('admin-cancel-emp-modal-btn');
+  const adminEmpForm = document.getElementById('admin-employee-form');
+  const adminEmpIdInput = document.getElementById('admin-emp-id-input');
+  const adminEmpNameInput = document.getElementById('admin-emp-name-input');
+  const adminEmpUserInput = document.getElementById('admin-emp-user-input');
+  const adminEmpPassInput = document.getElementById('admin-emp-pass-input');
+  const adminEmpRoleSelect = document.getElementById('admin-emp-role-select');
+  const adminEmpEmailInput = document.getElementById('admin-emp-email-input');
+  const adminEmpStatusSelect = document.getElementById('admin-emp-status-select');
+  const adminEmpModalTitle = document.getElementById('admin-emp-modal-title');
+
+  const adminLogsSearch = document.getElementById('admin-logs-search');
+  const adminLogsFilterEmp = document.getElementById('admin-logs-filter-employee');
+  const adminLogsFilterAction = document.getElementById('admin-logs-filter-action');
+  const adminExportLogsBtn = document.getElementById('admin-export-logs-btn');
+
+  // Employee Portal Elements
+  const employeeAuthForm = document.getElementById('employee-auth-form');
+  const employeeUsernameInput = document.getElementById('employee-username-input');
+  const employeePasswordInput = document.getElementById('employee-password-input');
+  const employeeLoginCard = document.getElementById('employee-login-card');
+  const employeeDashboardView = document.getElementById('employee-dashboard-view');
+  const employeeLogoutBtn = document.getElementById('employee-logout-btn');
+  const employeeRefreshBtn = document.getElementById('employee-refresh-btn');
+  const empDashName = document.getElementById('emp-dash-name');
+  const empDashUsername = document.getElementById('emp-dash-username');
+  const empDashRoleBadge = document.getElementById('emp-dash-role-badge');
+  const empLiveTimer = document.getElementById('emp-live-timer');
+
+  const empLeadsFilter = document.getElementById('emp-leads-filter');
+  const empLeadsContainer = document.getElementById('emp-leads-container');
+  const empInteractionForm = document.getElementById('emp-interaction-form');
+  const empIntClient = document.getElementById('emp-int-client');
+  const empIntChannel = document.getElementById('emp-int-channel');
+  const empIntNotes = document.getElementById('emp-int-notes');
+  const empSessionLogList = document.getElementById('emp-session-log-list');
+
+  // Note Modal Elements
+  const employeeNoteModal = document.getElementById('employee-note-modal');
+  const closeEmpNoteModalBtn = document.getElementById('close-emp-note-modal-btn');
+  const cancelEmpNoteModalBtn = document.getElementById('cancel-emp-note-modal-btn');
+  const employeeNoteForm = document.getElementById('employee-note-form');
+  const empNoteLeadId = document.getElementById('emp-note-lead-id');
+  const empNoteContent = document.getElementById('emp-note-content');
+  const empNoteModalSubtitle = document.getElementById('emp-note-modal-subtitle');
+
+  function getEmployees() {
+    let list = [];
+    try {
+      const stored = localStorage.getItem('carbonaxis_employees');
+      if (stored) list = JSON.parse(stored);
+    } catch (e) {
+      console.warn('Error reading employees:', e);
+    }
+
+    if (!list || list.length === 0) {
+      list = [
+        {
+          id: 'EMP-1001',
+          name: 'Alex Morgan',
+          username: 'alex_broker',
+          password: 'broker123',
+          role: 'Carbon Credit Broker',
+          email: 'alex@carbonaxisgreen.com',
+          status: 'Active',
+          created_at: new Date().toISOString(),
+          last_login: null,
+          last_logout: null,
+          is_online: false,
+          login_count: 0
+        }
+      ];
+      localStorage.setItem('carbonaxis_employees', JSON.stringify(list));
+    }
+    return list;
+  }
+
+  function saveEmployees(list) {
+    localStorage.setItem('carbonaxis_employees', JSON.stringify(list));
+  }
+
+  function getEmployeeLogs() {
+    try {
+      return JSON.parse(localStorage.getItem('carbonaxis_employee_logs') || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveEmployeeLogs(list) {
+    localStorage.setItem('carbonaxis_employee_logs', JSON.stringify(list));
+  }
+
+  async function logEmployeeActivity({ employee, action_type, action_label, details, session_id }) {
+    let emp = employee;
+    if (!emp) {
+      try {
+        emp = JSON.parse(sessionStorage.getItem('carbonaxis_current_employee') || 'null');
+      } catch (e) {}
+    }
+
+    const logEntry = {
+      id: 'LOG-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      timestamp: new Date().toISOString(),
+      employee_id: emp?.id || 'EMP-UNKNOWN',
+      employee_name: emp?.name || 'Staff Member',
+      employee_username: emp?.username || 'unknown',
+      employee_role: emp?.role || 'Broker/Specialist',
+      action_type: action_type || 'ACTIVITY',
+      action_label: action_label || 'Workspace Action',
+      details: details || '',
+      session_id: session_id || emp?.session_id || 'SESS-WEB'
+    };
+
+    const logs = getEmployeeLogs();
+    logs.unshift(logEntry);
+    saveEmployeeLogs(logs);
+
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('employee_audit_logs').insert([logEntry]);
+      } catch (err) {
+        // Fallback gracefully
+      }
+    }
+
+    const tabLogsCountEl = document.getElementById('tab-logs-count');
+    if (tabLogsCountEl) tabLogsCountEl.textContent = logs.length;
+
+    renderAdminEmployeeLogs();
+    renderEmployeeSessionFeed();
+    updateEmployeeKPIs();
+
+    return logEntry;
+  }
+
+  function openEmployeeModal(empToEdit = null) {
+    if (!adminEmpModal) return;
+    if (empToEdit) {
+      if (adminEmpModalTitle) adminEmpModalTitle.innerHTML = '<i class="fa-solid fa-user-pen text-blue-600"></i> Edit Employee Account';
+      if (adminEmpIdInput) adminEmpIdInput.value = empToEdit.id;
+      if (adminEmpNameInput) adminEmpNameInput.value = empToEdit.name;
+      if (adminEmpUserInput) {
+        adminEmpUserInput.value = empToEdit.username;
+        adminEmpUserInput.disabled = true;
+      }
+      if (adminEmpPassInput) adminEmpPassInput.value = empToEdit.password;
+      if (adminEmpRoleSelect) adminEmpRoleSelect.value = empToEdit.role;
+      if (adminEmpEmailInput) adminEmpEmailInput.value = empToEdit.email || '';
+      if (adminEmpStatusSelect) adminEmpStatusSelect.value = empToEdit.status;
+    } else {
+      if (adminEmpModalTitle) adminEmpModalTitle.innerHTML = '<i class="fa-solid fa-user-plus text-blue-600"></i> Create New Employee Account';
+      if (adminEmpIdInput) adminEmpIdInput.value = '';
+      if (adminEmpNameInput) adminEmpNameInput.value = '';
+      if (adminEmpUserInput) {
+        adminEmpUserInput.value = '';
+        adminEmpUserInput.disabled = false;
+      }
+      if (adminEmpPassInput) adminEmpPassInput.value = '';
+      if (adminEmpRoleSelect) adminEmpRoleSelect.selectedIndex = 0;
+      if (adminEmpEmailInput) adminEmpEmailInput.value = '';
+      if (adminEmpStatusSelect) adminEmpStatusSelect.value = 'Active';
+    }
+    adminEmpModal.classList.remove('hidden');
+  }
+
+  function closeEmployeeModal() {
+    if (adminEmpModal) adminEmpModal.classList.add('hidden');
+    if (adminEmpUserInput) adminEmpUserInput.disabled = false;
+  }
+
+  if (adminOpenAddEmpBtn) {
+    adminOpenAddEmpBtn.addEventListener('click', () => {
+      const employees = getEmployees();
+      if (employees.length >= 10) {
+        alert('Employee account limit reached (10/10). Maximum of 10 staff accounts permitted.');
+        return;
+      }
+      openEmployeeModal();
+    });
+  }
+
+  if (adminCloseEmpModalBtn) adminCloseEmpModalBtn.addEventListener('click', closeEmployeeModal);
+  if (adminCancelEmpModalBtn) adminCancelEmpModalBtn.addEventListener('click', closeEmployeeModal);
+
+  if (adminEmpForm) {
+    adminEmpForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const employees = getEmployees();
+      const empId = adminEmpIdInput?.value.trim();
+      const name = (adminEmpNameInput?.value || '').trim();
+      const username = (adminEmpUserInput?.value || '').trim().toLowerCase();
+      const password = (adminEmpPassInput?.value || '').trim();
+      const role = adminEmpRoleSelect?.value || 'Carbon Credit Broker';
+      const email = (adminEmpEmailInput?.value || '').trim();
+      const status = adminEmpStatusSelect?.value || 'Active';
+
+      if (!name || !username || !password) {
+        alert('Please complete all required fields (Name, Username, Password).');
+        return;
+      }
+
+      if (empId) {
+        // Edit existing
+        const idx = employees.findIndex(e => e.id === empId);
+        if (idx !== -1) {
+          employees[idx].name = name;
+          employees[idx].password = password;
+          employees[idx].role = role;
+          employees[idx].email = email;
+          employees[idx].status = status;
+          saveEmployees(employees);
+          alert(`Employee "${name}" updated successfully.`);
+        }
+      } else {
+        // Create new
+        if (employees.length >= 10) {
+          alert('Employee account limit reached (10/10). Maximum of 10 staff accounts permitted.');
+          return;
+        }
+
+        const usernameExists = employees.some(e => e.username.toLowerCase() === username);
+        if (usernameExists) {
+          alert(`Username "${username}" is already assigned to another staff member. Please use a unique login username.`);
+          return;
+        }
+
+        const newEmp = {
+          id: 'EMP-' + (1000 + employees.length + 1),
+          name,
+          username,
+          password,
+          role,
+          email,
+          status,
+          created_at: new Date().toISOString(),
+          last_login: null,
+          last_logout: null,
+          is_online: false,
+          login_count: 0
+        };
+
+        employees.push(newEmp);
+        saveEmployees(employees);
+        alert(`New employee account created: ${name} (@${username})`);
+      }
+
+      closeEmployeeModal();
+      loadAdminDashboardData();
+    });
+  }
+
+  function renderAdminEmployeesTable() {
+    const tbody = document.getElementById('admin-employees-tbody');
+    const counterDisplay = document.getElementById('admin-emp-count-display');
+    const tabEmpCountEl = document.getElementById('tab-employees-count');
+    if (!tbody) return;
+
+    const employees = getEmployees();
+    if (counterDisplay) counterDisplay.textContent = employees.length;
+    if (tabEmpCountEl) tabEmpCountEl.textContent = `${employees.length}/10`;
+
+    if (employees.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="px-5 py-8 text-center text-slate-400">
+            <i class="fa-solid fa-users text-2xl mb-2 block"></i>
+            No employee accounts configured. Click "Create Employee" to add your first staff member (up to 10).
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = employees.map((emp) => {
+      const isOnline = emp.is_online === true;
+      const onlineBadge = isOnline 
+        ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Online</span>`
+        : `<span class="text-[10px] text-slate-400 font-medium">Offline</span>`;
+
+      const statusBadge = emp.status === 'Active'
+        ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">Active</span>`
+        : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">Suspended</span>`;
+
+      const lastLoginStr = emp.last_login 
+        ? `${new Date(emp.last_login).toLocaleDateString()} <span class="text-[10px] text-slate-400">${new Date(emp.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`
+        : '<span class="text-slate-400 italic">Never</span>';
+
+      const lastLogoutStr = emp.last_logout
+        ? `${new Date(emp.last_logout).toLocaleDateString()} <span class="text-[10px] text-slate-400">${new Date(emp.last_logout).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`
+        : '<span class="text-slate-400 italic">—</span>';
+
+      return `
+        <tr class="hover:bg-slate-50/80 transition" data-id="${emp.id}">
+          <td class="px-5 py-3.5">
+            <span class="font-mono text-[11px] font-bold text-slate-900 block">${emp.id}</span>
+            <span class="font-mono text-[11px] text-blue-600 font-medium">@${escapeHtml(emp.username)}</span>
+          </td>
+          <td class="px-5 py-3.5">
+            <span class="font-bold text-slate-900 block">${escapeHtml(emp.name)}</span>
+            <span class="text-[10px] text-slate-500 font-medium">${escapeHtml(emp.role)}</span>
+          </td>
+          <td class="px-5 py-3.5">
+            <span class="font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-slate-700" title="Password">${escapeHtml(emp.password)}</span>
+          </td>
+          <td class="px-5 py-3.5 space-y-1">
+            <div>${statusBadge}</div>
+            <div>${onlineBadge}</div>
+          </td>
+          <td class="px-5 py-3.5 text-[11px] text-slate-600">
+            ${lastLoginStr}
+          </td>
+          <td class="px-5 py-3.5 text-[11px] text-slate-600">
+            ${lastLogoutStr}
+          </td>
+          <td class="px-5 py-3.5 text-center">
+            <span class="font-bold text-xs bg-slate-100 text-slate-800 px-2 py-1 rounded-lg">${emp.login_count || 0}</span>
+          </td>
+          <td class="px-5 py-3.5 text-right space-x-1 whitespace-nowrap">
+            <button class="admin-emp-view-logs p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition text-xs" data-user="${escapeHtml(emp.username)}" title="View Activity Logs">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+            <button class="admin-emp-edit p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition text-xs" data-id="${emp.id}" title="Edit Profile">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="admin-emp-toggle-status p-1.5 ${emp.status === 'Active' ? 'bg-amber-50 hover:bg-amber-100 text-amber-700' : 'bg-green-50 hover:bg-green-100 text-green-700'} rounded-lg transition text-xs" data-id="${emp.id}" title="${emp.status === 'Active' ? 'Suspend Account' : 'Activate Account'}">
+              <i class="fa-solid ${emp.status === 'Active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
+            </button>
+            <button class="admin-emp-reset-pass p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg transition text-xs" data-id="${emp.id}" title="Reset Password">
+              <i class="fa-solid fa-key"></i>
+            </button>
+            <button class="admin-emp-delete p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition text-xs" data-id="${emp.id}" title="Delete Account">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Attach row events
+    tbody.querySelectorAll('.admin-emp-view-logs').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const username = btn.getAttribute('data-user');
+        switchAdminTab('logs');
+        if (adminLogsFilterEmp) {
+          adminLogsFilterEmp.value = username;
+          renderAdminEmployeeLogs();
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.admin-emp-edit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const emp = getEmployees().find(e => e.id === id);
+        if (emp) openEmployeeModal(emp);
+      });
+    });
+
+    tbody.querySelectorAll('.admin-emp-toggle-status').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const employees = getEmployees();
+        const emp = employees.find(e => e.id === id);
+        if (emp) {
+          emp.status = emp.status === 'Active' ? 'Inactive' : 'Active';
+          saveEmployees(employees);
+          renderAdminEmployeesTable();
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.admin-emp-reset-pass').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const employees = getEmployees();
+        const emp = employees.find(e => e.id === id);
+        if (emp) {
+          const newPass = prompt(`Set new password for ${emp.name} (@${emp.username}):`, emp.password);
+          if (newPass && newPass.trim()) {
+            emp.password = newPass.trim();
+            saveEmployees(employees);
+            renderAdminEmployeesTable();
+            alert(`Password updated for ${emp.name}.`);
+          }
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.admin-emp-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const employees = getEmployees();
+        const emp = employees.find(e => e.id === id);
+        if (emp && confirm(`Are you sure you want to delete employee "${emp.name}" (@${emp.username})?`)) {
+          const filtered = employees.filter(e => e.id !== id);
+          saveEmployees(filtered);
+          loadAdminDashboardData();
+        }
+      });
+    });
+  }
+
+  function renderAdminEmployeeLogs() {
+    const tbody = document.getElementById('admin-logs-tbody');
+    const tabLogsCountEl = document.getElementById('tab-logs-count');
+    if (!tbody) return;
+
+    const logs = getEmployeeLogs();
+    const employees = getEmployees();
+    if (tabLogsCountEl) tabLogsCountEl.textContent = logs.length;
+
+    // Populate employee filter dropdown
+    if (adminLogsFilterEmp) {
+      const currentVal = adminLogsFilterEmp.value;
+      adminLogsFilterEmp.innerHTML = '<option value="all">All Employees</option>' + 
+        employees.map(e => `<option value="${escapeHtml(e.username)}" ${currentVal === e.username ? 'selected' : ''}>${escapeHtml(e.name)} (@${escapeHtml(e.username)})</option>`).join('');
+    }
+
+    const searchTerm = (adminLogsSearch?.value || '').toLowerCase();
+    const empFilter = adminLogsFilterEmp?.value || 'all';
+    const actionFilter = adminLogsFilterAction?.value || 'all';
+
+    const filtered = logs.filter(log => {
+      const matchesSearch = 
+        (log.employee_name || '').toLowerCase().includes(searchTerm) ||
+        (log.employee_username || '').toLowerCase().includes(searchTerm) ||
+        (log.action_label || '').toLowerCase().includes(searchTerm) ||
+        (log.details || '').toLowerCase().includes(searchTerm);
+
+      const matchesEmp = empFilter === 'all' || log.employee_username === empFilter;
+      const matchesAction = actionFilter === 'all' || log.action_type === actionFilter;
+
+      return matchesSearch && matchesEmp && matchesAction;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-5 py-8 text-center text-slate-400">
+            <i class="fa-solid fa-clock-rotate-left text-2xl mb-2 block"></i>
+            No activity logs match the selected filters. Employee logins, logouts, lead changes, notes, and catalog queries will be logged here in real time.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(log => {
+      const dateStr = log.timestamp 
+        ? `${new Date(log.timestamp).toLocaleDateString()} • ${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+        : 'Recent';
+
+      // Badge styling by action type
+      let badgeHtml = '';
+      switch (log.action_type) {
+        case 'LOGIN':
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-right-to-bracket mr-1"></i> Staff Login</span>`;
+          break;
+        case 'LOGOUT':
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200"><i class="fa-solid fa-right-from-bracket mr-1"></i> Staff Logout</span>`;
+          break;
+        case 'STATUS_UPDATE':
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200"><i class="fa-solid fa-arrows-rotate mr-1"></i> Lead Status</span>`;
+          break;
+        case 'CLIENT_NOTE':
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-note-sticky mr-1"></i> Internal Note</span>`;
+          break;
+        case 'CLIENT_LOG':
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200"><i class="fa-solid fa-comments mr-1"></i> Interaction Log</span>`;
+          break;
+        case 'CATALOG_INSPECT':
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-800 border border-cyan-200"><i class="fa-solid fa-magnifying-glass-chart mr-1"></i> Lot Inspect</span>`;
+          break;
+        default:
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">${escapeHtml(log.action_label || 'Action')}</span>`;
+      }
+
+      return `
+        <tr class="hover:bg-slate-50/80 transition">
+          <td class="px-5 py-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+            ${dateStr}
+          </td>
+          <td class="px-5 py-3">
+            <span class="font-bold text-slate-900 block">${escapeHtml(log.employee_name)}</span>
+            <span class="text-[10px] text-blue-600 font-mono">@${escapeHtml(log.employee_username)}</span>
+            <span class="text-[9px] text-slate-400 block">${escapeHtml(log.employee_role)}</span>
+          </td>
+          <td class="px-5 py-3 whitespace-nowrap">
+            ${badgeHtml}
+          </td>
+          <td class="px-5 py-3 max-w-md text-slate-700 text-xs">
+            <p class="leading-relaxed font-medium">${escapeHtml(log.details)}</p>
+          </td>
+          <td class="px-5 py-3 text-right font-mono text-[10px] text-slate-400 whitespace-nowrap">
+            <span class="bg-slate-100 px-2 py-0.5 rounded">${escapeHtml(log.session_id || 'SESS-WEB')}</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  if (adminLogsSearch) adminLogsSearch.addEventListener('input', renderAdminEmployeeLogs);
+  if (adminLogsFilterEmp) adminLogsFilterEmp.addEventListener('change', renderAdminEmployeeLogs);
+  if (adminLogsFilterAction) adminLogsFilterAction.addEventListener('change', renderAdminEmployeeLogs);
+
+  if (adminExportLogsBtn) {
+    adminExportLogsBtn.addEventListener('click', () => {
+      const logs = getEmployeeLogs();
+      if (logs.length === 0) {
+        alert('No employee activity logs available to export.');
+        return;
+      }
+
+      const headers = ['Timestamp', 'Session ID', 'Employee ID', 'Staff Name', 'Username', 'Role', 'Action Type', 'Action Label', 'Details'];
+      const rows = logs.map(l => [
+        `"${l.timestamp || ''}"`,
+        `"${l.session_id || ''}"`,
+        `"${l.employee_id || ''}"`,
+        `"${(l.employee_name || '').replace(/"/g, '""')}"`,
+        `"${(l.employee_username || '').replace(/"/g, '""')}"`,
+        `"${(l.employee_role || '').replace(/"/g, '""')}"`,
+        `"${l.action_type || ''}"`,
+        `"${(l.action_label || '').replace(/"/g, '""')}"`,
+        `"${(l.details || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `carbonaxis_employee_audit_logs_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+
+  // ==================== 9. Employee Portal Workspace & Interactive Session Controller ====================
+  let employeeLiveTimerInterval = null;
+
+  function getCurrentEmployee() {
+    try {
+      const raw = sessionStorage.getItem('carbonaxis_current_employee');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function checkEmployeeAuth() {
+    const curEmp = getCurrentEmployee();
+
+    if (curEmp && curEmp.username) {
+      if (employeeLoginCard) employeeLoginCard.classList.add('hidden');
+      if (employeeDashboardView) employeeDashboardView.classList.remove('hidden');
+
+      if (empDashName) empDashName.textContent = curEmp.name;
+      if (empDashUsername) empDashUsername.textContent = `(@${curEmp.username})`;
+      if (empDashRoleBadge) empDashRoleBadge.textContent = curEmp.role;
+
+      startEmployeeLiveTimer(curEmp.session_start || Date.now());
+      loadEmployeeWorkspace();
+    } else {
+      if (employeeLoginCard) employeeLoginCard.classList.remove('hidden');
+      if (employeeDashboardView) employeeDashboardView.classList.add('hidden');
+      if (employeeLiveTimerInterval) {
+        clearInterval(employeeLiveTimerInterval);
+        employeeLiveTimerInterval = null;
+      }
+    }
+  }
+
+  function startEmployeeLiveTimer(startTime) {
+    if (employeeLiveTimerInterval) clearInterval(employeeLiveTimerInterval);
+    const timerEl = document.getElementById('emp-live-timer');
+    if (!timerEl) return;
+
+    function tick() {
+      const diffSec = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+      const hours = String(Math.floor(diffSec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
+      const secs = String(diffSec % 60).padStart(2, '0');
+      timerEl.textContent = `Session: ${hours}:${mins}:${secs}`;
+    }
+
+    tick();
+    employeeLiveTimerInterval = setInterval(tick, 1000);
+  }
+
+  if (employeeAuthForm) {
+    employeeAuthForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = (employeeUsernameInput?.value || '').trim().toLowerCase();
+      const password = (employeePasswordInput?.value || '').trim();
+
+      const employees = getEmployees();
+      const emp = employees.find(e => e.username.toLowerCase() === username && e.password === password);
+
+      if (!emp) {
+        alert('Invalid employee username or password. Please verify your credentials or contact administrator.');
+        return;
+      }
+
+      if (emp.status !== 'Active') {
+        alert('Access Restricted: This employee account has been suspended or deactivated by the Administrator.');
+        return;
+      }
+
+      // Generate Session
+      const sessionId = 'SESS-' + Date.now().toString(36).toUpperCase();
+      const sessionObj = {
+        id: emp.id,
+        name: emp.name,
+        username: emp.username,
+        role: emp.role,
+        email: emp.email,
+        session_id: sessionId,
+        session_start: Date.now()
+      };
+      sessionStorage.setItem('carbonaxis_current_employee', JSON.stringify(sessionObj));
+
+      // Update Employee record
+      emp.is_online = true;
+      emp.last_login = new Date().toISOString();
+      emp.login_count = (emp.login_count || 0) + 1;
+      saveEmployees(employees);
+
+      // Log Login Event
+      await logEmployeeActivity({
+        employee: sessionObj,
+        action_type: 'LOGIN',
+        action_label: 'Staff Member Login',
+        details: `Employee authenticated into staff workspace from web portal session (Device: ${navigator.platform || 'Desktop Browser'}).`,
+        session_id: sessionId
+      });
+
+      if (employeeUsernameInput) employeeUsernameInput.value = '';
+      if (employeePasswordInput) employeePasswordInput.value = '';
+
+      checkEmployeeAuth();
+    });
+  }
+
+  if (employeeLogoutBtn) {
+    employeeLogoutBtn.addEventListener('click', async () => {
+      const curEmp = getCurrentEmployee();
+      if (!curEmp) {
+        sessionStorage.removeItem('carbonaxis_current_employee');
+        checkEmployeeAuth();
+        return;
+      }
+
+      const diffSec = Math.max(1, Math.floor((Date.now() - (curEmp.session_start || Date.now())) / 1000));
+      const mins = Math.floor(diffSec / 60);
+      const secs = diffSec % 60;
+      const durationStr = (mins > 0 ? `${mins}m ` : '') + `${secs}s`;
+
+      const logs = getEmployeeLogs();
+      const sessionActions = logs.filter(l => l.session_id === curEmp.session_id && l.action_type !== 'LOGIN');
+
+      // Update Employee offline
+      const employees = getEmployees();
+      const emp = employees.find(e => e.id === curEmp.id);
+      if (emp) {
+        emp.is_online = false;
+        emp.last_logout = new Date().toISOString();
+        saveEmployees(employees);
+      }
+
+      // Log Logout Event
+      await logEmployeeActivity({
+        employee: curEmp,
+        action_type: 'LOGOUT',
+        action_label: 'Staff Member Logout',
+        details: `Employee terminated staff session. Active duration: ${durationStr}. Total workspace actions logged in session: ${sessionActions.length}.`,
+        session_id: curEmp.session_id
+      });
+
+      sessionStorage.removeItem('carbonaxis_current_employee');
+      checkEmployeeAuth();
+    });
+  }
+
+  if (employeeRefreshBtn) {
+    employeeRefreshBtn.addEventListener('click', () => {
+      loadEmployeeWorkspace();
+      alert('Staff workspace data refreshed.');
+    });
+  }
+
+  async function loadEmployeeWorkspace() {
+    await renderEmployeeLeads();
+    renderEmployeeSessionFeed();
+    updateEmployeeKPIs();
+  }
+
+  async function renderEmployeeLeads() {
+    if (!empLeadsContainer) return;
+    const inquiries = await fetchInquiries();
+    const filterStatus = empLeadsFilter?.value || 'all';
+
+    const filtered = inquiries.filter(i => filterStatus === 'all' || (i.status || 'New') === filterStatus);
+
+    if (filtered.length === 0) {
+      empLeadsContainer.innerHTML = `
+        <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-100">
+          <i class="fa-solid fa-inbox text-2xl mb-1 block"></i>
+          No leads matching status "${filterStatus}".
+        </div>
+      `;
+      return;
+    }
+
+    empLeadsContainer.innerHTML = filtered.map(lead => {
+      const dateStr = lead.created_at ? new Date(lead.created_at).toLocaleDateString() : 'Recent';
+      const notesList = Array.isArray(lead.internal_notes) ? lead.internal_notes : [];
+
+      return `
+        <div class="p-4 bg-slate-50/80 rounded-2xl border border-slate-200 space-y-3 hover:border-slate-300 transition" data-id="${lead.id}">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="font-bold text-slate-900 text-xs">${escapeHtml(lead.name || 'Anonymous Client')}</span>
+              <span class="text-[10px] text-slate-400 block">${dateStr} • ${escapeHtml(lead.inquiry_type || 'General Lead')}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <select class="emp-lead-status-sel text-xs p-1.5 rounded-lg border border-slate-200 bg-white font-medium focus:outline-none" data-id="${lead.id}" data-name="${escapeHtml(lead.name)}">
+                <option value="New" ${lead.status === 'New' ? 'selected' : ''}>New</option>
+                <option value="In Discussion" ${lead.status === 'In Discussion' ? 'selected' : ''}>In Discussion</option>
+                <option value="Contacted" ${lead.status === 'Contacted' ? 'selected' : ''}>Contacted</option>
+                <option value="Closed" ${lead.status === 'Closed' ? 'selected' : ''}>Closed</option>
+              </select>
+              <button class="emp-add-note-btn px-2.5 py-1 text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition flex items-center gap-1" data-id="${lead.id}" data-name="${escapeHtml(lead.name)}">
+                <i class="fa-solid fa-note-sticky"></i> Note
+              </button>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-600 bg-white p-2.5 rounded-xl border border-slate-100 leading-relaxed">
+            <div class="flex flex-wrap gap-3 mb-1 text-slate-400 text-[10px]">
+              <span><i class="fa-solid fa-envelope"></i> ${escapeHtml(lead.email || 'N/A')}</span>
+              <span><i class="fa-solid fa-phone"></i> ${escapeHtml(lead.phone || 'N/A')}</span>
+            </div>
+            <p>${escapeHtml(lead.message || 'No description provided.')}</p>
+          </div>
+
+          ${notesList.length > 0 ? `
+            <div class="space-y-1.5 pt-1 border-t border-slate-100">
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Staff Notes:</span>
+              ${notesList.map(n => `
+                <div class="text-[10px] bg-amber-50/70 p-2 rounded-lg text-amber-900 border border-amber-100">
+                  <div class="flex justify-between font-bold text-amber-800 mb-0.5">
+                    <span>${escapeHtml(n.author || 'Staff')}</span>
+                    <span class="text-[9px] text-amber-600 font-normal">${n.date ? new Date(n.date).toLocaleDateString() : ''}</span>
+                  </div>
+                  <p>${escapeHtml(n.text)}</p>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    // Attach status dropdown change listeners
+    empLeadsContainer.querySelectorAll('.emp-lead-status-sel').forEach(sel => {
+      sel.addEventListener('change', async (e) => {
+        const id = e.target.getAttribute('data-id');
+        const clientName = e.target.getAttribute('data-name');
+        const newStatus = e.target.value;
+        const curEmp = getCurrentEmployee();
+
+        await updateInquiryStatus(id, newStatus);
+
+        await logEmployeeActivity({
+          employee: curEmp,
+          action_type: 'STATUS_UPDATE',
+          action_label: 'Lead Status Updated',
+          details: `Changed pipeline status of lead "${clientName}" (ID: ${id}) to "${newStatus}".`
+        });
+
+        loadEmployeeWorkspace();
+      });
+    });
+
+    // Attach note buttons
+    empLeadsContainer.querySelectorAll('.emp-add-note-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        if (empNoteLeadId) empNoteLeadId.value = id;
+        if (empNoteModalSubtitle) empNoteModalSubtitle.textContent = `Lead: ${name} (ID: ${id})`;
+        if (empNoteContent) empNoteContent.value = '';
+        if (employeeNoteModal) employeeNoteModal.classList.remove('hidden');
+      });
+    });
+  }
+
+  if (empLeadsFilter) {
+    empLeadsFilter.addEventListener('change', renderEmployeeLeads);
+  }
+
+  // Handle Internal Note Form Submit
+  if (employeeNoteForm) {
+    employeeNoteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const leadId = empNoteLeadId?.value;
+      const content = (empNoteContent?.value || '').trim();
+      const curEmp = getCurrentEmployee();
+
+      if (!leadId || !content) return;
+
+      const local = JSON.parse(localStorage.getItem('carbonaxis_inquiries') || '[]');
+      const lead = local.find(i => String(i.id) === String(leadId));
+      if (lead) {
+        if (!Array.isArray(lead.internal_notes)) lead.internal_notes = [];
+        lead.internal_notes.push({
+          author: `${curEmp.name} (${curEmp.role})`,
+          text: content,
+          date: new Date().toISOString()
+        });
+        localStorage.setItem('carbonaxis_inquiries', JSON.stringify(local));
+
+        await logEmployeeActivity({
+          employee: curEmp,
+          action_type: 'CLIENT_NOTE',
+          action_label: 'Internal Lead Note Added',
+          details: `Appended internal note to lead "${lead.name}": "${content}".`
+        });
+      }
+
+      if (employeeNoteModal) employeeNoteModal.classList.add('hidden');
+      loadEmployeeWorkspace();
+    });
+  }
+
+  if (closeEmpNoteModalBtn) closeEmpNoteModalBtn.addEventListener('click', () => employeeNoteModal?.classList.add('hidden'));
+  if (cancelEmpNoteModalBtn) cancelEmpNoteModalBtn.addEventListener('click', () => employeeNoteModal?.classList.add('hidden'));
+
+  // Quick Interaction Form Submit
+  if (empInteractionForm) {
+    empInteractionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const clientName = (empIntClient?.value || '').trim();
+      const channel = empIntChannel?.value || 'Phone Call';
+      const notes = (empIntNotes?.value || '').trim();
+      const curEmp = getCurrentEmployee();
+
+      if (!clientName || !notes) {
+        alert('Please provide client name and discussion summary.');
+        return;
+      }
+
+      await logEmployeeActivity({
+        employee: curEmp,
+        action_type: 'CLIENT_LOG',
+        action_label: 'Client Interaction Recorded',
+        details: `Logged [${channel}] with client "${clientName}". Notes: "${notes}".`
+      });
+
+      if (empIntClient) empIntClient.value = '';
+      if (empIntNotes) empIntNotes.value = '';
+
+      alert(`Client interaction recorded in audit trail for "${clientName}".`);
+      loadEmployeeWorkspace();
+    });
+  }
+
+  // Hook Project Inspect buttons
+  document.querySelectorAll('.emp-inspect-proj-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const projId = btn.getAttribute('data-id');
+      const projName = btn.getAttribute('data-name');
+      const curEmp = getCurrentEmployee();
+
+      await logEmployeeActivity({
+        employee: curEmp,
+        action_type: 'CATALOG_INSPECT',
+        action_label: 'Carbon Asset Inspected',
+        details: `Inspected technical specifications & verification registry documents for project [${projId}] - ${projName}.`
+      });
+
+      alert(`TECHNICAL SPECIFICATION LOT REVIEW\n------------------------------------\nProject: ${projName}\nIdentifier: ${projId}\nVerification Body: Global Standard Verified Registry\nTrading Status: Ready for Allocation\n\nYour review has been timestamped in the compliance audit log.`);
+      loadEmployeeWorkspace();
+    });
+  });
+
+  // Render Live Session Activity Feed
+  function renderEmployeeSessionFeed() {
+    if (!empSessionLogList) return;
+    const curEmp = getCurrentEmployee();
+    if (!curEmp) return;
+
+    const logs = getEmployeeLogs();
+    const sessionLogs = logs.filter(l => l.session_id === curEmp.session_id);
+
+    if (sessionLogs.length === 0) {
+      empSessionLogList.innerHTML = `
+        <div class="text-center py-6 text-slate-400 text-xs">
+          No actions logged in current session yet.
+        </div>
+      `;
+      return;
+    }
+
+    empSessionLogList.innerHTML = sessionLogs.map(l => {
+      const timeStr = l.timestamp ? new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+      return `
+        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs space-y-1">
+          <div class="flex items-center justify-between text-[10px]">
+            <span class="font-bold text-slate-700">${escapeHtml(l.action_label)}</span>
+            <span class="font-mono text-slate-400">${timeStr}</span>
+          </div>
+          <p class="text-[11px] text-slate-600 line-clamp-2">${escapeHtml(l.details)}</p>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Update Employee Dashboard KPI numbers
+  async function updateEmployeeKPIs() {
+    const curEmp = getCurrentEmployee();
+    const inquiries = await fetchInquiries();
+    const logs = getEmployeeLogs();
+
+    const kpiLeads = document.getElementById('emp-kpi-leads');
+    const kpiActions = document.getElementById('emp-kpi-actions');
+    const kpiInteractions = document.getElementById('emp-kpi-interactions');
+
+    if (kpiLeads) kpiLeads.textContent = inquiries.length;
+
+    if (curEmp) {
+      const today = new Date().toISOString().slice(0, 10);
+      const myLogsToday = logs.filter(l => l.employee_username === curEmp.username && (l.timestamp || '').startsWith(today));
+      const myInteractions = logs.filter(l => l.employee_username === curEmp.username && l.action_type === 'CLIENT_LOG');
+
+      if (kpiActions) kpiActions.textContent = myLogsToday.length;
+      if (kpiInteractions) kpiInteractions.textContent = myInteractions.length;
+    }
+  }
 
   function escapeHtml(text) {
     if (!text) return '';

@@ -39,6 +39,9 @@
 
         <!-- Right Side Header CTAs -->
         <div class="hidden md:flex items-center gap-2">
+          <a href="#" data-view="employee" class="nav-link-btn px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-950 transition flex items-center gap-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
+            <i class="fa-solid fa-user-tie text-[11px] text-blue-600"></i> Staff Portal
+          </a>
           <a href="#" data-view="admin" class="nav-link-btn px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-950 transition flex items-center gap-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
             <i class="fa-solid fa-shield-halved text-[11px] text-emerald-600"></i> Admin
           </a>
@@ -63,6 +66,7 @@
       <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="projects">Credit Catalog</a>
       <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="marketplace">Trading Desk</a>
       <a href="#" class="nav-link-btn block text-sm font-semibold text-slate-600 hover:text-green-600" data-view="transparency">Registry Clearing</a>
+      <a href="#" class="nav-link-btn block text-sm font-semibold text-blue-600 hover:text-blue-700" data-view="employee"><i class="fa-solid fa-user-tie text-xs mr-1.5"></i> Staff & Employee Portal</a>
       <a href="#" class="nav-link-btn block text-sm font-semibold text-emerald-600 hover:text-emerald-700" data-view="admin"><i class="fa-solid fa-shield-halved text-xs mr-1.5"></i> Admin Portal</a>
       <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
         <button class="trigger-contact-cta w-full py-2 text-xs font-bold text-white bg-green-600 rounded-lg">Contact Us</button>
@@ -935,13 +939,19 @@
           </div>
         </div>
 
-        <!-- Tab Controls (Inquiries vs Trade Orders) -->
-        <div class="flex border-b border-slate-200 space-x-4 text-xs font-bold">
-          <button id="admin-tab-inquiries-btn" class="pb-3 border-b-2 border-green-600 text-green-600 active">
+        <!-- Tab Controls (Inquiries vs Trade Orders vs Staff vs Activity Logs) -->
+        <div class="flex border-b border-slate-200 space-x-2 sm:space-x-4 text-xs font-bold overflow-x-auto custom-scrollbar">
+          <button id="admin-tab-inquiries-btn" class="pb-3 border-b-2 border-green-600 text-green-600 active whitespace-nowrap">
             <i class="fa-solid fa-envelope-open-text mr-1"></i> Inquiries & Leads (<span id="tab-inquiries-count">0</span>)
           </button>
-          <button id="admin-tab-trades-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">
+          <button id="admin-tab-trades-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition whitespace-nowrap">
             <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Trade Desk Executions (<span id="tab-trades-count">0</span>)
+          </button>
+          <button id="admin-tab-employees-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition whitespace-nowrap">
+            <i class="fa-solid fa-users-gear mr-1"></i> Staff Accounts (<span id="tab-employees-count">1/10</span>)
+          </button>
+          <button id="admin-tab-logs-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition whitespace-nowrap">
+            <i class="fa-solid fa-clock-rotate-left mr-1"></i> Employee Activity & Audit Logs (<span id="tab-logs-count">0</span>)
           </button>
         </div>
 
@@ -1014,10 +1024,495 @@
           </div>
         </div>
 
+        <!-- Section 3: Staff Accounts Management Section (Up to 10 Employees) -->
+        <div id="admin-tab-employees" class="space-y-4 hidden">
+          
+          <!-- Staff Subheader & Actions -->
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-users-gear text-blue-600"></i> Employee & Staff Account Provisioning
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">Admin-controlled logins for internal brokers and sales staff. Maximum capacity: <strong>10 employees</strong>.</p>
+            </div>
+            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+              <span id="admin-employee-counter-badge" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-id-badge"></i> <span id="admin-emp-count-display">1</span> / 10 Accounts Used
+              </span>
+              <button id="admin-open-add-emp-btn" class="px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition flex items-center gap-1.5 shadow-sm active:scale-98">
+                <i class="fa-solid fa-user-plus"></i> Create Employee
+              </button>
+            </div>
+          </div>
+
+          <!-- Employee Directory Table -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th class="px-5 py-3.5">ID / User</th>
+                    <th class="px-5 py-3.5">Employee Name & Role</th>
+                    <th class="px-5 py-3.5">Credentials</th>
+                    <th class="px-5 py-3.5">Status</th>
+                    <th class="px-5 py-3.5">Last Login</th>
+                    <th class="px-5 py-3.5">Last Logout</th>
+                    <th class="px-5 py-3.5">Logins</th>
+                    <th class="px-5 py-3.5 text-right">Admin Controls</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-employees-tbody" class="divide-y divide-slate-100 text-slate-600">
+                  <!-- Dynamic Employees Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Employee Activity & Audit Logs -->
+        <div id="admin-tab-logs" class="space-y-4 hidden">
+          
+          <!-- Filters & Search Bar for Activity Logs -->
+          <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+              <input type="text" id="admin-logs-search" placeholder="Search activity logs (e.g. login, status change, client note, lead)..." class="w-full text-xs pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" />
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 justify-end">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Staff:</span>
+                <select id="admin-logs-filter-employee" class="text-xs p-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-green-500 font-medium">
+                  <option value="all">All Employees</option>
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Action:</span>
+                <select id="admin-logs-filter-action" class="text-xs p-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-green-500 font-medium">
+                  <option value="all">All Actions</option>
+                  <option value="LOGIN">Login / Authentication</option>
+                  <option value="LOGOUT">Logout / Session End</option>
+                  <option value="STATUS_UPDATE">Lead Status Changes</option>
+                  <option value="CLIENT_NOTE">Client Notes Added</option>
+                  <option value="CLIENT_LOG">Interactions Recorded</option>
+                  <option value="CATALOG_INSPECT">Project Specs Reviewed</option>
+                </select>
+              </div>
+
+              <button id="admin-export-logs-btn" class="px-3 py-2 text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl transition flex items-center gap-1.5">
+                <i class="fa-solid fa-file-csv text-xs"></i> Export Logs CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Activity Logs Data Table -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th class="px-5 py-3.5">Timestamp</th>
+                    <th class="px-5 py-3.5">Staff Member</th>
+                    <th class="px-5 py-3.5">Action Event</th>
+                    <th class="px-5 py-3.5">Activity Details (What They Did Inside)</th>
+                    <th class="px-5 py-3.5 text-right">Session Details</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-logs-tbody" class="divide-y divide-slate-100 text-slate-600">
+                  <!-- Dynamic Logs Rows -->
+                </tbody>
+              </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW: EMPLOYEE & STAFF PORTAL ==================== -->
+    <div id="view-employee" class="space-y-6 hidden">
+      
+      <!-- Employee Login Overlay (when not authenticated) -->
+      <div id="employee-login-card" class="max-w-md mx-auto bg-white p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6 my-12">
+        <div class="text-center space-y-2">
+          <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center mx-auto text-xl shadow-inner">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+          <h2 class="text-xl font-extrabold text-slate-900">CarbonAxis Staff & Employee Portal</h2>
+          <p class="text-xs text-slate-500 leading-relaxed">Sign in with your administrator-provisioned employee credentials to access your leads workspace and trading desk tools.</p>
+        </div>
+
+        <form id="employee-auth-form" class="space-y-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Staff Username</label>
+            <div class="relative">
+              <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+              <input type="text" id="employee-username-input" placeholder="e.g. alex_broker" class="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50 font-medium" required />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Password</label>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+              <input type="password" id="employee-password-input" placeholder="Enter employee password" class="w-full text-xs pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50 font-medium tracking-wide" required />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-98 transition shadow-md flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-to-bracket text-xs"></i> Sign In to Staff Workspace
+          </button>
+        </form>
+
+        <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-[11px] text-blue-800 flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-blue-600"></i>
+          <span>Accounts are created and managed by the Administrator (Max 10 staff members).</span>
+        </div>
+      </div>
+
+      <!-- Authenticated Employee Dashboard Workspace -->
+      <div id="employee-dashboard-view" class="space-y-6 hidden">
+        
+        <!-- Top Staff Header Bar -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <i class="fa-solid fa-circle text-[8px] text-emerald-600 animate-pulse"></i> Active Online Session
+              </span>
+              <span id="emp-dash-role-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Carbon Credit Broker</span>
+              <span id="emp-live-timer" class="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">Session: 00:00:00</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+              <span>Staff Workspace:</span> <span id="emp-dash-name" class="text-blue-600">Alex Morgan</span> <span id="emp-dash-username" class="text-xs text-slate-400 font-mono font-normal">(@alex_broker)</span>
+            </h2>
+          </div>
+
+          <!-- Controls -->
+          <div class="flex items-center gap-2">
+            <button id="employee-refresh-btn" class="px-3.5 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition flex items-center gap-1.5">
+              <i class="fa-solid fa-arrows-rotate text-xs"></i> Refresh
+            </button>
+            <button id="employee-logout-btn" class="px-3.5 py-2 text-xs font-bold bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl transition flex items-center gap-1.5">
+              <i class="fa-solid fa-right-from-bracket text-xs"></i> Log Out
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Staff KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Available Leads</span>
+            <div class="flex items-center justify-between mt-1">
+              <span id="emp-kpi-leads" class="text-2xl font-black text-slate-900">0</span>
+              <span class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center text-sm"><i class="fa-solid fa-inbox"></i></span>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">My Actions Today</span>
+            <div class="flex items-center justify-between mt-1">
+              <span id="emp-kpi-actions" class="text-2xl font-black text-blue-600">0</span>
+              <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm"><i class="fa-solid fa-list-check"></i></span>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Interactions Logged</span>
+            <div class="flex items-center justify-between mt-1">
+              <span id="emp-kpi-interactions" class="text-2xl font-black text-purple-600">0</span>
+              <span class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-sm"><i class="fa-solid fa-comments"></i></span>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Available Volume</span>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-xl font-black text-slate-900">112,600 t</span>
+              <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm"><i class="fa-solid fa-chart-pie"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Workspace Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Left Column (7 cols): Leads Management & Client Interaction Logger -->
+          <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Leads & Inquiries Handling -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-address-book text-green-600"></i> Client Inquiries & Lead Desk
+                  </h3>
+                  <p class="text-[11px] text-slate-400">Review corporate leads, update status, and record notes. All changes are logged.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <select id="emp-leads-filter" class="text-xs p-1.5 border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-blue-500 font-medium">
+                    <option value="all">All Statuses</option>
+                    <option value="New">New</option>
+                    <option value="In Discussion">In Discussion</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Leads Container List -->
+              <div id="emp-leads-container" class="space-y-3 max-h-[480px] overflow-y-auto custom-scrollbar pr-1">
+                <!-- Dynamically populated leads cards -->
+              </div>
+            </div>
+
+            <!-- Quick Log Client Interaction Card -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <div class="border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <i class="fa-solid fa-pen-to-square text-purple-600"></i> Quick Log Client Interaction
+                </h3>
+                <p class="text-[11px] text-slate-400">Record calls, virtual meetings, or email proposals. Synchronized directly to administrator activity audits.</p>
+              </div>
+
+              <form id="emp-interaction-form" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Client / Company Name</label>
+                    <input type="text" id="emp-int-client" placeholder="e.g. Acme Corporation" class="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50" required />
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Interaction Channel</label>
+                    <select id="emp-int-channel" class="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50 font-medium">
+                      <option value="Phone Call">📞 Phone Call</option>
+                      <option value="Video Conference">💻 Video Conference (Zoom/Teams)</option>
+                      <option value="Email Outreach">✉️ Email Outreach / Proposal</option>
+                      <option value="Deal Negotiation">🤝 Deal Negotiation / Term Sheet</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Discussion Summary & Outcome</label>
+                  <textarea id="emp-int-notes" rows="2" placeholder="Summarize discussion points, carbon credit tons requested, pricing discussed, or next follow-up date..." class="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50" required></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 active:scale-98 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-floppy-disk text-xs"></i> Record Interaction to Staff Audit Log
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+          <!-- Right Column (5 cols): Live My Session Activity Feed & Inventory Reference -->
+          <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Live My Session Activity Feed -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                  <h3 class="text-sm font-extrabold text-slate-900">My Session Activity Feed</h3>
+                </div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logged Live</span>
+              </div>
+              <p class="text-[11px] text-slate-500">Every action performed in this workspace is timestamped and recorded for administrative audit compliance.</p>
+              
+              <div id="emp-session-log-list" class="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                <!-- Dynamically populated session logs -->
+              </div>
+            </div>
+
+            <!-- Quick Carbon Inventory Reference -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <i class="fa-solid fa-layer-group text-blue-600"></i> Sourced Inventory Quick Reference
+                </h3>
+                <span class="text-[10px] font-bold text-slate-400">6 Projects</span>
+              </div>
+
+              <div class="space-y-2.5 max-h-[320px] overflow-y-auto custom-scrollbar pr-1">
+                <!-- Project Item 1 -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:border-slate-300 transition">
+                  <div>
+                    <span class="font-bold text-slate-900 block">🇧🇷 Project #01 • Acre Canopy</span>
+                    <span class="text-[10px] text-slate-400 font-mono">ID: PRJ-GS-0104 • 12,000 t/yr</span>
+                  </div>
+                  <button class="emp-inspect-proj-btn px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition" data-id="PRJ-GS-0104" data-name="Acre Canopy Protection (GS)">
+                    Inspect Lot
+                  </button>
+                </div>
+
+                <!-- Project Item 2 -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:border-slate-300 transition">
+                  <div>
+                    <span class="font-bold text-slate-900 block">🇲🇦 Project #02 • Sahara Solar</span>
+                    <span class="text-[10px] text-slate-400 font-mono">ID: PRJ-VCS-0218 • 34,500 t/yr</span>
+                  </div>
+                  <button class="emp-inspect-proj-btn px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition" data-id="PRJ-VCS-0218" data-name="Sahara Concentrated Solar (VCS)">
+                    Inspect Lot
+                  </button>
+                </div>
+
+                <!-- Project Item 3 -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:border-slate-300 transition">
+                  <div>
+                    <span class="font-bold text-slate-900 block">🇰🇪 Project #03 • Mombasa Mangrove</span>
+                    <span class="text-[10px] text-slate-400 font-mono">ID: PRJ-PV-0342 • 8,400 t/yr</span>
+                  </div>
+                  <button class="emp-inspect-proj-btn px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition" data-id="PRJ-PV-0342" data-name="Mombasa Mangrove Replanting (PV)">
+                    Inspect Lot
+                  </button>
+                </div>
+
+                <!-- Project Item 4 -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:border-slate-300 transition">
+                  <div>
+                    <span class="font-bold text-slate-900 block">🇮🇸 Project #04 • Icelandic DAC</span>
+                    <span class="text-[10px] text-slate-400 font-mono">ID: PRJ-DAC-0419 • 5,200 t/yr</span>
+                  </div>
+                  <button class="emp-inspect-proj-btn px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition" data-id="PRJ-DAC-0419" data-name="Icelandic Direct Air Capture (DAC)">
+                    Inspect Lot
+                  </button>
+                </div>
+
+                <!-- Project Item 5 -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:border-slate-300 transition">
+                  <div>
+                    <span class="font-bold text-slate-900 block">🇮🇳 Project #05 • Gujarat Wind Corridor</span>
+                    <span class="text-[10px] text-slate-400 font-mono">ID: PRJ-VCS-0552 • 42,000 t/yr</span>
+                  </div>
+                  <button class="emp-inspect-proj-btn px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition" data-id="PRJ-VCS-0552" data-name="Gujarat Clean Wind Corridor (VCS)">
+                    Inspect Lot
+                  </button>
+                </div>
+
+                <!-- Project Item 6 -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:border-slate-300 transition">
+                  <div>
+                    <span class="font-bold text-slate-900 block">🇨🇴 Project #06 • Andean Cloud Forest</span>
+                    <span class="text-[10px] text-slate-400 font-mono">ID: PRJ-GS-0681 • 10,500 t/yr</span>
+                  </div>
+                  <button class="emp-inspect-proj-btn px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition" data-id="PRJ-GS-0681" data-name="Andean Cloud Forest Conservation (GS)">
+                    Inspect Lot
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
     </div>
 
   </main>
+
+  <!-- ==================== ADMIN: CREATE/EDIT EMPLOYEE MODAL ==================== -->
+  <div id="admin-employee-modal" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden transform scale-95 transition-transform duration-300">
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div>
+          <h3 id="admin-emp-modal-title" class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-user-plus text-blue-600"></i> Create New Employee Account
+          </h3>
+          <p class="text-[11px] text-slate-400">Capacity: maximum 10 employee accounts allowed.</p>
+        </div>
+        <button id="admin-close-emp-modal-btn" class="text-slate-400 hover:text-slate-700 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="admin-employee-form" class="p-6 space-y-3.5 text-xs text-slate-600">
+        <input type="hidden" id="admin-emp-id-input" value="" />
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Employee Full Name</label>
+          <input type="text" id="admin-emp-name-input" placeholder="e.g. Sarah Jenkins" class="w-full p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50" required />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Username (Login ID)</label>
+            <input type="text" id="admin-emp-user-input" placeholder="e.g. sarah_broker" class="w-full p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50 font-mono" required />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Login Password</label>
+            <input type="text" id="admin-emp-pass-input" placeholder="e.g. Pass123!" class="w-full p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50 font-mono" required />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Designation & Role</label>
+          <select id="admin-emp-role-select" class="w-full p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50 font-medium">
+            <option value="Carbon Credit Broker">Carbon Credit Broker</option>
+            <option value="Senior Sales Specialist">Senior Sales Specialist</option>
+            <option value="Client Relationship Manager">Client Relationship Manager</option>
+            <option value="Compliance & Registry Auditor">Compliance & Registry Auditor</option>
+            <option value="Trading Desk Operator">Trading Desk Operator</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
+            <input type="email" id="admin-emp-email-input" placeholder="sarah@carbonaxisgreen.com" class="w-full p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Account Status</label>
+            <select id="admin-emp-status-select" class="w-full p-2.5 border border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-slate-50 font-medium">
+              <option value="Active">Active (Allowed to Login)</option>
+              <option value="Inactive">Inactive (Suspended)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex gap-2 justify-end">
+          <button type="button" id="admin-cancel-emp-modal-btn" class="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition">
+            Cancel
+          </button>
+          <button type="submit" id="admin-submit-emp-modal-btn" class="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-md">
+            Save Employee
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== EMPLOYEE: ADD NOTE MODAL ==================== -->
+  <div id="employee-note-modal" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-sm w-full overflow-hidden transform scale-95 transition-transform duration-300">
+      <div class="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-note-sticky text-amber-500"></i> Add Internal Lead Note
+          </h3>
+          <p id="emp-note-modal-subtitle" class="text-[11px] text-slate-400">Lead #1 • Michael Smith</p>
+        </div>
+        <button id="close-emp-note-modal-btn" class="text-slate-400 hover:text-slate-700 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="employee-note-form" class="p-5 space-y-3 text-xs text-slate-600">
+        <input type="hidden" id="emp-note-lead-id" value="" />
+        <div>
+          <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Staff Note Content</label>
+          <textarea id="emp-note-content" rows="3" placeholder="Enter follow-up outcome, client preferences, budget, or trading timeline..." class="w-full p-2.5 border border-slate-200 rounded-xl focus:border-amber-500 focus:outline-none bg-slate-50" required></textarea>
+        </div>
+
+        <div class="pt-2 flex gap-2 justify-end">
+          <button type="button" id="cancel-emp-note-modal-btn" class="px-3.5 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-xl transition shadow-md">
+            Save Note to Audit Trail
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ==================== CORPORATE FOOTER ==================== -->
   <footer class="bg-slate-950 text-slate-400 py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-900 mt-auto relative z-10">
@@ -1085,7 +1580,8 @@
           <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="projects">Credit Catalog</a></li>
           <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="marketplace">Trading Desk</a></li>
           <li><a href="#" class="nav-link-btn hover:text-white transition" data-view="transparency">Registry Clearing</a></li>
-          <li><a href="#" class="nav-link-btn text-emerald-400 font-bold hover:text-white transition flex items-center gap-1.5 pt-1" data-view="admin"><i class="fa-solid fa-lock text-[10px]"></i> Admin Portal</a></li>
+          <li><a href="#" class="nav-link-btn text-blue-400 font-bold hover:text-white transition flex items-center gap-1.5 pt-1" data-view="employee"><i class="fa-solid fa-user-tie text-[10px]"></i> Staff & Employee Portal</a></li>
+          <li><a href="#" class="nav-link-btn text-emerald-400 font-bold hover:text-white transition flex items-center gap-1.5 pt-0.5" data-view="admin"><i class="fa-solid fa-lock text-[10px]"></i> Admin Portal</a></li>
         </ul>
       </div>
 
