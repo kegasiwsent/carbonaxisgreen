@@ -211,13 +211,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Hook nav links
-  navLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetView = link.getAttribute('data-view');
-      switchView(targetView);
-    });
+  // Hook nav links and global data-view delegation
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-view]');
+    if (trigger && !trigger.classList.contains('project-filter-btn')) {
+      const targetView = trigger.getAttribute('data-view');
+      if (views[targetView]) {
+        e.preventDefault();
+        switchView(targetView);
+      }
+    }
   });
 
   // Mobile menu toggle
@@ -1616,6 +1619,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (employeePasswordInput) employeePasswordInput.value = '';
 
       checkEmployeeAuth();
+    });
+  }
+
+  const empAutofillBtn = document.getElementById('employee-autofill-demo-btn');
+  if (empAutofillBtn) {
+    empAutofillBtn.addEventListener('click', () => {
+      if (employeeUsernameInput) employeeUsernameInput.value = 'alex_broker';
+      if (employeePasswordInput) employeePasswordInput.value = 'broker123';
     });
   }
 
