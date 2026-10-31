@@ -2166,6 +2166,23 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Sync to Supabase deal_sheets cloud table if connected
+    if (supabaseClient) {
+      try {
+        supabaseClient.from('deal_sheets').upsert([{
+          id: 'master_deals',
+          title: state.title,
+          cells: state.cells,
+          rows: state.rows,
+          updated_at: new Date().toISOString()
+        }]).then(({ error }) => {
+          if (error) console.warn('Supabase deal_sheets sync notice:', error.message);
+        }).catch(err => console.warn('Supabase sheet notice:', err));
+      } catch (e) {
+        // Fallback safely to localStorage
+      }
+    }
+
     updateGSheetKPIs();
   }
 
