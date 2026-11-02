@@ -2122,27 +2122,61 @@ document.addEventListener('DOMContentLoaded', () => {
     return state;
   }
 
-  function getGSheetState() {
-    if (!gsheetState) {
-      try {
-        const stored = localStorage.getItem('carbonaxis_gsheet_state_v3');
-        if (stored) {
-          gsheetState = JSON.parse(stored);
-        }
-      } catch (e) {
-        console.warn('Error reading gsheet state:', e);
-      }
-      if (!gsheetState || !gsheetState.cells) {
-        gsheetState = initDefaultGSheetState();
-        localStorage.setItem('carbonaxis_gsheet_state_v3', JSON.stringify(gsheetState));
-      }
+  const SHEETS_STORE_KEY = 'carbonaxis_sheets_store_v4';
+  const ACTIVE_SHEET_KEY = 'carbonaxis_active_sheet_id_v4';
+
+  function getSheetsStore() {
+    let store = {};
+    try {
+      const stored = localStorage.getItem(SHEETS_STORE_KEY);
+      if (stored) store = JSON.parse(stored);
+    } catch (e) {
+      console.warn('Error reading sheets store:', e);
     }
-    return gsheetState;
+    if (!store || Object.keys(store).length === 0) {
+      const defaultState = initDefaultGSheetState();
+      defaultState.id = 'sheet_master_2026';
+      defaultState.author = 'Alex Morgan (@alex_broker)';
+      defaultState.createdAt = '2026-10-31T09:00:00.000Z';
+      defaultState.updatedAt = new Date().toISOString();
+      store = { 'sheet_master_2026': defaultState };
+      localStorage.setItem(SHEETS_STORE_KEY, JSON.stringify(store));
+      localStorage.setItem(ACTIVE_SHEET_KEY, 'sheet_master_2026');
+    }
+    return store;
+  }
+
+  function saveSheetsStore(store) {
+    localStorage.setItem(SHEETS_STORE_KEY, JSON.stringify(store));
+  }
+
+  function getActiveSheetId() {
+    let id = localStorage.getItem(ACTIVE_SHEET_KEY);
+    const store = getSheetsStore();
+    if (!id || !store[id]) {
+      id = Object.keys(store)[0] || 'sheet_master_2026';
+      localStorage.setItem(ACTIVE_SHEET_KEY, id);
+    }
+    return id;
+  }
+
+  function getGSheetState() {
+    const store = getSheetsStore();
+    const activeId = getActiveSheetId();
+    if (!store[activeId]) {
+      const firstId = Object.keys(store)[0];
+      return store[firstId] || initDefaultGSheetState();
+    }
+    return store[activeId];
   }
 
   function saveGSheetState(state, editorRole, cellKey, oldVal, newVal) {
-    gsheetState = state;
-    localStorage.setItem('carbonaxis_gsheet_state_v3', JSON.stringify(state));
+    const store = getSheetsStore();
+    const activeId = state.id || getActiveSheetId();
+    state.id = activeId;
+    state.updatedAt = new Date().toISOString();
+    store[activeId] = state;
+    saveSheetsStore(store);
 
     // Update cloud status
     ['emp', 'admin'].forEach(prefix => {
@@ -2162,7 +2196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
         action_type: 'GSHEET_CELL_EDIT',
         action_label: 'Google Sheet Cell Edited',
-        details: `Updated [${cellKey}] from "${oldVal || ''}" to "${newVal || ''}".`
+        details: `Updated [${cellKey}] in "${state.title}" from "${oldVal || ''}" to "${newVal || ''}".`
       });
     }
 
@@ -2170,11 +2204,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (supabaseClient) {
       try {
         supabaseClient.from('deal_sheets').upsert([{
-          id: 'master_deals',
+          id: activeId,
           title: state.title,
           cells: state.cells,
           rows: state.rows,
-          updated_at: new Date().toISOString()
+          updated_at: state.updatedAt
         }]).then(({ error }) => {
           if (error) console.warn('Supabase deal_sheets sync notice:', error.message);
         }).catch(err => console.warn('Supabase sheet notice:', err));
@@ -2951,6 +2985,848 @@ document.addEventListener('DOMContentLoaded', () => {
     link.click();
     document.body.removeChild(link);
   }
+
+  // ==================== 11. Google Sheets Multi-Document & File Menu Manager ====================
+  let pendingImportFile = null;
+
+  // Create new spreadsheet
+  function createNewSpreadsheet(title, fromTemplate = false, mode = 'emp') {
+    const curEmp = getCurrentEmployee();
+    const newId = 'sheet_' + Date.now();
+    const newTitle = title || (fromTemplate ? 'Carbon Deals Master ' + new Date().getFullYear() : 'Untitled spreadsheet');
+
+    let cells = {};
+    if (fromTemplate) {
+      cells = JSON.parse(JSON.stringify(initDefaultGSheetState().cells));
+    } else {
+      // Standard column headers on Row 1
+      const headerNames = [
+        { col: 'A', val: 'Client / Organization', align: 'left' },
+        { col: 'B', val: 'Contact / Email / Phone', align: 'left' },
+        { col: 'C', val: 'Carbon Registry & Project', align: 'left' },
+        { col: 'D', val: 'Volume (tCO2e)', align: 'right' },
+        { col: 'E', val: 'Price ($/t)', align: 'right' },
+        { col: 'F', val: 'Deal Value ($)', align: 'right' },
+        { col: 'G', val: 'Deal Stage', align: 'center' },
+        { col: 'H', val: 'Notes & ESG Terms', align: 'left' },
+        { col: 'I', val: 'Assigned Broker', align: 'left' },
+        { col: 'J', val: 'Vintage', align: 'center' },
+        { col: 'K', val: 'Registry Status', align: 'center' },
+        { col: 'L', val: 'Closing Date', align: 'center' },
+        { col: 'M', val: 'Internal Ref', align: 'center' },
+        { col: 'N', val: 'Broker Fee ($)', align: 'right' }
+      ];
+      headerNames.forEach(h => {
+        cells[h.col + '1'] = {
+          raw: h.val,
+          bold: true,
+          bg: '#f8fafd',
+          color: '#1f1f1f',
+          align: h.align
+        };
+      });
+    }
+
+    const newSheet = {
+      id: newId,
+      title: newTitle,
+      starred: false,
+      rows: GS_DEFAULT_ROWS,
+      cells: cells,
+      author: curEmp ? `${curEmp.name} (@${curEmp.username})` : 'Administrator',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const store = getSheetsStore();
+    store[newId] = newSheet;
+    saveSheetsStore(store);
+    localStorage.setItem(ACTIVE_SHEET_KEY, newId);
+
+    // Close any open modals/menus
+    closeAllGSheetMenus();
+    const openModal = document.getElementById('gs-open-modal');
+    if (openModal) openModal.classList.add('hidden');
+
+    logEmployeeActivity({
+      employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
+      action_type: 'GSHEET_CREATE',
+      action_label: 'New Spreadsheet Created',
+      details: `Created new spreadsheet "${newTitle}" (ID: ${newId}).`
+    });
+
+    renderGSheet('emp');
+    renderGSheet('admin');
+  }
+
+  // Duplicate spreadsheet
+  function duplicateSpreadsheet(sheetId, mode = 'emp') {
+    const store = getSheetsStore();
+    const target = store[sheetId] || getGSheetState();
+    if (!target) return;
+
+    const curEmp = getCurrentEmployee();
+    const newId = 'sheet_' + Date.now();
+    const newTitle = 'Copy of ' + (target.title || 'Untitled spreadsheet');
+
+    const cloned = JSON.parse(JSON.stringify(target));
+    cloned.id = newId;
+    cloned.title = newTitle;
+    cloned.author = curEmp ? `${curEmp.name} (@${curEmp.username})` : 'Administrator';
+    cloned.createdAt = new Date().toISOString();
+    cloned.updatedAt = new Date().toISOString();
+
+    store[newId] = cloned;
+    saveSheetsStore(store);
+    localStorage.setItem(ACTIVE_SHEET_KEY, newId);
+
+    closeAllGSheetMenus();
+    const openModal = document.getElementById('gs-open-modal');
+    if (openModal) openModal.classList.add('hidden');
+
+    renderGSheet('emp');
+    renderGSheet('admin');
+    alert(`Spreadsheet duplicated! Now viewing "${newTitle}".`);
+  }
+
+  // Delete spreadsheet
+  function deleteSpreadsheet(sheetId, mode = 'emp') {
+    const store = getSheetsStore();
+    const keys = Object.keys(store);
+    if (keys.length <= 1) {
+      alert('Cannot delete the only remaining spreadsheet. Create a new sheet first.');
+      return;
+    }
+
+    const sheet = store[sheetId];
+    const sheetTitle = sheet ? sheet.title : 'this spreadsheet';
+    if (!confirm(`Are you sure you want to move "${sheetTitle}" to bin?`)) {
+      return;
+    }
+
+    delete store[sheetId];
+    saveSheetsStore(store);
+
+    const activeId = getActiveSheetId();
+    if (activeId === sheetId) {
+      const remainingId = Object.keys(store)[0];
+      localStorage.setItem(ACTIVE_SHEET_KEY, remainingId);
+    }
+
+    closeAllGSheetMenus();
+    renderExistingSheetsList();
+    renderGSheet('emp');
+    renderGSheet('admin');
+  }
+
+  // Open existing sheet
+  function switchActiveSheet(sheetId) {
+    const store = getSheetsStore();
+    if (!store[sheetId]) return;
+
+    localStorage.setItem(ACTIVE_SHEET_KEY, sheetId);
+    closeAllGSheetMenus();
+    const openModal = document.getElementById('gs-open-modal');
+    if (openModal) openModal.classList.add('hidden');
+
+    renderGSheet('emp');
+    renderGSheet('admin');
+  }
+
+  // Open Dialog Modal
+  function openExistingSheetsDialog(initialTab = 'recent') {
+    closeAllGSheetMenus();
+    const modal = document.getElementById('gs-open-modal');
+    if (!modal) return;
+
+    switchOpenModalTab(initialTab);
+    renderExistingSheetsList();
+    modal.classList.remove('hidden');
+  }
+
+  function switchOpenModalTab(tab) {
+    const btnRecent = document.getElementById('gs-open-nav-recent');
+    const btnUpload = document.getElementById('gs-open-nav-upload');
+    const viewRecent = document.getElementById('gs-open-view-recent');
+    const viewUpload = document.getElementById('gs-open-view-upload');
+
+    if (tab === 'recent') {
+      if (btnRecent) {
+        btnRecent.classList.add('border-emerald-600', 'text-emerald-700', 'font-bold');
+        btnRecent.classList.remove('border-transparent', 'text-slate-500');
+      }
+      if (btnUpload) {
+        btnUpload.classList.remove('border-emerald-600', 'text-emerald-700', 'font-bold');
+        btnUpload.classList.add('border-transparent', 'text-slate-500');
+      }
+      if (viewRecent) viewRecent.classList.remove('hidden');
+      if (viewUpload) viewUpload.classList.add('hidden');
+      renderExistingSheetsList();
+    } else {
+      if (btnUpload) {
+        btnUpload.classList.add('border-emerald-600', 'text-emerald-700', 'font-bold');
+        btnUpload.classList.remove('border-transparent', 'text-slate-500');
+      }
+      if (btnRecent) {
+        btnRecent.classList.remove('border-emerald-600', 'text-emerald-700', 'font-bold');
+        btnRecent.classList.add('border-transparent', 'text-slate-500');
+      }
+      if (viewUpload) viewUpload.classList.remove('hidden');
+      if (viewRecent) viewRecent.classList.add('hidden');
+    }
+  }
+
+  function renderExistingSheetsList(filterText = '') {
+    const container = document.getElementById('gs-existing-sheets-container');
+    const countBadge = document.getElementById('gs-open-sheets-count');
+    if (!container) return;
+
+    const store = getSheetsStore();
+    const activeId = getActiveSheetId();
+    const list = Object.values(store);
+
+    if (countBadge) countBadge.textContent = list.length;
+
+    const searchLower = (filterText || '').toLowerCase().trim();
+    const filtered = list.filter(s => {
+      if (!searchLower) return true;
+      return (s.title || '').toLowerCase().includes(searchLower) ||
+             (s.author || '').toLowerCase().includes(searchLower);
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="col-span-full text-center py-12 text-slate-400 space-y-2">
+          <i class="fa-solid fa-file-circle-question text-3xl text-slate-300"></i>
+          <p class="text-xs">No spreadsheets matching "${escapeHtml(filterText)}".</p>
+          <button onclick="window.empCreateNewSheet()" class="text-xs text-emerald-600 font-bold hover:underline">
+            + Create a new spreadsheet
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map(sheet => {
+      const isActive = sheet.id === activeId;
+      // Calculate deals count & total value
+      let dealsCount = 0;
+      let totalPipeline = 0;
+      for (let r = 2; r <= (sheet.rows || 35); r++) {
+        if (r === 7) continue;
+        const cellA = sheet.cells ? sheet.cells['A' + r] : null;
+        if (cellA && cellA.raw && String(cellA.raw).trim() !== '') {
+          dealsCount++;
+          const cellF = sheet.cells ? sheet.cells['F' + r] : null;
+          if (cellF && cellF.raw) {
+            const num = Number(String(cellF.raw).replace(/[^0-9.-]/g, ''));
+            if (!isNaN(num)) totalPipeline += num;
+          }
+        }
+      }
+
+      const formattedDate = sheet.updatedAt ? new Date(sheet.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently';
+
+      return `
+        <div class="gs-open-dialog-sheet-card p-4 rounded-xl flex flex-col justify-between space-y-3 ${isActive ? 'active-sheet' : 'bg-white'}">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-start gap-2.5">
+              <div class="w-8 h-8 rounded-lg ${isActive ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600'} flex items-center justify-center text-sm flex-shrink-0 shadow-sm">
+                <i class="fa-solid fa-file-excel"></i>
+              </div>
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <h4 class="font-bold text-xs text-slate-900 line-clamp-1">${escapeHtml(sheet.title || 'Untitled spreadsheet')}</h4>
+                  ${isActive ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">Active</span>' : ''}
+                </div>
+                <p class="text-[10px] text-slate-500">
+                  <span>${escapeHtml(sheet.author || 'Staff')}</span> • <span class="font-mono">${formattedDate}</span>
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1">
+              <button class="gs-card-copy-btn p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition text-xs" data-id="${sheet.id}" title="Make a copy">
+                <i class="fa-regular fa-clone"></i>
+              </button>
+              <button class="gs-card-delete-btn p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition text-xs" data-id="${sheet.id}" title="Delete spreadsheet">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] pt-2 border-t border-slate-100">
+            <div class="flex items-center gap-2 font-mono text-[10px] text-slate-500">
+              <span><strong>${dealsCount}</strong> deals</span>
+              <span>•</span>
+              <span class="text-emerald-700 font-bold">$${totalPipeline.toLocaleString()}</span>
+            </div>
+            <button class="gs-card-open-btn px-3 py-1 text-xs font-bold ${isActive ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} rounded-lg transition flex items-center gap-1 shadow-sm" data-id="${sheet.id}">
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> ${isActive ? 'Currently Open' : 'Open Sheet'}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach card event listeners
+    container.querySelectorAll('.gs-card-open-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        switchActiveSheet(id);
+      });
+    });
+
+    container.querySelectorAll('.gs-card-copy-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        duplicateSpreadsheet(id);
+      });
+    });
+
+    container.querySelectorAll('.gs-card-delete-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        deleteSpreadsheet(id);
+      });
+    });
+  }
+
+  // Robust CSV Parser
+  function parseCSV(text) {
+    const lines = [];
+    let row = [];
+    let inQuote = false;
+    let curVal = '';
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      const next = text[i + 1];
+      if (c === '"') {
+        if (inQuote && next === '"') {
+          curVal += '"';
+          i++;
+        } else {
+          inQuote = !inQuote;
+        }
+      } else if (c === ',' && !inQuote) {
+        row.push(curVal.trim());
+        curVal = '';
+      } else if ((c === '\r' || c === '\n') && !inQuote) {
+        if (c === '\r' && next === '\n') i++;
+        row.push(curVal.trim());
+        if (row.some(val => val !== '')) lines.push(row);
+        row = [];
+        curVal = '';
+      } else {
+        curVal += c;
+      }
+    }
+    if (curVal !== '' || row.length > 0) {
+      row.push(curVal.trim());
+      if (row.some(val => val !== '')) lines.push(row);
+    }
+    return lines;
+  }
+
+  // Import Spreadsheet File Engine
+  function importSpreadsheetFile(file, destMode = 'new') {
+    if (!file) {
+      alert('Please select a file to import.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      const parsedRows = parseCSV(text);
+
+      if (parsedRows.length === 0) {
+        alert('The uploaded file appears to be empty.');
+        return;
+      }
+
+      const curEmp = getCurrentEmployee();
+      const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+
+      if (destMode === 'new') {
+        // Create new spreadsheet
+        const newId = 'sheet_' + Date.now();
+        const newCells = {};
+
+        parsedRows.forEach((rowArr, rIdx) => {
+          const rowNum = rIdx + 1;
+          rowArr.forEach((cellVal, cIdx) => {
+            if (cIdx < GS_COLS.length) {
+              const col = GS_COLS[cIdx];
+              const isHeader = rowNum === 1;
+              newCells[col + rowNum] = {
+                raw: cellVal,
+                bold: isHeader,
+                bg: isHeader ? '#f8fafd' : '#ffffff',
+                align: isHeader ? 'center' : (isNaN(Number(cellVal)) ? 'left' : 'right')
+              };
+            }
+          });
+        });
+
+        const newSheet = {
+          id: newId,
+          title: fileNameWithoutExt,
+          starred: false,
+          rows: Math.max(GS_DEFAULT_ROWS, parsedRows.length + 5),
+          cells: newCells,
+          author: curEmp ? `${curEmp.name} (@${curEmp.username})` : 'Administrator',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        const store = getSheetsStore();
+        store[newId] = newSheet;
+        saveSheetsStore(store);
+        localStorage.setItem(ACTIVE_SHEET_KEY, newId);
+
+        closeAllGSheetMenus();
+        const openModal = document.getElementById('gs-open-modal');
+        if (openModal) openModal.classList.add('hidden');
+
+        renderGSheet('emp');
+        renderGSheet('admin');
+        alert(`Successfully imported "${file.name}" as a new spreadsheet with ${parsedRows.length} rows!`);
+      } else if (destMode === 'replace') {
+        // Replace current sheet cells
+        const curSheet = getGSheetState();
+        curSheet.cells = {};
+        parsedRows.forEach((rowArr, rIdx) => {
+          const rowNum = rIdx + 1;
+          rowArr.forEach((cellVal, cIdx) => {
+            if (cIdx < GS_COLS.length) {
+              const col = GS_COLS[cIdx];
+              const isHeader = rowNum === 1;
+              curSheet.cells[col + rowNum] = {
+                raw: cellVal,
+                bold: isHeader,
+                bg: isHeader ? '#f8fafd' : '#ffffff',
+                align: isHeader ? 'center' : (isNaN(Number(cellVal)) ? 'left' : 'right')
+              };
+            }
+          });
+        });
+        curSheet.rows = Math.max(curSheet.rows || 35, parsedRows.length + 5);
+        saveGSheetState(curSheet);
+
+        closeAllGSheetMenus();
+        const openModal = document.getElementById('gs-open-modal');
+        if (openModal) openModal.classList.add('hidden');
+
+        renderGSheet('emp');
+        renderGSheet('admin');
+        alert(`Successfully replaced current sheet data with ${parsedRows.length} rows from "${file.name}"!`);
+      } else if (destMode === 'append') {
+        // Append rows
+        const curSheet = getGSheetState();
+        let lastRow = 1;
+        Object.keys(curSheet.cells).forEach(k => {
+          const m = k.match(/[0-9]+/);
+          if (m) lastRow = Math.max(lastRow, parseInt(m[0], 10));
+        });
+
+        parsedRows.forEach((rowArr, rIdx) => {
+          if (rIdx === 0 && rowArr[0] && (rowArr[0].toLowerCase().includes('client') || rowArr[0].toLowerCase().includes('name'))) {
+            return;
+          }
+          lastRow++;
+          rowArr.forEach((cellVal, cIdx) => {
+            if (cIdx < GS_COLS.length) {
+              const col = GS_COLS[cIdx];
+              curSheet.cells[col + lastRow] = {
+                raw: cellVal,
+                align: isNaN(Number(cellVal)) ? 'left' : 'right'
+              };
+            }
+          });
+        });
+
+        curSheet.rows = Math.max(curSheet.rows || 35, lastRow + 5);
+        saveGSheetState(curSheet);
+
+        closeAllGSheetMenus();
+        const openModal = document.getElementById('gs-open-modal');
+        if (openModal) openModal.classList.add('hidden');
+
+        renderGSheet('emp');
+        renderGSheet('admin');
+        alert(`Successfully appended rows from "${file.name}"! Current row count: ${lastRow}.`);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // Export Excel (.xlsx compatible CSV with UTF-8 BOM)
+  function exportGSheetXLSX() {
+    const state = getGSheetState();
+    const rows = [];
+
+    for (let r = 1; r <= state.rows; r++) {
+      const rowVals = [];
+      let hasData = false;
+      GS_COLS.forEach(col => {
+        const key = col + r;
+        const val = evalGSheetCell(key, state);
+        if (val !== '' && val !== null && val !== undefined) hasData = true;
+        rowVals.push(`"${String(val).replace(/"/g, '""')}"`);
+      });
+      if (hasData || r <= 15) {
+        rows.push(rowVals.join(','));
+      }
+    }
+
+    const bom = '\uFEFF';
+    const csvContent = 'data:application/vnd.ms-excel;charset=utf-8,' + encodeURIComponent(bom + rows.join('\r\n'));
+    const link = document.createElement('a');
+    link.setAttribute('href', csvContent);
+    link.setAttribute('download', `${(state.title || 'CarbonAxis_Master_Deals').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Show Details Modal
+  function showSheetDetailsModal() {
+    closeAllGSheetMenus();
+    const modal = document.getElementById('gs-details-modal');
+    if (!modal) return;
+
+    const state = getGSheetState();
+    const nameEl = document.getElementById('gs-detail-name');
+    const ownerEl = document.getElementById('gs-detail-owner');
+    const modEl = document.getElementById('gs-detail-modified');
+    const createdEl = document.getElementById('gs-detail-created');
+    const dimEl = document.getElementById('gs-detail-dimensions');
+    const pipeEl = document.getElementById('gs-detail-pipeline');
+
+    if (nameEl) nameEl.textContent = state.title || 'Untitled spreadsheet';
+    if (ownerEl) ownerEl.textContent = state.author || 'Staff Broker';
+    if (modEl) modEl.textContent = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : 'Just now';
+    if (createdEl) createdEl.textContent = state.createdAt ? new Date(state.createdAt).toLocaleDateString() : '2026-10-31';
+    if (dimEl) dimEl.textContent = `${GS_COLS.length} Columns × ${state.rows || 35} Rows`;
+
+    // Calculate pipeline
+    let totalPipeline = 0;
+    for (let r = 2; r <= (state.rows || 35); r++) {
+      if (r === 7) continue;
+      const fVal = evalGSheetCell('F' + r, state);
+      const num = typeof fVal === 'number' ? fVal : Number(String(fVal).replace(/[^0-9.-]/g, ''));
+      if (!isNaN(num)) totalPipeline += num;
+    }
+    if (pipeEl) pipeEl.textContent = '$' + totalPipeline.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    modal.classList.remove('hidden');
+  }
+
+  function closeAllGSheetMenus() {
+    const empDropdown = document.getElementById('emp-gs-file-dropdown');
+    const adminDropdown = document.getElementById('admin-gs-file-dropdown');
+    if (empDropdown) empDropdown.classList.add('hidden');
+    if (adminDropdown) adminDropdown.classList.add('hidden');
+  }
+
+  // Setup File Menu Dropdowns & Action Handlers
+  ['emp', 'admin'].forEach(mode => {
+    const fileMenuBtn = document.getElementById(`${mode}-gs-menu-file`);
+    const fileDropdown = document.getElementById(`${mode}-gs-file-dropdown`);
+
+    if (fileMenuBtn && fileDropdown) {
+      fileMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isClosed = fileDropdown.classList.contains('hidden');
+        closeAllGSheetMenus();
+        if (isClosed) fileDropdown.classList.remove('hidden');
+      });
+    }
+
+    // New Spreadsheet
+    const newSheetBtn = document.getElementById(`${mode}-file-new-sheet`);
+    if (newSheetBtn) {
+      newSheetBtn.addEventListener('click', () => {
+        const title = prompt('Enter title for new spreadsheet:', 'Untitled spreadsheet');
+        if (title !== null) {
+          createNewSpreadsheet(title, false, mode);
+        }
+      });
+    }
+
+    // New from Template
+    const newTemplateBtn = document.getElementById(`${mode}-file-new-template`);
+    if (newTemplateBtn) {
+      newTemplateBtn.addEventListener('click', () => {
+        const title = prompt('Enter title for template spreadsheet:', 'Carbon Deals ' + new Date().getFullYear());
+        if (title !== null) {
+          createNewSpreadsheet(title, true, mode);
+        }
+      });
+    }
+
+    // Open Existing Sheets
+    const openBtn = document.getElementById(`${mode}-file-open-btn`);
+    if (openBtn) {
+      openBtn.addEventListener('click', () => openExistingSheetsDialog('recent'));
+    }
+
+    // Import File
+    const importBtn = document.getElementById(`${mode}-file-import-btn`);
+    if (importBtn) {
+      importBtn.addEventListener('click', () => openExistingSheetsDialog('upload'));
+    }
+
+    // Make a copy
+    const copyBtn = document.getElementById(`${mode}-file-copy-btn`);
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => duplicateSpreadsheet(getActiveSheetId(), mode));
+    }
+
+    // Share Team
+    const shareTeamBtn = document.getElementById(`${mode}-file-share-team`);
+    if (shareTeamBtn) {
+      shareTeamBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        alert('Spreadsheet is currently shared with all 10 authorized staff brokers and administrator in real time.');
+      });
+    }
+
+    // Share Link
+    const shareLinkBtn = document.getElementById(`${mode}-file-share-link`);
+    if (shareLinkBtn) {
+      shareLinkBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        navigator.clipboard?.writeText(window.location.href);
+        alert('Spreadsheet direct workspace link copied to clipboard!');
+      });
+    }
+
+    // Download CSV
+    const dlCsvBtn = document.getElementById(`${mode}-file-dl-csv`);
+    if (dlCsvBtn) {
+      dlCsvBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        exportGSheetCSV();
+      });
+    }
+
+    // Download XLSX
+    const dlXlsxBtn = document.getElementById(`${mode}-file-dl-xlsx`);
+    if (dlXlsxBtn) {
+      dlXlsxBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        exportGSheetXLSX();
+      });
+    }
+
+    // Download PDF
+    const dlPdfBtn = document.getElementById(`${mode}-file-dl-pdf`);
+    if (dlPdfBtn) {
+      dlPdfBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        window.print();
+      });
+    }
+
+    // Rename
+    const renameBtn = document.getElementById(`${mode}-file-rename-btn`);
+    if (renameBtn) {
+      renameBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        const docTitle = document.getElementById(`${mode}-gs-doc-title`);
+        if (docTitle) {
+          docTitle.focus();
+          docTitle.select();
+        }
+      });
+    }
+
+    // Move to bin / Delete
+    const deleteBtn = document.getElementById(`${mode}-file-delete-btn`);
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => deleteSpreadsheet(getActiveSheetId(), mode));
+    }
+
+    // Details
+    const detailsBtn = document.getElementById(`${mode}-file-details-btn`);
+    if (detailsBtn) {
+      detailsBtn.addEventListener('click', showSheetDetailsModal);
+    }
+
+    // Settings
+    const settingsBtn = document.getElementById(`${mode}-file-settings-btn`);
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        alert('Spreadsheet Settings:\nLocale: United States (USD)\nCalculation: On change\nTimezone: UTC');
+      });
+    }
+
+    // Print
+    const printMenuBtn = document.getElementById(`${mode}-file-print-btn`);
+    if (printMenuBtn) {
+      printMenuBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        window.print();
+      });
+    }
+  });
+
+  // Global click outside to close menus
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.gs-menu-wrapper')) {
+      closeAllGSheetMenus();
+    }
+  });
+
+  // Open Modal Tab switching & search filter
+  const openTabRecent = document.getElementById('gs-open-nav-recent');
+  const openTabUpload = document.getElementById('gs-open-nav-upload');
+  const openSearchInput = document.getElementById('gs-open-search-input');
+  const openCreateNewBtn = document.getElementById('gs-open-create-new-btn');
+  const closeOpenModal = document.getElementById('close-gs-open-modal');
+  const cancelOpenModal = document.getElementById('gs-open-modal-cancel');
+
+  if (openTabRecent) openTabRecent.addEventListener('click', () => switchOpenModalTab('recent'));
+  if (openTabUpload) openTabUpload.addEventListener('click', () => switchOpenModalTab('upload'));
+  if (openSearchInput) {
+    openSearchInput.addEventListener('input', (e) => renderExistingSheetsList(e.target.value));
+  }
+  if (openCreateNewBtn) {
+    openCreateNewBtn.addEventListener('click', () => {
+      const title = prompt('Enter title for new spreadsheet:', 'Untitled spreadsheet');
+      if (title !== null) {
+        createNewSpreadsheet(title, false);
+      }
+    });
+  }
+  if (closeOpenModal) {
+    closeOpenModal.addEventListener('click', () => {
+      const m = document.getElementById('gs-open-modal');
+      if (m) m.classList.add('hidden');
+    });
+  }
+  if (cancelOpenModal) {
+    cancelOpenModal.addEventListener('click', () => {
+      const m = document.getElementById('gs-open-modal');
+      if (m) m.classList.add('hidden');
+    });
+  }
+
+  // Upload / Import Drag and Drop Handling
+  const dropzone = document.getElementById('gs-dropzone');
+  const fileImportInput = document.getElementById('gs-file-import-input');
+  const browseFileBtn = document.getElementById('gs-browse-file-btn');
+  const selectedBadge = document.getElementById('gs-selected-file-badge');
+  const selectedName = document.getElementById('gs-selected-file-name');
+  const selectedSize = document.getElementById('gs-selected-file-size');
+  const removeSelectedFile = document.getElementById('gs-remove-selected-file');
+  const confirmImportBtn = document.getElementById('gs-confirm-import-btn');
+
+  if (browseFileBtn && fileImportInput) {
+    browseFileBtn.addEventListener('click', () => fileImportInput.click());
+  }
+
+  if (dropzone && fileImportInput) {
+    dropzone.addEventListener('click', (e) => {
+      if (e.target !== browseFileBtn) fileImportInput.click();
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        handleFileSelection(files[0]);
+      }
+    });
+  }
+
+  if (fileImportInput) {
+    fileImportInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFileSelection(e.target.files[0]);
+      }
+    });
+  }
+
+  function handleFileSelection(file) {
+    pendingImportFile = file;
+    if (selectedBadge) selectedBadge.classList.remove('hidden');
+    if (selectedName) selectedName.textContent = file.name;
+    if (selectedSize) selectedSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+  }
+
+  if (removeSelectedFile) {
+    removeSelectedFile.addEventListener('click', () => {
+      pendingImportFile = null;
+      if (fileImportInput) fileImportInput.value = '';
+      if (selectedBadge) selectedBadge.classList.add('hidden');
+    });
+  }
+
+  if (confirmImportBtn) {
+    confirmImportBtn.addEventListener('click', () => {
+      if (!pendingImportFile) {
+        alert('Please select or drop a CSV / Excel file to import.');
+        return;
+      }
+      const destRadios = document.getElementsByName('gs-import-dest');
+      let destMode = 'new';
+      destRadios.forEach(r => {
+        if (r.checked) destMode = r.value;
+      });
+      importSpreadsheetFile(pendingImportFile, destMode);
+      pendingImportFile = null;
+      if (fileImportInput) fileImportInput.value = '';
+      if (selectedBadge) selectedBadge.classList.add('hidden');
+    });
+  }
+
+  // Details Modal close handlers
+  const closeDetailsModal = document.getElementById('close-gs-details-modal');
+  const closeDetailsModalBtn = document.getElementById('close-gs-details-modal-btn');
+  if (closeDetailsModal) {
+    closeDetailsModal.addEventListener('click', () => {
+      const m = document.getElementById('gs-details-modal');
+      if (m) m.classList.add('hidden');
+    });
+  }
+  if (closeDetailsModalBtn) {
+    closeDetailsModalBtn.addEventListener('click', () => {
+      const m = document.getElementById('gs-details-modal');
+      if (m) m.classList.add('hidden');
+    });
+  }
+
+  // Keyboard shortcut Ctrl+O / Cmd+O to open file dialog
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O')) {
+      const isEmpVisible = empTabSheetView && !empTabSheetView.classList.contains('hidden') && viewEmployee && !viewEmployee.classList.contains('hidden');
+      const isAdminVisible = tabSheetView && !tabSheetView.classList.contains('hidden') && adminDashboardView && !adminDashboardView.classList.contains('hidden');
+      if (isEmpVisible || isAdminVisible) {
+        e.preventDefault();
+        openExistingSheetsDialog('recent');
+      }
+    }
+  });
+
+  window.empCreateNewSheet = () => createNewSpreadsheet('Untitled spreadsheet', false);
 
   // Google Drive Modal Functions
   const gsheetEmbedModal = document.getElementById('gsheet-embed-modal');

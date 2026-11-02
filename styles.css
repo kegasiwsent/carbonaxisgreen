@@ -658,3 +658,159 @@ body {
   border-color: #c4c7c5;
 }
 
+/* ==========================================================================
+   Google Sheets File Dropdown Menu & Dialogs
+   Matches Google Sheets UI (media_1793593914926_f1fabade.png)
+   ========================================================================== */
+
+.gs-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.gs-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16), 0 1px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dadce0;
+  min-width: 270px;
+  z-index: 1000;
+  padding: 6px 0;
+  font-family: Roboto, -apple-system, Arial, sans-serif;
+  font-size: 13px;
+  color: #1f1f1f;
+  animation: gsFadeDown 0.15s ease-out;
+}
+
+@keyframes gsFadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gs-menu-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+.gs-menu-item-row:hover {
+  background: #f1f3f4;
+}
+
+.gs-menu-item-row.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.gs-menu-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gs-menu-icon {
+  width: 18px;
+  text-align: center;
+  color: #444746;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.gs-menu-label {
+  font-size: 13px;
+  color: #1f1f1f;
+  font-weight: 400;
+}
+
+.gs-menu-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gs-menu-shortcut {
+  color: #747775;
+  font-size: 11px;
+  font-family: Roboto Mono, monospace;
+}
+
+.gs-menu-arrow {
+  color: #747775;
+  font-size: 9px;
+  margin-left: 6px;
+}
+
+.gs-menu-divider {
+  height: 1px;
+  background: #e0e2e5;
+  margin: 5px 0;
+}
+
+/* Submenu container */
+.gs-submenu-wrapper {
+  position: relative;
+}
+
+.gs-submenu-wrapper:hover .gs-submenu {
+  display: block;
+}
+
+.gs-submenu {
+  display: none;
+  position: absolute;
+  top: -6px;
+  left: 98%;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16), 0 1px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dadce0;
+  min-width: 220px;
+  z-index: 1001;
+  padding: 6px 0;
+}
+
+/* Open & Import Modal Styles */
+.gs-open-dialog-sheet-card {
+  transition: all 0.15s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.gs-open-dialog-sheet-card:hover {
+  border-color: #1a73e8;
+  background-color: #f8fafd;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.1);
+}
+
+.gs-open-dialog-sheet-card.active-sheet {
+  border-color: #0f9d58;
+  background-color: #ecfdf5;
+}
+
+.gs-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.gs-dropzone:hover, .gs-dropzone.dragover {
+  border-color: #1a73e8;
+  background-color: #f0f7ff;
+}
+
+

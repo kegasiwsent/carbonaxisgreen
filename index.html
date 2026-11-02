@@ -1173,7 +1173,175 @@
                   </div>
                   <!-- Menu Bar -->
                   <div class="gs-menu-bar">
-                    <button class="gs-menu-item" type="button" id="admin-gs-menu-file">File</button>
+                    <div class="gs-menu-wrapper">
+                      <button class="gs-menu-item" type="button" id="admin-gs-menu-file">File</button>
+                      <div id="admin-gs-file-dropdown" class="gs-dropdown-menu hidden">
+                        <!-- New -->
+                        <div class="gs-submenu-wrapper">
+                          <div class="gs-menu-item-row" id="admin-file-new-btn">
+                            <div class="gs-menu-left">
+                              <i class="fa-solid fa-file-circle-plus gs-menu-icon"></i>
+                              <span class="gs-menu-label font-medium">New</span>
+                            </div>
+                            <div class="gs-menu-right">
+                              <i class="fa-solid fa-play gs-menu-arrow"></i>
+                            </div>
+                          </div>
+                          <div class="gs-submenu">
+                            <div class="gs-menu-item-row" id="admin-file-new-sheet">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-table text-emerald-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Spreadsheet</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="admin-file-new-template">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-invoice-dollar text-blue-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">From Carbon Deals Template</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Open -->
+                        <div class="gs-menu-item-row" id="admin-file-open-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-regular fa-folder-open gs-menu-icon"></i>
+                            <span class="gs-menu-label font-medium">Open</span>
+                          </div>
+                          <div class="gs-menu-right">
+                            <span class="gs-menu-shortcut">⌘O</span>
+                          </div>
+                        </div>
+
+                        <!-- Import -->
+                        <div class="gs-menu-item-row" id="admin-file-import-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-file-import gs-menu-icon"></i>
+                            <span class="gs-menu-label">Import</span>
+                          </div>
+                        </div>
+
+                        <!-- Make a copy -->
+                        <div class="gs-menu-item-row" id="admin-file-copy-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-regular fa-clone gs-menu-icon"></i>
+                            <span class="gs-menu-label">Make a copy</span>
+                          </div>
+                        </div>
+
+                        <div class="gs-menu-divider"></div>
+
+                        <!-- Share -->
+                        <div class="gs-submenu-wrapper">
+                          <div class="gs-menu-item-row" id="admin-file-share-btn">
+                            <div class="gs-menu-left">
+                              <i class="fa-solid fa-user-plus gs-menu-icon"></i>
+                              <span class="gs-menu-label">Share</span>
+                            </div>
+                            <div class="gs-menu-right">
+                              <i class="fa-solid fa-play gs-menu-arrow"></i>
+                            </div>
+                          </div>
+                          <div class="gs-submenu">
+                            <div class="gs-menu-item-row" id="admin-file-share-team">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-users text-blue-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Share with team</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="admin-file-share-link">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-link text-slate-500 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Copy link</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Download -->
+                        <div class="gs-submenu-wrapper">
+                          <div class="gs-menu-item-row" id="admin-file-download-btn">
+                            <div class="gs-menu-left">
+                              <i class="fa-solid fa-download gs-menu-icon"></i>
+                              <span class="gs-menu-label">Download</span>
+                            </div>
+                            <div class="gs-menu-right">
+                              <i class="fa-solid fa-play gs-menu-arrow"></i>
+                            </div>
+                          </div>
+                          <div class="gs-submenu">
+                            <div class="gs-menu-item-row" id="admin-file-dl-csv">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-csv text-emerald-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Comma-separated values (.csv)</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="admin-file-dl-xlsx">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-excel text-emerald-700 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Microsoft Excel (.xlsx)</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="admin-file-dl-pdf">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-pdf text-rose-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">PDF document (.pdf)</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="gs-menu-divider"></div>
+
+                        <!-- Rename -->
+                        <div class="gs-menu-item-row" id="admin-file-rename-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-pen gs-menu-icon"></i>
+                            <span class="gs-menu-label">Rename</span>
+                          </div>
+                        </div>
+
+                        <!-- Move to bin / Delete -->
+                        <div class="gs-menu-item-row text-rose-600" id="admin-file-delete-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-regular fa-trash-can gs-menu-icon text-rose-500"></i>
+                            <span class="gs-menu-label text-rose-600">Move to bin</span>
+                          </div>
+                        </div>
+
+                        <div class="gs-menu-divider"></div>
+
+                        <!-- Details -->
+                        <div class="gs-menu-item-row" id="admin-file-details-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-circle-info gs-menu-icon"></i>
+                            <span class="gs-menu-label">Details</span>
+                          </div>
+                        </div>
+
+                        <!-- Settings -->
+                        <div class="gs-menu-item-row" id="admin-file-settings-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-gear gs-menu-icon"></i>
+                            <span class="gs-menu-label">Settings</span>
+                          </div>
+                        </div>
+
+                        <div class="gs-menu-divider"></div>
+
+                        <!-- Print -->
+                        <div class="gs-menu-item-row" id="admin-file-print-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-print gs-menu-icon"></i>
+                            <span class="gs-menu-label">Print</span>
+                          </div>
+                          <div class="gs-menu-right">
+                            <span class="gs-menu-shortcut">⌘P</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <button class="gs-menu-item" type="button" id="admin-gs-menu-edit">Edit</button>
                     <button class="gs-menu-item" type="button" id="admin-gs-menu-view">View</button>
                     <button class="gs-menu-item" type="button" id="admin-gs-menu-insert">Insert</button>
@@ -1519,7 +1687,175 @@
                   </div>
                   <!-- Menu Bar (Google Sheets Menu) -->
                   <div class="gs-menu-bar">
-                    <button class="gs-menu-item" type="button" id="emp-gs-menu-file">File</button>
+                    <div class="gs-menu-wrapper">
+                      <button class="gs-menu-item" type="button" id="emp-gs-menu-file">File</button>
+                      <div id="emp-gs-file-dropdown" class="gs-dropdown-menu hidden">
+                        <!-- New -->
+                        <div class="gs-submenu-wrapper">
+                          <div class="gs-menu-item-row" id="emp-file-new-btn">
+                            <div class="gs-menu-left">
+                              <i class="fa-solid fa-file-circle-plus gs-menu-icon"></i>
+                              <span class="gs-menu-label font-medium">New</span>
+                            </div>
+                            <div class="gs-menu-right">
+                              <i class="fa-solid fa-play gs-menu-arrow"></i>
+                            </div>
+                          </div>
+                          <div class="gs-submenu">
+                            <div class="gs-menu-item-row" id="emp-file-new-sheet">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-table text-emerald-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Spreadsheet</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="emp-file-new-template">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-invoice-dollar text-blue-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">From Carbon Deals Template</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Open -->
+                        <div class="gs-menu-item-row" id="emp-file-open-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-regular fa-folder-open gs-menu-icon"></i>
+                            <span class="gs-menu-label font-medium">Open</span>
+                          </div>
+                          <div class="gs-menu-right">
+                            <span class="gs-menu-shortcut">⌘O</span>
+                          </div>
+                        </div>
+
+                        <!-- Import -->
+                        <div class="gs-menu-item-row" id="emp-file-import-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-file-import gs-menu-icon"></i>
+                            <span class="gs-menu-label">Import</span>
+                          </div>
+                        </div>
+
+                        <!-- Make a copy -->
+                        <div class="gs-menu-item-row" id="emp-file-copy-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-regular fa-clone gs-menu-icon"></i>
+                            <span class="gs-menu-label">Make a copy</span>
+                          </div>
+                        </div>
+
+                        <div class="gs-menu-divider"></div>
+
+                        <!-- Share -->
+                        <div class="gs-submenu-wrapper">
+                          <div class="gs-menu-item-row" id="emp-file-share-btn">
+                            <div class="gs-menu-left">
+                              <i class="fa-solid fa-user-plus gs-menu-icon"></i>
+                              <span class="gs-menu-label">Share</span>
+                            </div>
+                            <div class="gs-menu-right">
+                              <i class="fa-solid fa-play gs-menu-arrow"></i>
+                            </div>
+                          </div>
+                          <div class="gs-submenu">
+                            <div class="gs-menu-item-row" id="emp-file-share-team">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-users text-blue-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Share with team</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="emp-file-share-link">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-link text-slate-500 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Copy link</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Download -->
+                        <div class="gs-submenu-wrapper">
+                          <div class="gs-menu-item-row" id="emp-file-download-btn">
+                            <div class="gs-menu-left">
+                              <i class="fa-solid fa-download gs-menu-icon"></i>
+                              <span class="gs-menu-label">Download</span>
+                            </div>
+                            <div class="gs-menu-right">
+                              <i class="fa-solid fa-play gs-menu-arrow"></i>
+                            </div>
+                          </div>
+                          <div class="gs-submenu">
+                            <div class="gs-menu-item-row" id="emp-file-dl-csv">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-csv text-emerald-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Comma-separated values (.csv)</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="emp-file-dl-xlsx">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-excel text-emerald-700 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Microsoft Excel (.xlsx)</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="emp-file-dl-pdf">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-pdf text-rose-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">PDF document (.pdf)</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="gs-menu-divider"></div>
+
+                        <!-- Rename -->
+                        <div class="gs-menu-item-row" id="emp-file-rename-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-pen gs-menu-icon"></i>
+                            <span class="gs-menu-label">Rename</span>
+                          </div>
+                        </div>
+
+                        <!-- Move to bin / Delete -->
+                        <div class="gs-menu-item-row text-rose-600" id="emp-file-delete-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-regular fa-trash-can gs-menu-icon text-rose-500"></i>
+                            <span class="gs-menu-label text-rose-600">Move to bin</span>
+                          </div>
+                        </div>
+
+                        <div class="gs-menu-divider"></div>
+
+                        <!-- Details -->
+                        <div class="gs-menu-item-row" id="emp-file-details-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-circle-info gs-menu-icon"></i>
+                            <span class="gs-menu-label">Details</span>
+                          </div>
+                        </div>
+
+                        <!-- Settings -->
+                        <div class="gs-menu-item-row" id="emp-file-settings-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-gear gs-menu-icon"></i>
+                            <span class="gs-menu-label">Settings</span>
+                          </div>
+                        </div>
+
+                        <div class="gs-menu-divider"></div>
+
+                        <!-- Print -->
+                        <div class="gs-menu-item-row" id="emp-file-print-btn">
+                          <div class="gs-menu-left">
+                            <i class="fa-solid fa-print gs-menu-icon"></i>
+                            <span class="gs-menu-label">Print</span>
+                          </div>
+                          <div class="gs-menu-right">
+                            <span class="gs-menu-shortcut">⌘P</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <button class="gs-menu-item" type="button" id="emp-gs-menu-edit">Edit</button>
                     <button class="gs-menu-item" type="button" id="emp-gs-menu-view">View</button>
                     <button class="gs-menu-item" type="button" id="emp-gs-menu-insert">Insert</button>
@@ -2202,6 +2538,180 @@
             Save & Connect Link
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GOOGLE SHEETS OPEN & IMPORT MODAL ==================== -->
+  <div id="gs-open-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-overlay flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[88vh]">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white text-base shadow-sm">
+            <i class="fa-solid fa-table-cells"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Open a file</h3>
+            <p class="text-[11px] text-slate-500">Select an existing spreadsheet, create a new one, or upload from your device</p>
+          </div>
+        </div>
+        <button id="close-gs-open-modal" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition text-base" type="button">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="px-6 border-b border-slate-200 flex items-center justify-between bg-white text-xs font-semibold">
+        <div class="flex space-x-6">
+          <button id="gs-open-nav-recent" class="py-3 border-b-2 border-emerald-600 text-emerald-700 active font-bold flex items-center gap-2" type="button">
+            <i class="fa-regular fa-clock"></i> Recent & Saved Sheets (<span id="gs-open-sheets-count">0</span>)
+          </button>
+          <button id="gs-open-nav-upload" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition flex items-center gap-2" type="button">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload & Import File
+          </button>
+        </div>
+        <button id="gs-open-create-new-btn" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition font-bold flex items-center gap-1.5 shadow-sm active:scale-98" type="button">
+          <i class="fa-solid fa-plus text-xs"></i> New Spreadsheet
+        </button>
+      </div>
+
+      <!-- Tab View 1: Recent & Saved Sheets -->
+      <div id="gs-open-view-recent" class="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
+        <!-- Search filter -->
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+          <input type="text" id="gs-open-search-input" placeholder="Search spreadsheets by title, broker, or notes..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 bg-slate-50 focus:bg-white" />
+        </div>
+
+        <!-- Dynamic Sheets Container -->
+        <div id="gs-existing-sheets-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Dynamically populated sheet cards -->
+        </div>
+      </div>
+
+      <!-- Tab View 2: Upload / Import File -->
+      <div id="gs-open-view-upload" class="p-6 overflow-y-auto flex-1 space-y-4 hidden custom-scrollbar">
+        <!-- Drag & Drop Zone -->
+        <div id="gs-dropzone" class="gs-dropzone p-8 text-center cursor-pointer bg-slate-50/60 hover:bg-emerald-50/30 transition flex flex-col items-center justify-center space-y-3">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shadow-inner">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-slate-800">Drag and drop CSV or Excel file here</h4>
+            <p class="text-xs text-slate-500 mt-1">Supports Comma-Separated Values (.csv), Microsoft Excel (.xlsx), or .txt</p>
+          </div>
+          <button id="gs-browse-file-btn" type="button" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition">
+            Browse on your device
+          </button>
+          <input type="file" id="gs-file-import-input" accept=".csv, text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx, .txt" class="hidden" />
+        </div>
+
+        <!-- Selected File Status Badge -->
+        <div id="gs-selected-file-badge" class="hidden p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-file-excel text-emerald-600 text-xl"></i>
+            <div>
+              <span id="gs-selected-file-name" class="font-bold text-xs text-slate-800 block">data.csv</span>
+              <span id="gs-selected-file-size" class="text-[10px] text-slate-500 font-mono">0 KB</span>
+            </div>
+          </div>
+          <button id="gs-remove-selected-file" class="text-slate-400 hover:text-red-500 text-sm p-1">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Import Destination Option -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs">
+          <span class="font-bold text-slate-700 block">Import location:</span>
+          <div class="space-y-1.5">
+            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+              <input type="radio" name="gs-import-dest" value="new" checked class="text-emerald-600 focus:ring-emerald-500" />
+              <span>Create new spreadsheet</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+              <input type="radio" name="gs-import-dest" value="replace" class="text-emerald-600 focus:ring-emerald-500" />
+              <span>Replace current spreadsheet grid</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+              <input type="radio" name="gs-import-dest" value="append" class="text-emerald-600 focus:ring-emerald-500" />
+              <span>Append rows to current spreadsheet</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button id="gs-confirm-import-btn" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition shadow flex items-center gap-2 active:scale-98" type="button">
+            <i class="fa-solid fa-file-import"></i> Import Spreadsheet Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+        <span class="flex items-center gap-1.5">
+          <i class="fa-solid fa-cloud text-emerald-600"></i> All sheets persist in browser storage and sync with Supabase cloud
+        </span>
+        <button id="gs-open-modal-cancel" class="px-4 py-1.5 border border-slate-300 hover:bg-slate-200 rounded-lg text-slate-700 font-bold transition" type="button">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GOOGLE SHEETS DETAILS MODAL ==================== -->
+  <div id="gs-details-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-overlay flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-circle-info"></i>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Document details</h3>
+        </div>
+        <button id="close-gs-details-modal" class="text-slate-400 hover:text-slate-600 text-base p-1 transition" type="button">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Name</span>
+          <span id="gs-detail-name" class="font-bold text-slate-800 text-right">CarbonAxis Master Deals 2026</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Location</span>
+          <span class="font-mono text-emerald-700 font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-cloud"></i> CarbonAxis Cloud / Drive
+          </span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Owner</span>
+          <span id="gs-detail-owner" class="font-bold text-slate-800">Alex Morgan</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Modified</span>
+          <span id="gs-detail-modified" class="text-slate-700 font-mono">Just now</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Created</span>
+          <span id="gs-detail-created" class="text-slate-700 font-mono">2026-10-31</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Grid Dimensions</span>
+          <span id="gs-detail-dimensions" class="font-mono text-slate-800">14 Columns × 35 Rows</span>
+        </div>
+        <div class="flex justify-between py-1.5">
+          <span class="text-slate-500">Total Deals Pipeline</span>
+          <span id="gs-detail-pipeline" class="font-mono font-bold text-emerald-700 text-sm">$0.00</span>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t border-slate-100">
+        <button id="close-gs-details-modal-btn" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition" type="button">
+          Close
+        </button>
       </div>
     </div>
   </div>
