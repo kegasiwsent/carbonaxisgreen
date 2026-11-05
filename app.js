@@ -724,6 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (tabEmployeesView) tabEmployeesView.classList.remove('hidden');
       renderAdminEmployeesTable();
+      fetchEmployeesFromCloud().then(() => renderAdminEmployeesTable()).catch(() => {});
     } else if (tabName === 'logs') {
       if (tabLogsBtn) {
         tabLogsBtn.classList.add('border-green-600', 'text-green-600', 'active');
@@ -750,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadAdminDashboardData() {
     currentInquiries = await fetchInquiries();
     currentTrades = await fetchTrades();
-    const employees = getEmployees();
+    const employees = await fetchEmployeesFromCloud();
     const logs = getEmployeeLogs();
     const sheetRecords = getSheetRecords();
 
@@ -1069,8 +1070,74 @@ document.addEventListener('DOMContentLoaded', () => {
     return list;
   }
 
-  function saveEmployees(list) {
+  async function fetchEmployeesFromCloud() {
+    let cloudList = [];
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('staff_accounts')
+          .select('*')
+          .order('created_at', { ascending: true });
+        if (!error && Array.isArray(data)) {
+          cloudList = data;
+        } else if (error) {
+          console.warn('Supabase staff_accounts fetch notice:', error.message);
+        }
+      } catch (err) {
+        console.warn('Supabase staff fetch error:', err);
+      }
+    }
+
+    const localList = getEmployees();
+
+    if (cloudList && cloudList.length > 0) {
+      // Sync any missing local staff into cloud table
+      if (supabaseClient) {
+        const missingInCloud = localList.filter(l => 
+          !cloudList.some(c => (c.username || '').toLowerCase() === (l.username || '').toLowerCase())
+        );
+        if (missingInCloud.length > 0) {
+          try {
+            await supabaseClient.from('staff_accounts').upsert(missingInCloud, { onConflict: 'username' });
+            const { data: refreshed } = await supabaseClient
+              .from('staff_accounts')
+              .select('*')
+              .order('created_at', { ascending: true });
+            if (Array.isArray(refreshed) && refreshed.length > 0) {
+              cloudList = refreshed;
+            }
+          } catch (mErr) {
+            console.warn('Notice syncing local accounts to cloud:', mErr);
+          }
+        }
+      }
+
+      localStorage.setItem('carbonaxis_employees', JSON.stringify(cloudList));
+      return cloudList;
+    }
+
+    // If cloud is connected but table is empty, seed local accounts to cloud
+    if (supabaseClient && cloudList && cloudList.length === 0 && localList.length > 0) {
+      try {
+        await supabaseClient.from('staff_accounts').upsert(localList, { onConflict: 'username' });
+      } catch (seedErr) {
+        // Table may need schema query
+      }
+    }
+
+    return localList;
+  }
+
+  async function saveEmployees(list) {
     localStorage.setItem('carbonaxis_employees', JSON.stringify(list));
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient.from('staff_accounts').upsert(list, { onConflict: 'username' });
+        if (error) console.warn('Supabase staff_accounts upsert notice:', error.message);
+      } catch (e) {
+        console.warn('Supabase staff_accounts save exception:', e);
+      }
+    }
   }
 
   function getEmployeeLogs() {
@@ -1178,9 +1245,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (adminCancelEmpModalBtn) adminCancelEmpModalBtn.addEventListener('click', closeEmployeeModal);
 
   if (adminEmpForm) {
-    adminEmpForm.addEventListener('submit', (e) => {
+    adminEmpForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const employees = getEmployees();
+      const saveBtn = adminEmpForm.querySelector('button[type="submit"]');
+      const originalBtnText = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving account...';
+      }
+
+      let employees = await fetchEmployeesFromCloud();
       const empId = adminEmpIdInput?.value.trim();
       const name = (adminEmpNameInput?.value || '').trim();
       const username = (adminEmpUserInput?.value || '').trim().toLowerCase();
@@ -1190,31 +1264,56 @@ document.addEventListener('DOMContentLoaded', () => {
       const status = adminEmpStatusSelect?.value || 'Active';
 
       if (!name || !username || !password) {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = originalBtnText;
+        }
         alert('Please complete all required fields (Name, Username, Password).');
         return;
       }
 
       if (empId) {
         // Edit existing
-        const idx = employees.findIndex(e => e.id === empId);
+        const idx = employees.findIndex(emp => emp.id === empId);
         if (idx !== -1) {
           employees[idx].name = name;
           employees[idx].password = password;
           employees[idx].role = role;
           employees[idx].email = email;
           employees[idx].status = status;
-          saveEmployees(employees);
+          await saveEmployees(employees);
+
+          if (supabaseClient) {
+            try {
+              await supabaseClient.from('staff_accounts').update({
+                name,
+                password,
+                role,
+                email,
+                status
+              }).eq('id', empId);
+            } catch (err) {}
+          }
+
           alert(`Employee "${name}" updated successfully.`);
         }
       } else {
         // Create new
         if (employees.length >= 10) {
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
+          }
           alert('Employee account limit reached (10/10). Maximum of 10 staff accounts permitted.');
           return;
         }
 
-        const usernameExists = employees.some(e => e.username.toLowerCase() === username);
+        const usernameExists = employees.some(emp => (emp.username || '').toLowerCase() === username);
         if (usernameExists) {
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
+          }
           alert(`Username "${username}" is already assigned to another staff member. Please use a unique login username.`);
           return;
         }
@@ -1235,12 +1334,26 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         employees.push(newEmp);
-        saveEmployees(employees);
-        alert(`New employee account created: ${name} (@${username})`);
+        await saveEmployees(employees);
+
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('staff_accounts').upsert([newEmp], { onConflict: 'username' });
+          } catch (err) {
+            console.warn('Direct employee cloud upsert notice:', err);
+          }
+        }
+
+        alert(`New staff account created successfully!\n\nStaff Name: ${name}\nUsername: ${username}\nPassword: ${password}\nRole: ${role}\n\nStaff can now immediately sign in at the Staff Portal.`);
+      }
+
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalBtnText;
       }
 
       closeEmployeeModal();
-      loadAdminDashboardData();
+      await loadAdminDashboardData();
     });
   }
 
@@ -1352,20 +1465,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tbody.querySelectorAll('.admin-emp-toggle-status').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         const employees = getEmployees();
         const emp = employees.find(e => e.id === id);
         if (emp) {
-          emp.status = emp.status === 'Active' ? 'Inactive' : 'Active';
-          saveEmployees(employees);
+          emp.status = emp.status === 'Active' ? 'Suspended' : 'Active';
+          await saveEmployees(employees);
+          if (supabaseClient) {
+            try {
+              await supabaseClient.from('staff_accounts').update({ status: emp.status }).eq('id', id);
+            } catch (err) {}
+          }
           renderAdminEmployeesTable();
         }
       });
     });
 
     tbody.querySelectorAll('.admin-emp-reset-pass').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         const employees = getEmployees();
         const emp = employees.find(e => e.id === id);
@@ -1373,7 +1491,12 @@ document.addEventListener('DOMContentLoaded', () => {
           const newPass = prompt(`Set new password for ${emp.name} (@${emp.username}):`, emp.password);
           if (newPass && newPass.trim()) {
             emp.password = newPass.trim();
-            saveEmployees(employees);
+            await saveEmployees(employees);
+            if (supabaseClient) {
+              try {
+                await supabaseClient.from('staff_accounts').update({ password: emp.password }).eq('id', id);
+              } catch (err) {}
+            }
             renderAdminEmployeesTable();
             alert(`Password updated for ${emp.name}.`);
           }
@@ -1382,14 +1505,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tbody.querySelectorAll('.admin-emp-delete').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         const employees = getEmployees();
         const emp = employees.find(e => e.id === id);
         if (emp && confirm(`Are you sure you want to delete employee "${emp.name}" (@${emp.username})?`)) {
           const filtered = employees.filter(e => e.id !== id);
-          saveEmployees(filtered);
-          loadAdminDashboardData();
+          localStorage.setItem('carbonaxis_employees', JSON.stringify(filtered));
+          if (supabaseClient) {
+            try {
+              await supabaseClient.from('staff_accounts').delete().eq('id', id);
+            } catch (err) {
+              console.warn('Supabase delete staff error:', err);
+            }
+          }
+          await loadAdminDashboardData();
         }
       });
     });
@@ -1585,13 +1715,67 @@ document.addEventListener('DOMContentLoaded', () => {
   if (employeeAuthForm) {
     employeeAuthForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = employeeAuthForm.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying credentials...';
+      }
+
       const username = (employeeUsernameInput?.value || '').trim().toLowerCase();
       const password = (employeePasswordInput?.value || '').trim();
 
-      const employees = getEmployees();
-      const emp = employees.find(e => e.username.toLowerCase() === username && e.password === password);
+      if (!username || !password) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }
+        alert('Please enter your staff username and password.');
+        return;
+      }
 
+      // 1. First attempt to query Supabase staff_accounts cloud table directly (case-insensitive username)
+      let emp = null;
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('staff_accounts')
+            .select('*')
+            .ilike('username', username)
+            .maybeSingle();
+
+          if (!error && data) {
+            emp = data;
+            // Update local storage cache with this record
+            const localList = getEmployees();
+            const idx = localList.findIndex(e => e.id === emp.id || (e.username || '').toLowerCase() === (emp.username || '').toLowerCase());
+            if (idx >= 0) {
+              localList[idx] = emp;
+            } else {
+              localList.push(emp);
+            }
+            localStorage.setItem('carbonaxis_employees', JSON.stringify(localList));
+          } else if (error) {
+            console.warn('Supabase staff check notice:', error.message);
+          }
+        } catch (cloudErr) {
+          console.warn('Cloud employee auth check notice:', cloudErr);
+        }
+      }
+
+      // 2. If not found via direct cloud query or offline, check local storage
       if (!emp) {
+        const employees = getEmployees();
+        emp = employees.find(e => (e.username || '').trim().toLowerCase() === username);
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
+
+      // 3. Verify user and password
+      if (!emp || (emp.password || '').trim() !== password) {
         alert('Invalid employee username or password. Please verify your credentials or contact administrator.');
         return;
       }
@@ -1617,8 +1801,30 @@ document.addEventListener('DOMContentLoaded', () => {
       // Update Employee record
       emp.is_online = true;
       emp.last_login = new Date().toISOString();
-      emp.login_count = (emp.login_count || 0) + 1;
-      saveEmployees(employees);
+      emp.login_count = (Number(emp.login_count) || 0) + 1;
+
+      // Update local storage
+      const employees = getEmployees();
+      const empIdx = employees.findIndex(e => e.id === emp.id || (e.username || '').toLowerCase() === (emp.username || '').toLowerCase());
+      if (empIdx !== -1) {
+        employees[empIdx] = emp;
+      } else {
+        employees.push(emp);
+      }
+      localStorage.setItem('carbonaxis_employees', JSON.stringify(employees));
+
+      // Update cloud record
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('staff_accounts').update({
+            is_online: true,
+            last_login: emp.last_login,
+            login_count: emp.login_count
+          }).eq('id', emp.id);
+        } catch (updErr) {
+          console.warn('Could not update online status in cloud:', updErr);
+        }
+      }
 
       // Log Login Event
       await logEmployeeActivity({
@@ -1663,11 +1869,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Update Employee offline
       const employees = getEmployees();
-      const emp = employees.find(e => e.id === curEmp.id);
+      const emp = employees.find(e => e.id === curEmp.id || (e.username || '').toLowerCase() === (curEmp.username || '').toLowerCase());
       if (emp) {
         emp.is_online = false;
         emp.last_logout = new Date().toISOString();
-        saveEmployees(employees);
+        localStorage.setItem('carbonaxis_employees', JSON.stringify(employees));
+
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('staff_accounts').update({
+              is_online: false,
+              last_logout: emp.last_logout
+            }).eq('id', emp.id);
+          } catch (e) {
+            console.warn('Could not update offline status in cloud:', e);
+          }
+        }
       }
 
       // Log Logout Event
