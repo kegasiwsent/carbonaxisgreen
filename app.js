@@ -1168,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('carbonaxis_employee_logs', JSON.stringify(list));
   }
 
-  async function logEmployeeActivity({ employee, action_type, action_label, details, session_id }) {
+  async function logEmployeeActivity({ employee, action_type, action_label, details, session_id, skipKpiRefresh = false }) {
     let emp = employee;
     if (!emp) {
       try {
@@ -1206,7 +1206,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderAdminEmployeeLogs();
     renderEmployeeSessionFeed();
-    updateEmployeeKPIs();
+    if (!skipKpiRefresh) {
+      updateEmployeeKPIs();
+    }
 
     return logEntry;
   }
@@ -2212,14 +2214,52 @@ document.addEventListener('DOMContentLoaded', () => {
   if (empTabLeadsBtn) empTabLeadsBtn.addEventListener('click', () => switchEmpSubTab('leads'));
 
   // ==================== 10. Authentic Google Sheets Web App Engine ====================
+  const ALL_GS_COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
   const GS_COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
   const GS_DEFAULT_ROWS = 35;
 
   let gsheetState = null;
   let empSelectedCell = { col: 'A', row: 1 };
   let adminSelectedCell = { col: 'A', row: 1 };
+  let empSelectedRange = null; // { startCol, startRow, endCol, endRow }
+  let adminSelectedRange = null;
   let empInlineEditor = null;
   let adminInlineEditor = null;
+  let gsheetCloudSyncTimer = null;
+  let lastGSheetLocalSaveTimestamp = 0;
+
+  function getColLetter(idx) {
+    let s = '';
+    while (idx >= 0) {
+      s = String.fromCharCode((idx % 26) + 65) + s;
+      idx = Math.floor(idx / 26) - 1;
+    }
+    return s;
+  }
+
+  function getActiveSheetCols(state) {
+    if (!state) return GS_COLS;
+    ensureWorkbookTabs(state);
+    const activeSheet = state.sheets ? state.sheets[state.activeTabId] : null;
+    const count = activeSheet && activeSheet.colCount ? activeSheet.colCount : GS_COLS.length;
+    const cols = [];
+    for (let i = 0; i < count; i++) {
+      if (i < ALL_GS_COLS.length) {
+        cols.push(ALL_GS_COLS[i]);
+      } else {
+        cols.push(getColLetter(i));
+      }
+    }
+    return cols;
+  }
+
+  function getInitialColWidth(col) {
+    const defaults = {
+      A: 190, B: 180, C: 220, D: 120, E: 100, F: 130, G: 140,
+      H: 230, I: 160, J: 90, K: 140, L: 110, M: 110, N: 120
+    };
+    return defaults[col] || 130;
+  }
 
   function initDefaultGSheetState() {
     const defaultSheetId = 'sheet_1';
@@ -2365,6 +2405,8 @@ document.addEventListener('DOMContentLoaded', () => {
           gridData: initialCells,
           rowCount: GS_DEFAULT_ROWS,
           colCount: GS_COLS.length,
+          colWidths: { A: 190, B: 180, C: 220, D: 120, E: 100, F: 130, G: 140, H: 230, I: 160, J: 90, K: 140, L: 110, M: 110, N: 120 },
+          merges: [],
           history: []
         }
       },
@@ -2436,6 +2478,8 @@ document.addEventListener('DOMContentLoaded', () => {
             gridData: t.cells || t.gridData || {},
             rowCount: t.rows || state.rows || GS_DEFAULT_ROWS,
             colCount: GS_COLS.length,
+            colWidths: {},
+            merges: [],
             history: []
           };
         });
@@ -2447,10 +2491,19 @@ document.addEventListener('DOMContentLoaded', () => {
           gridData: state.cells || {},
           rowCount: state.rows || GS_DEFAULT_ROWS,
           colCount: GS_COLS.length,
+          colWidths: {},
+          merges: [],
           history: []
         };
       }
     }
+
+    // Ensure colCount, colWidths, and merges exist on every sheet
+    Object.values(state.sheets).forEach(s => {
+      if (!s.colCount) s.colCount = GS_COLS.length;
+      if (!s.colWidths) s.colWidths = {};
+      if (!Array.isArray(s.merges)) s.merges = [];
+    });
 
     // 3. Ensure activeTabId is valid
     const sheetIds = Object.keys(state.sheets);
@@ -2504,6 +2557,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     state.updatedAt = new Date().toISOString();
+    lastGSheetLocalSaveTimestamp = Date.now();
     store[activeId] = state;
     saveSheetsStore(store);
 
@@ -2518,7 +2572,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Log employee action if a cell was edited
+    // Log employee action if a cell was edited (skipKpiRefresh prevents heavy network lag)
     if (cellKey && oldVal !== newVal) {
       const curEmp = getCurrentEmployee();
       const curSheet = state.sheets[state.activeTabId];
@@ -2526,32 +2580,36 @@ document.addEventListener('DOMContentLoaded', () => {
         employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
         action_type: 'GSHEET_CELL_EDIT',
         action_label: 'Google Sheet Cell Edited',
-        details: `Updated [${cellKey}] in "${state.title} (${curSheet ? curSheet.name : 'Sheet1'})" from "${oldVal || ''}" to "${newVal || ''}".`
+        details: `Updated [${cellKey}] in "${state.title} (${curSheet ? curSheet.name : 'Sheet1'})" from "${oldVal || ''}" to "${newVal || ''}".`,
+        skipKpiRefresh: true
       });
     }
 
-    // Sync to Supabase deal_sheets cloud table
-    if (supabaseClient) {
-      try {
-        const payload = {
-          id: activeId,
-          title: state.title,
-          cells: {
-            ...state.sheets[state.activeTabId].gridData,
-            __sheets: state.sheets,
-            __active_tab_id: state.activeTabId,
-            __tabs: state.tabs
-          },
-          rows: state.rows,
-          updated_at: state.updatedAt
-        };
-        supabaseClient.from('deal_sheets').upsert([payload]).then(({ error }) => {
-          if (error) console.warn('Supabase deal_sheets sync notice:', error.message);
-        }).catch(err => console.warn('Supabase sheet notice:', err));
-      } catch (e) {
-        // Fallback safely to localStorage
+    // Debounced Sync to Supabase deal_sheets cloud table (800ms debounce prevents freezing)
+    if (gsheetCloudSyncTimer) clearTimeout(gsheetCloudSyncTimer);
+    gsheetCloudSyncTimer = setTimeout(() => {
+      if (supabaseClient) {
+        try {
+          const payload = {
+            id: activeId,
+            title: state.title,
+            cells: {
+              ...(state.sheets[state.activeTabId]?.gridData || {}),
+              __sheets: state.sheets,
+              __active_tab_id: state.activeTabId,
+              __tabs: state.tabs
+            },
+            rows: state.rows,
+            updated_at: state.updatedAt
+          };
+          supabaseClient.from('deal_sheets').upsert([payload]).then(({ error }) => {
+            if (error) console.warn('Supabase deal_sheets sync notice:', error.message);
+          }).catch(err => console.warn('Supabase sheet notice:', err));
+        } catch (e) {
+          // Fallback safely to localStorage
+        }
       }
-    }
+    }, 800);
 
     updateGSheetKPIs();
   }
@@ -2610,6 +2668,8 @@ document.addEventListener('DOMContentLoaded', () => {
       gridData: {},
       rowCount: GS_DEFAULT_ROWS,
       colCount: GS_COLS.length,
+      colWidths: {},
+      merges: [],
       history: []
     };
 
@@ -2788,7 +2848,9 @@ document.addEventListener('DOMContentLoaded', () => {
       name: newName,
       gridData: clonedGrid,
       rowCount: target.rowCount || GS_DEFAULT_ROWS,
-      colCount: GS_COLS.length,
+      colCount: target.colCount || GS_COLS.length,
+      colWidths: JSON.parse(JSON.stringify(target.colWidths || {})),
+      merges: JSON.parse(JSON.stringify(target.merges || [])),
       history: []
     };
 
@@ -2913,8 +2975,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const e = parseCellCoord(endCoord);
     if (!s || !e) return [];
 
-    const colStartIdx = GS_COLS.indexOf(s.col);
-    const colEndIdx = GS_COLS.indexOf(e.col);
+    const state = getGSheetState();
+    const cols = getActiveSheetCols(state);
+    const colStartIdx = cols.indexOf(s.col);
+    const colEndIdx = cols.indexOf(e.col);
     if (colStartIdx === -1 || colEndIdx === -1) return [];
 
     const cMin = Math.min(colStartIdx, colEndIdx);
@@ -2925,7 +2989,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const result = [];
     for (let r = rMin; r <= rMax; r++) {
       for (let c = cMin; c <= cMax; c++) {
-        result.push(GS_COLS[c] + r);
+        result.push(cols[c] + r);
       }
     }
     return result;
@@ -3067,6 +3131,425 @@ document.addEventListener('DOMContentLoaded', () => {
     if (adminKpiVal) adminKpiVal.textContent = valFormatted;
   }
 
+  // Helper to find merge covering a given cell
+  function findCellMerge(col, row, state) {
+    if (!state || !state.sheets || !state.sheets[state.activeTabId]) return null;
+    const merges = state.sheets[state.activeTabId].merges || [];
+    if (!merges.length) return null;
+    const cols = getActiveSheetCols(state);
+    const cIdx = cols.indexOf(col);
+    if (cIdx === -1) return null;
+
+    for (let i = 0; i < merges.length; i++) {
+      const m = merges[i];
+      const scIdx = cols.indexOf(m.startCol);
+      const ecIdx = cols.indexOf(m.endCol);
+      if (scIdx === -1 || ecIdx === -1) continue;
+      const minC = Math.min(scIdx, ecIdx);
+      const maxC = Math.max(scIdx, ecIdx);
+      const minR = Math.min(m.startRow, m.endRow);
+      const maxR = Math.max(m.startRow, m.endRow);
+
+      if (cIdx >= minC && cIdx <= maxC && row >= minR && row <= maxR) {
+        return {
+          ...m,
+          minCol: cols[minC],
+          maxCol: cols[maxC],
+          minRow: minR,
+          maxRow: maxR,
+          colSpan: maxC - minC + 1,
+          rowSpan: maxR - minR + 1,
+          isTopLeft: (cIdx === minC && row === minR)
+        };
+      }
+    }
+    return null;
+  }
+
+  function isCellInRange(col, row, range, cols) {
+    if (!range) return false;
+    const cIdx = cols.indexOf(col);
+    const scIdx = cols.indexOf(range.startCol);
+    const ecIdx = cols.indexOf(range.endCol);
+    if (cIdx === -1 || scIdx === -1 || ecIdx === -1) return false;
+    const minC = Math.min(scIdx, ecIdx);
+    const maxC = Math.max(scIdx, ecIdx);
+    const minR = Math.min(range.startRow, range.endRow);
+    const maxR = Math.max(range.startRow, range.endRow);
+    return (cIdx >= minC && cIdx <= maxC && row >= minR && row <= maxR);
+  }
+
+  function selectGSheetRange(mode, c1, r1, c2, r2) {
+    const range = { startCol: c1, startRow: r1, endCol: c2, endRow: r2 };
+    if (mode === 'emp') empSelectedRange = range;
+    else adminSelectedRange = range;
+
+    const table = document.getElementById(`${mode}-gs-table`);
+    if (!table) return;
+
+    const state = getGSheetState();
+    const cols = getActiveSheetCols(state);
+    const scIdx = cols.indexOf(c1);
+    const ecIdx = cols.indexOf(c2);
+    if (scIdx === -1 || ecIdx === -1) return;
+
+    const minC = Math.min(scIdx, ecIdx);
+    const maxC = Math.max(scIdx, ecIdx);
+    const minR = Math.min(r1, r2);
+    const maxR = Math.max(r1, r2);
+
+    const nameBox = document.getElementById(`${mode}-gs-name-box`);
+    if (nameBox) {
+      nameBox.textContent = `${cols[minC]}${minR}:${cols[maxC]}${maxR}`;
+    }
+
+    table.querySelectorAll('.gs-cell.gs-range-selected').forEach(c => c.classList.remove('gs-range-selected'));
+
+    for (let r = minR; r <= maxR; r++) {
+      for (let c = minC; c <= maxC; c++) {
+        const key = cols[c] + r;
+        const cellEl = table.querySelector(`[data-cell="${key}"]`);
+        if (cellEl) cellEl.classList.add('gs-range-selected');
+      }
+    }
+  }
+
+  function clearGSheetRange(mode) {
+    if (mode === 'emp') empSelectedRange = null;
+    else adminSelectedRange = null;
+
+    const table = document.getElementById(`${mode}-gs-table`);
+    if (table) {
+      table.querySelectorAll('.gs-cell.gs-range-selected').forEach(c => c.classList.remove('gs-range-selected'));
+    }
+  }
+
+  function expandRangeSelection(mode, direction) {
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    let range = mode === 'emp' ? empSelectedRange : adminSelectedRange;
+    const state = getGSheetState();
+    const cols = getActiveSheetCols(state);
+
+    if (!range) {
+      range = { startCol: sel.col, startRow: sel.row, endCol: sel.col, endRow: sel.row };
+    }
+
+    let endColIdx = cols.indexOf(range.endCol);
+    let endRow = range.endRow;
+
+    if (direction === 'up') {
+      endRow = Math.max(1, endRow - 1);
+    } else if (direction === 'down') {
+      endRow = Math.min(state.rows, endRow + 1);
+    } else if (direction === 'left') {
+      endColIdx = Math.max(0, endColIdx - 1);
+    } else if (direction === 'right') {
+      endColIdx = Math.min(cols.length - 1, endColIdx + 1);
+    }
+
+    selectGSheetRange(mode, range.startCol, range.startRow, cols[endColIdx], endRow);
+  }
+
+  function toggleMergeSelectedCells(mode) {
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    const activeSheet = state.sheets[state.activeTabId];
+    if (!activeSheet) return;
+    if (!activeSheet.merges) activeSheet.merges = [];
+
+    const range = mode === 'emp' ? empSelectedRange : adminSelectedRange;
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const cols = getActiveSheetCols(state);
+
+    // If no multi-cell range selected, check if active cell is already merged -> unmerge!
+    if (!range || (range.startCol === range.endCol && range.startRow === range.endRow)) {
+      const existing = findCellMerge(sel.col, sel.row, state);
+      if (existing) {
+        activeSheet.merges = activeSheet.merges.filter(m => {
+          return !(m.startCol === existing.minCol && m.startRow === existing.minRow);
+        });
+        saveGSheetState(state, mode);
+        renderGSheet('emp');
+        renderGSheet('admin');
+        return;
+      } else {
+        alert('Please select a range of 2 or more cells (using Shift+Click or Shift+Arrows) to merge.');
+        return;
+      }
+    }
+
+    const scIdx = cols.indexOf(range.startCol);
+    const ecIdx = cols.indexOf(range.endCol);
+    const minC = Math.min(scIdx, ecIdx);
+    const maxC = Math.max(scIdx, ecIdx);
+    const minR = Math.min(range.startRow, range.endRow);
+    const maxR = Math.max(range.startRow, range.endRow);
+
+    const startCol = cols[minC];
+    const endCol = cols[maxC];
+    const startRow = minR;
+    const endRow = maxR;
+
+    // Check if exactly this range is already merged -> unmerge
+    const exactIndex = activeSheet.merges.findIndex(m => {
+      return m.startCol === startCol && m.endCol === endCol && m.startRow === startRow && m.endRow === endRow;
+    });
+
+    if (exactIndex !== -1) {
+      activeSheet.merges.splice(exactIndex, 1);
+    } else {
+      // Remove any overlapping merges
+      activeSheet.merges = activeSheet.merges.filter(m => {
+        const mSc = cols.indexOf(m.startCol);
+        const mEc = cols.indexOf(m.endCol);
+        const mMinC = Math.min(mSc, mEc);
+        const mMaxC = Math.max(mSc, mEc);
+        const mMinR = Math.min(m.startRow, m.endRow);
+        const mMaxR = Math.max(m.startRow, m.endRow);
+
+        const overlap = !(maxC < mMinC || minC > mMaxC || maxR < mMinR || minR > mMaxR);
+        return !overlap;
+      });
+
+      activeSheet.merges.push({
+        startCol,
+        startRow,
+        endCol,
+        endRow
+      });
+    }
+
+    saveGSheetState(state, mode);
+    renderGSheet('emp');
+    renderGSheet('admin');
+  }
+
+  function insertColumnAt(mode, targetCol, position = 'left') {
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    const activeSheet = state.sheets[state.activeTabId];
+    if (!activeSheet) return;
+
+    const cols = getActiveSheetCols(state);
+    const targetIdx = cols.indexOf(targetCol);
+    if (targetIdx === -1) return;
+
+    const insertIdx = position === 'left' ? targetIdx : targetIdx + 1;
+    if (cols.length >= ALL_GS_COLS.length) {
+      alert('Maximum 26 columns (A-Z) supported.');
+      return;
+    }
+
+    const newGrid = {};
+    Object.keys(activeSheet.gridData || {}).forEach(k => {
+      const parsed = parseCellCoord(k);
+      if (!parsed) {
+        newGrid[k] = activeSheet.gridData[k];
+        return;
+      }
+      const cIdx = cols.indexOf(parsed.col);
+      if (cIdx >= insertIdx) {
+        const newCol = ALL_GS_COLS[cIdx + 1];
+        newGrid[newCol + parsed.row] = activeSheet.gridData[k];
+      } else {
+        newGrid[k] = activeSheet.gridData[k];
+      }
+    });
+
+    const newWidths = {};
+    if (activeSheet.colWidths) {
+      Object.keys(activeSheet.colWidths).forEach(col => {
+        const cIdx = cols.indexOf(col);
+        if (cIdx >= insertIdx) {
+          newWidths[ALL_GS_COLS[cIdx + 1]] = activeSheet.colWidths[col];
+        } else {
+          newWidths[col] = activeSheet.colWidths[col];
+        }
+      });
+    }
+
+    if (Array.isArray(activeSheet.merges)) {
+      activeSheet.merges = activeSheet.merges.map(m => {
+        const scIdx = cols.indexOf(m.startCol);
+        const ecIdx = cols.indexOf(m.endCol);
+        let newSc = m.startCol;
+        let newEc = m.endCol;
+        if (scIdx >= insertIdx) newSc = ALL_GS_COLS[scIdx + 1];
+        if (ecIdx >= insertIdx) newEc = ALL_GS_COLS[ecIdx + 1];
+        return { ...m, startCol: newSc, endCol: newEc };
+      });
+    }
+
+    activeSheet.colCount = cols.length + 1;
+    activeSheet.gridData = newGrid;
+    activeSheet.colWidths = newWidths;
+    state.cells = newGrid;
+
+    saveGSheetState(state, mode);
+    renderGSheet('emp');
+    renderGSheet('admin');
+    selectGSheetCell(mode, ALL_GS_COLS[insertIdx], 1);
+  }
+
+  function deleteColumnAt(mode, targetCol) {
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    const activeSheet = state.sheets[state.activeTabId];
+    if (!activeSheet) return;
+
+    const cols = getActiveSheetCols(state);
+    const targetIdx = cols.indexOf(targetCol);
+    if (targetIdx === -1) return;
+
+    if (cols.length <= 3) {
+      alert('Spreadsheet requires at least 3 columns.');
+      return;
+    }
+
+    const newGrid = {};
+    Object.keys(activeSheet.gridData || {}).forEach(k => {
+      const parsed = parseCellCoord(k);
+      if (!parsed) {
+        newGrid[k] = activeSheet.gridData[k];
+        return;
+      }
+      if (parsed.col === targetCol) {
+        return; // Deleted!
+      }
+      const cIdx = cols.indexOf(parsed.col);
+      if (cIdx > targetIdx) {
+        const newCol = ALL_GS_COLS[cIdx - 1];
+        newGrid[newCol + parsed.row] = activeSheet.gridData[k];
+      } else {
+        newGrid[k] = activeSheet.gridData[k];
+      }
+    });
+
+    const newWidths = {};
+    if (activeSheet.colWidths) {
+      Object.keys(activeSheet.colWidths).forEach(col => {
+        if (col === targetCol) return;
+        const cIdx = cols.indexOf(col);
+        if (cIdx > targetIdx) {
+          newWidths[ALL_GS_COLS[cIdx - 1]] = activeSheet.colWidths[col];
+        } else {
+          newWidths[col] = activeSheet.colWidths[col];
+        }
+      });
+    }
+
+    if (Array.isArray(activeSheet.merges)) {
+      activeSheet.merges = activeSheet.merges.filter(m => {
+        const scIdx = cols.indexOf(m.startCol);
+        const ecIdx = cols.indexOf(m.endCol);
+        return !(targetIdx >= Math.min(scIdx, ecIdx) && targetIdx <= Math.max(scIdx, ecIdx));
+      }).map(m => {
+        const scIdx = cols.indexOf(m.startCol);
+        const ecIdx = cols.indexOf(m.endCol);
+        let newSc = m.startCol;
+        let newEc = m.endCol;
+        if (scIdx > targetIdx) newSc = ALL_GS_COLS[scIdx - 1];
+        if (ecIdx > targetIdx) newEc = ALL_GS_COLS[ecIdx - 1];
+        return { ...m, startCol: newSc, endCol: newEc };
+      });
+    }
+
+    activeSheet.colCount = cols.length - 1;
+    activeSheet.gridData = newGrid;
+    activeSheet.colWidths = newWidths;
+    state.cells = newGrid;
+
+    saveGSheetState(state, mode);
+    renderGSheet('emp');
+    renderGSheet('admin');
+    const fallbackCol = ALL_GS_COLS[Math.min(targetIdx, activeSheet.colCount - 1)];
+    selectGSheetCell(mode, fallbackCol, 1);
+  }
+
+  function getSelectedRangeText(mode) {
+    const state = getGSheetState();
+    const range = mode === 'emp' ? empSelectedRange : adminSelectedRange;
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const cols = getActiveSheetCols(state);
+
+    if (!range || (range.startCol === range.endCol && range.startRow === range.endRow)) {
+      const key = sel.col + sel.row;
+      const cell = state.cells[key];
+      return cell ? (cell.raw || '') : '';
+    }
+
+    const scIdx = cols.indexOf(range.startCol);
+    const ecIdx = cols.indexOf(range.endCol);
+    if (scIdx === -1 || ecIdx === -1) return '';
+
+    const minC = Math.min(scIdx, ecIdx);
+    const maxC = Math.max(scIdx, ecIdx);
+    const minR = Math.min(range.startRow, range.endRow);
+    const maxR = Math.max(range.startRow, range.endRow);
+
+    const lines = [];
+    for (let r = minR; r <= maxR; r++) {
+      const rowVals = [];
+      for (let c = minC; c <= maxC; c++) {
+        const key = cols[c] + r;
+        const cell = state.cells[key];
+        rowVals.push(cell ? (cell.raw || '') : '');
+      }
+      lines.push(rowVals.join('\t'));
+    }
+    return lines.join('\r\n');
+  }
+
+  function pasteTextIntoGrid(mode, text) {
+    if (!text && text !== '') return;
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    const activeSheet = state.sheets[state.activeTabId];
+    if (!activeSheet) return;
+
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const cols = getActiveSheetCols(state);
+    const startColIdx = cols.indexOf(sel.col);
+    if (startColIdx === -1) return;
+
+    // Split text by lines and tabs
+    const rawLines = text.split(/\r\n|\n|\r/);
+    if (rawLines.length > 1 && rawLines[rawLines.length - 1] === '') {
+      rawLines.pop();
+    }
+
+    const parsedGrid = rawLines.map(line => line.split('\t'));
+
+    let maxRowReached = state.rows;
+    parsedGrid.forEach((rowArr, rIdx) => {
+      const targetRow = sel.row + rIdx;
+      if (targetRow > maxRowReached) maxRowReached = targetRow;
+
+      rowArr.forEach((val, cIdx) => {
+        const colIdx = startColIdx + cIdx;
+        if (colIdx < cols.length) {
+          const col = cols[colIdx];
+          const key = col + targetRow;
+          if (!state.cells[key]) state.cells[key] = {};
+          state.cells[key].raw = val;
+        }
+      });
+    });
+
+    if (maxRowReached > state.rows) {
+      state.rows = maxRowReached;
+      activeSheet.rowCount = maxRowReached;
+    }
+
+    saveGSheetState(state, mode);
+    renderGSheet('emp');
+    renderGSheet('admin');
+
+    const endColIdx = Math.min(cols.length - 1, startColIdx + (parsedGrid[0]?.length || 1) - 1);
+    const endRow = sel.row + parsedGrid.length - 1;
+    selectGSheetRange(mode, sel.col, sel.row, cols[endColIdx], endRow);
+  }
+
   // Render Google Sheet Table
   function renderGSheet(mode) {
     const table = document.getElementById(`${mode}-gs-table`);
@@ -3074,15 +3557,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const state = getGSheetState();
     const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const range = mode === 'emp' ? empSelectedRange : adminSelectedRange;
+    const cols = getActiveSheetCols(state);
+    const activeSheet = state.sheets ? state.sheets[state.activeTabId] : null;
+    const colWidths = (activeSheet && activeSheet.colWidths) || {};
 
     let html = '<thead><tr>';
     // Corner header
     html += `<th class="gs-corner-header" id="${mode}-gs-corner"></th>`;
 
-    // Column Headers A to N
-    GS_COLS.forEach(col => {
+    // Column Headers
+    cols.forEach(col => {
       const isActive = sel.col === col;
-      html += `<th class="gs-col-header ${isActive ? 'gs-active' : ''}" data-col="${col}" id="${mode}-gs-col-${col}">${col}</th>`;
+      const colW = colWidths[col] || getInitialColWidth(col);
+      html += `<th class="gs-col-header ${isActive ? 'gs-active' : ''}" data-col="${col}" id="${mode}-gs-col-${col}" style="width:${colW}px; min-width:${colW}px; max-width:${colW}px;">`;
+      html += `<span class="gs-col-title">${col}</span>`;
+      html += `<div class="gs-col-resizer" data-col="${col}"></div>`;
+      html += `</th>`;
     });
     html += '</tr></thead><tbody>';
 
@@ -3091,13 +3582,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const isRowActive = sel.row === r;
       html += `<tr><td class="gs-row-header ${isRowActive ? 'gs-active' : ''}" data-row="${r}" id="${mode}-gs-row-${r}">${r}</td>`;
 
-      GS_COLS.forEach(col => {
+      cols.forEach(col => {
         const key = col + r;
         const cell = state.cells[key] || {};
         const isSelected = sel.col === col && sel.row === r;
+        const isRangeSelected = isCellInRange(col, r, range, cols);
         const displayVal = evalGSheetCell(key, state);
+        const colW = colWidths[col] || getInitialColWidth(col);
 
-        let style = '';
+        let style = `width:${colW}px; min-width:${colW}px; max-width:${colW}px;`;
         if (cell.bold) style += 'font-weight:bold;';
         if (cell.italic) style += 'font-style:italic;';
         if (cell.strike) style += 'text-decoration:line-through;';
@@ -3106,12 +3599,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cell.bg) style += `background-color:${cell.bg};`;
         if (cell.size) style += `font-size:${cell.size}px;`;
 
-        html += `<td class="gs-cell ${isSelected ? 'gs-selected' : ''}" data-cell="${key}" data-col="${col}" data-row="${r}" style="${style}" title="${key}: ${escapeHtml(String(cell.raw || ''))}">`;
-        html += escapeHtml(String(displayVal));
-        if (isSelected) {
-          html += `<div class="gs-drag-handle"></div>`;
+        const merge = findCellMerge(col, r, state);
+        if (merge) {
+          if (merge.isTopLeft) {
+            html += `<td class="gs-cell gs-merged-cell ${isSelected ? 'gs-selected' : ''} ${isRangeSelected ? 'gs-range-selected' : ''}" colspan="${merge.colSpan}" rowspan="${merge.rowSpan}" data-cell="${key}" data-col="${col}" data-row="${r}" style="${style}" title="${key}: ${escapeHtml(String(cell.raw || ''))}">`;
+            html += escapeHtml(String(displayVal));
+            if (isSelected) {
+              html += `<div class="gs-drag-handle"></div>`;
+            }
+            html += '</td>';
+          } else {
+            // Covered by merge, skip cell
+          }
+        } else {
+          html += `<td class="gs-cell ${isSelected ? 'gs-selected' : ''} ${isRangeSelected ? 'gs-range-selected' : ''}" data-cell="${key}" data-col="${col}" data-row="${r}" style="${style}" title="${key}: ${escapeHtml(String(cell.raw || ''))}">`;
+          html += escapeHtml(String(displayVal));
+          if (isSelected) {
+            html += `<div class="gs-drag-handle"></div>`;
+          }
+          html += '</td>';
         }
-        html += '</td>';
       });
 
       html += '</tr>';
@@ -3127,7 +3634,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const formulaInput = document.getElementById(`${mode}-gs-formula-input`);
     const docTitle = document.getElementById(`${mode}-gs-doc-title`);
 
-    if (nameBox) nameBox.textContent = curKey;
+    if (nameBox) {
+      if (range && (range.startCol !== range.endCol || range.startRow !== range.endRow)) {
+        nameBox.textContent = `${range.startCol}${range.startRow}:${range.endCol}${range.endRow}`;
+      } else {
+        nameBox.textContent = curKey;
+      }
+    }
     if (formulaInput && document.activeElement !== formulaInput) {
       formulaInput.value = curCell.raw || '';
     }
@@ -3144,26 +3657,103 @@ document.addEventListener('DOMContentLoaded', () => {
     const table = document.getElementById(`${mode}-gs-table`);
     if (!table) return;
 
-    // Click cell to select and start editing immediately in one click
+    // 1. Column Resizers (Drag to resize column width)
+    table.querySelectorAll('.gs-col-resizer').forEach(resizer => {
+      resizer.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const col = resizer.getAttribute('data-col');
+        const th = document.getElementById(`${mode}-gs-col-${col}`);
+        if (!th) return;
+
+        const startX = e.clientX;
+        const startW = th.offsetWidth;
+        resizer.classList.add('gs-resizing');
+
+        function onMouseMove(moveEv) {
+          const delta = moveEv.clientX - startX;
+          const newW = Math.max(50, startW + delta);
+          th.style.width = newW + 'px';
+          th.style.minWidth = newW + 'px';
+          th.style.maxWidth = newW + 'px';
+
+          table.querySelectorAll(`.gs-cell[data-col="${col}"]`).forEach(td => {
+            td.style.width = newW + 'px';
+            td.style.minWidth = newW + 'px';
+            td.style.maxWidth = newW + 'px';
+          });
+        }
+
+        function onMouseUp(upEv) {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          resizer.classList.remove('gs-resizing');
+
+          const delta = upEv.clientX - startX;
+          const finalW = Math.max(50, startW + delta);
+
+          const state = getGSheetState();
+          ensureWorkbookTabs(state);
+          const activeSheet = state.sheets[state.activeTabId];
+          if (activeSheet) {
+            if (!activeSheet.colWidths) activeSheet.colWidths = {};
+            activeSheet.colWidths[col] = finalW;
+            saveGSheetState(state, mode);
+          }
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+    });
+
+    // 2. Column Header click: select entire column
+    table.querySelectorAll('.gs-col-header').forEach(colTh => {
+      colTh.addEventListener('click', (e) => {
+        if (e.target.classList.contains('gs-col-resizer')) return;
+        const col = colTh.getAttribute('data-col');
+        const state = getGSheetState();
+        selectGSheetRange(mode, col, 1, col, state.rows);
+      });
+    });
+
+    // 3. Row Header click: select entire row
+    table.querySelectorAll('.gs-row-header').forEach(rowTd => {
+      rowTd.addEventListener('click', () => {
+        const row = parseInt(rowTd.getAttribute('data-row'), 10);
+        const state = getGSheetState();
+        const cols = getActiveSheetCols(state);
+        selectGSheetRange(mode, cols[0], row, cols[cols.length - 1], row);
+      });
+    });
+
+    // 4. Click cell to select / range select / inline edit
     const cells = table.querySelectorAll('.gs-cell');
     cells.forEach(cellEl => {
       cellEl.addEventListener('click', (e) => {
-        // If clicking directly inside an active input editor inside this cell, let user place cursor
         if (e.target && e.target.classList.contains('gs-cell-editor')) return;
         const col = cellEl.getAttribute('data-col');
         const row = parseInt(cellEl.getAttribute('data-row'), 10);
-        selectGSheetCell(mode, col, row);
-        startInlineEditing(mode, col, row);
+
+        if (e.shiftKey) {
+          // Shift+Click range selection
+          const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+          selectGSheetRange(mode, sel.col, sel.row, col, row);
+        } else {
+          // Normal single click: select cell and start editing
+          clearGSheetRange(mode);
+          selectGSheetCell(mode, col, row);
+          startInlineEditing(mode, col, row);
+        }
       });
 
-      // Double click to inline edit (also supported)
       cellEl.addEventListener('dblclick', (e) => {
         const col = cellEl.getAttribute('data-col');
         const row = parseInt(cellEl.getAttribute('data-row'), 10);
+        clearGSheetRange(mode);
         startInlineEditing(mode, col, row);
       });
 
-      // Right-click on cell to show context menu
       cellEl.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         const col = cellEl.getAttribute('data-col');
@@ -3179,6 +3769,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       adminSelectedCell = { col, row };
     }
+
+    clearGSheetRange(mode);
 
     const state = getGSheetState();
     const key = col + row;
@@ -3290,6 +3882,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     input.addEventListener('keydown', (e) => {
+      const cols = getActiveSheetCols(state);
       if (e.key === 'Enter') {
         e.preventDefault();
         const nextRow = e.shiftKey ? Math.max(1, row - 1) : Math.min(row + 1, state.rows);
@@ -3299,10 +3892,10 @@ document.addEventListener('DOMContentLoaded', () => {
         selectGSheetCell(mode, col, nextRow);
       } else if (e.key === 'Tab') {
         e.preventDefault();
-        const curIdx = GS_COLS.indexOf(col);
+        const curIdx = cols.indexOf(col);
         const nextCol = e.shiftKey
-          ? GS_COLS[Math.max(0, curIdx - 1)]
-          : GS_COLS[Math.min(curIdx + 1, GS_COLS.length - 1)];
+          ? cols[Math.max(0, curIdx - 1)]
+          : cols[Math.min(curIdx + 1, cols.length - 1)];
         if (mode === 'emp') empSelectedCell = { col: nextCol, row };
         else adminSelectedCell = { col: nextCol, row };
         commitEdit();
@@ -3404,9 +3997,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
     const key = sel.col + sel.row;
     const state = getGSheetState();
+    const text = getSelectedRangeText(mode);
     const cell = state.cells[key] || {};
     sheetClipboard = {
-      text: cell.raw || '',
+      text: text,
       cellData: JSON.parse(JSON.stringify(cell)),
       isCut: true,
       sourceCell: key,
@@ -3422,9 +4016,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
     const key = sel.col + sel.row;
     const state = getGSheetState();
+    const text = getSelectedRangeText(mode);
     const cell = state.cells[key] || {};
     sheetClipboard = {
-      text: cell.raw || '',
+      text: text,
       cellData: JSON.parse(JSON.stringify(cell)),
       isCut: false,
       sourceCell: null,
@@ -3437,61 +4032,52 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function pasteIntoSelectedCell(mode, valuesOnly = false) {
-    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
-    const key = sel.col + sel.row;
-    const state = getGSheetState();
-    const oldVal = state.cells[key] ? state.cells[key].raw : '';
-
-    if (sheetClipboard.cellData) {
-      if (valuesOnly) {
-        if (!state.cells[key]) state.cells[key] = {};
-        state.cells[key].raw = sheetClipboard.cellData.raw || '';
-      } else {
-        state.cells[key] = JSON.parse(JSON.stringify(sheetClipboard.cellData));
+    let clipText = sheetClipboard.text;
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const sysText = await navigator.clipboard.readText();
+        if (sysText) clipText = sysText;
       }
+    } catch (e) {
+      // Use in-memory sheetClipboard fallback
+    }
 
-      if (sheetClipboard.isCut && sheetClipboard.sourceCell && sheetClipboard.sourceTabId) {
-        if (state.sheets[sheetClipboard.sourceTabId] && sheetClipboard.sourceCell !== key) {
-          delete state.sheets[sheetClipboard.sourceTabId].gridData[sheetClipboard.sourceCell];
-        }
-        sheetClipboard.isCut = false;
-        sheetClipboard.sourceCell = null;
-        sheetClipboard.sourceTabId = null;
-      }
-
-      saveGSheetState(state, mode, key, oldVal, state.cells[key].raw);
-      renderGSheet('emp');
-      renderGSheet('admin');
-    } else {
-      try {
-        if (navigator.clipboard && navigator.clipboard.readText) {
-          const clipText = await navigator.clipboard.readText();
-          if (clipText) {
-            if (!state.cells[key]) state.cells[key] = {};
-            state.cells[key].raw = clipText;
-            saveGSheetState(state, mode, key, oldVal, clipText);
-            renderGSheet('emp');
-            renderGSheet('admin');
-          }
-        }
-      } catch (e) {
-        // clipboard access blocked
-      }
+    if (clipText) {
+      pasteTextIntoGrid(mode, clipText);
     }
     closeAllGSheetMenus();
   }
 
   function clearSelectedCell(mode) {
     const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
-    const key = sel.col + sel.row;
+    const range = mode === 'emp' ? empSelectedRange : adminSelectedRange;
     const state = getGSheetState();
-    if (state.cells[key]) {
-      const oldVal = state.cells[key].raw;
-      state.cells[key].raw = '';
-      saveGSheetState(state, mode, key, oldVal, '');
-      renderGSheet('emp');
-      renderGSheet('admin');
+    const cols = getActiveSheetCols(state);
+
+    if (range && (range.startCol !== range.endCol || range.startRow !== range.endRow)) {
+      const scIdx = cols.indexOf(range.startCol);
+      const ecIdx = cols.indexOf(range.endCol);
+      const minC = Math.min(scIdx, ecIdx);
+      const maxC = Math.max(scIdx, ecIdx);
+      const minR = Math.min(range.startRow, range.endRow);
+      const maxR = Math.max(range.startRow, range.endRow);
+
+      for (let r = minR; r <= maxR; r++) {
+        for (let c = minC; c <= maxC; c++) {
+          const k = cols[c] + r;
+          if (state.cells[k]) state.cells[k].raw = '';
+        }
+      }
+    } else {
+      const key = sel.col + sel.row;
+      if (state.cells[key]) {
+        state.cells[key].raw = '';
+      }
     }
+
+    saveGSheetState(state, mode);
+    renderGSheet('emp');
+    renderGSheet('admin');
     closeAllGSheetMenus();
   }
 
@@ -3515,6 +4101,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    // Shift merges down
+    if (Array.isArray(activeSheet.merges)) {
+      activeSheet.merges = activeSheet.merges.map(m => {
+        let sR = m.startRow;
+        let eR = m.endRow;
+        if (sR > rIdx) sR += 1;
+        if (eR > rIdx) eR += 1;
+        return { ...m, startRow: sR, endRow: eR };
+      });
+    }
 
     activeSheet.gridData = newGrid;
     activeSheet.rowCount = (activeSheet.rowCount || GS_DEFAULT_ROWS) + 1;
@@ -3550,6 +4147,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    // Filter or shift merges
+    if (Array.isArray(activeSheet.merges)) {
+      activeSheet.merges = activeSheet.merges.filter(m => {
+        return !(rIdx >= m.startRow && rIdx <= m.endRow);
+      }).map(m => {
+        let sR = m.startRow;
+        let eR = m.endRow;
+        if (sR > rIdx) sR = Math.max(1, sR - 1);
+        if (eR > rIdx) eR = Math.max(1, eR - 1);
+        return { ...m, startRow: sR, endRow: eR };
+      });
+    }
 
     activeSheet.gridData = newGrid;
     activeSheet.rowCount = Math.max(10, (activeSheet.rowCount || GS_DEFAULT_ROWS) - 1);
@@ -3708,7 +4318,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const mode = isEmpVisible ? 'emp' : 'admin';
     const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
     const state = getGSheetState();
-    const colIdx = GS_COLS.indexOf(sel.col);
+    const cols = getActiveSheetCols(state);
+    const colIdx = cols.indexOf(sel.col);
 
     // If currently editing inside the cell editor, let editor handle keys
     if (document.activeElement && document.activeElement.classList.contains('gs-cell-editor')) {
@@ -3718,25 +4329,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // Navigation & editing shortcuts
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      selectGSheetCell(mode, sel.col, Math.max(1, sel.row - 1));
+      if (e.shiftKey) {
+        expandRangeSelection(mode, 'up');
+      } else {
+        clearGSheetRange(mode);
+        selectGSheetCell(mode, sel.col, Math.max(1, sel.row - 1));
+      }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      selectGSheetCell(mode, sel.col, Math.min(state.rows, sel.row + 1));
+      if (e.shiftKey) {
+        expandRangeSelection(mode, 'down');
+      } else {
+        clearGSheetRange(mode);
+        selectGSheetCell(mode, sel.col, Math.min(state.rows, sel.row + 1));
+      }
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      selectGSheetCell(mode, GS_COLS[Math.max(0, colIdx - 1)], sel.row);
+      if (e.shiftKey) {
+        expandRangeSelection(mode, 'left');
+      } else {
+        clearGSheetRange(mode);
+        selectGSheetCell(mode, cols[Math.max(0, colIdx - 1)], sel.row);
+      }
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      selectGSheetCell(mode, GS_COLS[Math.min(GS_COLS.length - 1, colIdx + 1)], sel.row);
+      if (e.shiftKey) {
+        expandRangeSelection(mode, 'right');
+      } else {
+        clearGSheetRange(mode);
+        selectGSheetCell(mode, cols[Math.min(cols.length - 1, colIdx + 1)], sel.row);
+      }
     } else if (e.key === 'Enter') {
       e.preventDefault();
+      clearGSheetRange(mode);
       const nextRow = e.shiftKey ? Math.max(1, sel.row - 1) : Math.min(state.rows, sel.row + 1);
       selectGSheetCell(mode, sel.col, nextRow);
     } else if (e.key === 'Tab') {
       e.preventDefault();
+      clearGSheetRange(mode);
       const nextCol = e.shiftKey
-        ? GS_COLS[Math.max(0, colIdx - 1)]
-        : GS_COLS[Math.min(GS_COLS.length - 1, colIdx + 1)];
+        ? cols[Math.max(0, colIdx - 1)]
+        : cols[Math.min(cols.length - 1, colIdx + 1)];
       selectGSheetCell(mode, nextCol, sel.row);
     } else if (e.key === 'F2') {
       e.preventDefault();
@@ -3745,13 +4378,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       clearSelectedCell(mode);
     } else if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
-      e.preventDefault();
       copySelectedCell(mode);
     } else if ((e.ctrlKey || e.metaKey) && (e.key === 'x' || e.key === 'X')) {
-      e.preventDefault();
       cutSelectedCell(mode);
     } else if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
-      e.preventDefault();
       pasteIntoSelectedCell(mode, false);
     } else if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
       e.preventDefault();
@@ -3859,6 +4489,14 @@ document.addEventListener('DOMContentLoaded', () => {
         saveGSheetState(state, mode);
         renderGSheet('emp');
         renderGSheet('admin');
+      });
+    }
+
+    // Formatting Toolbar: Merge Cells
+    const mergeBtn = document.getElementById(`${mode}-gs-merge-btn`);
+    if (mergeBtn) {
+      mergeBtn.addEventListener('click', () => {
+        toggleMergeSelectedCells(mode);
       });
     }
 
@@ -4950,12 +5588,31 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   if (tabCtxDelete) tabCtxDelete.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextTabId) deleteWorkbookTab(activeContextTabId); });
 
+  // Helper to test if sheet view is currently visible
+  function isSheetViewVisible(mode) {
+    if (mode === 'emp') {
+      const empViewEl = document.getElementById('view-employee');
+      const empTabSheetView = document.getElementById('emp-tab-sheet-view');
+      return empTabSheetView && !empTabSheetView.classList.contains('hidden') &&
+             empViewEl && !empViewEl.classList.contains('hidden');
+    } else {
+      const adminViewEl = document.getElementById('admin-dashboard-view');
+      const tabSheetView = document.getElementById('tab-sheet-view');
+      return tabSheetView && !tabSheetView.classList.contains('hidden') &&
+             adminViewEl && !adminViewEl.classList.contains('hidden');
+    }
+  }
+
   // Cell Context Menu Item Listeners
   const ctxEditCell = document.getElementById('gs-ctx-edit-cell');
   const ctxCut = document.getElementById('gs-ctx-cut');
   const ctxCopy = document.getElementById('gs-ctx-copy');
   const ctxPaste = document.getElementById('gs-ctx-paste');
   const ctxClear = document.getElementById('gs-ctx-clear');
+  const ctxMerge = document.getElementById('gs-ctx-merge');
+  const ctxInsertColLeft = document.getElementById('gs-ctx-insert-col-left');
+  const ctxInsertColRight = document.getElementById('gs-ctx-insert-col-right');
+  const ctxDeleteCol = document.getElementById('gs-ctx-delete-col');
   const ctxInsertRow = document.getElementById('gs-ctx-insert-row');
   const ctxDeleteRow = document.getElementById('gs-ctx-delete-row');
 
@@ -4967,8 +5624,77 @@ document.addEventListener('DOMContentLoaded', () => {
   if (ctxCopy) ctxCopy.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) copySelectedCell(activeContextCellCoord.mode); });
   if (ctxPaste) ctxPaste.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) pasteIntoSelectedCell(activeContextCellCoord.mode); });
   if (ctxClear) ctxClear.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) clearSelectedCell(activeContextCellCoord.mode); });
+  if (ctxMerge) ctxMerge.addEventListener('click', () => {
+    closeAllGSheetMenus();
+    if (activeContextCellCoord) toggleMergeSelectedCells(activeContextCellCoord.mode);
+  });
+  if (ctxInsertColLeft) ctxInsertColLeft.addEventListener('click', () => {
+    closeAllGSheetMenus();
+    if (activeContextCellCoord) insertColumnAt(activeContextCellCoord.mode, activeContextCellCoord.col, 'left');
+  });
+  if (ctxInsertColRight) ctxInsertColRight.addEventListener('click', () => {
+    closeAllGSheetMenus();
+    if (activeContextCellCoord) insertColumnAt(activeContextCellCoord.mode, activeContextCellCoord.col, 'right');
+  });
+  if (ctxDeleteCol) ctxDeleteCol.addEventListener('click', () => {
+    closeAllGSheetMenus();
+    if (activeContextCellCoord) deleteColumnAt(activeContextCellCoord.mode, activeContextCellCoord.col);
+  });
   if (ctxInsertRow) ctxInsertRow.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) insertRowBelow(activeContextCellCoord.mode); });
   if (ctxDeleteRow) ctxDeleteRow.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) deleteCurrentRow(activeContextCellCoord.mode); });
+
+  // Global document native paste event listener (100% reliable, never blocked by browser permission)
+  document.addEventListener('paste', (e) => {
+    const isEmpVisible = isSheetViewVisible('emp');
+    const isAdminVisible = isSheetViewVisible('admin');
+    if (!isEmpVisible && !isAdminVisible) return;
+
+    const mode = isEmpVisible ? 'emp' : 'admin';
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if ((activeTag === 'input' && !document.activeElement.classList.contains('gs-cell-editor')) || activeTag === 'textarea') {
+      return;
+    }
+
+    const clipData = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+    if (document.activeElement && document.activeElement.classList.contains('gs-cell-editor')) {
+      if (!clipData.includes('\t') && !clipData.includes('\n')) {
+        return; // standard single-line paste into input
+      }
+    }
+
+    if (clipData) {
+      e.preventDefault();
+      pasteTextIntoGrid(mode, clipData);
+    }
+  });
+
+  // Global document native copy event listener
+  document.addEventListener('copy', (e) => {
+    const isEmpVisible = isSheetViewVisible('emp');
+    const isAdminVisible = isSheetViewVisible('admin');
+    if (!isEmpVisible && !isAdminVisible) return;
+
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (activeTag === 'input' && !document.activeElement.classList.contains('gs-cell-editor')) return;
+    if (activeTag === 'textarea') return;
+
+    if (document.activeElement && document.activeElement.classList.contains('gs-cell-editor')) {
+      const input = document.activeElement;
+      if (input.selectionStart !== input.selectionEnd) {
+        return;
+      }
+    }
+
+    const mode = isEmpVisible ? 'emp' : 'admin';
+    const text = getSelectedRangeText(mode);
+    if (text) {
+      e.preventDefault();
+      if (e.clipboardData) {
+        e.clipboardData.setData('text/plain', text);
+      }
+      sheetClipboard.text = text;
+    }
+  });
 
   // Find & Replace Modal Handlers
   const closeFindReplaceBtn = document.getElementById('close-gs-find-replace-btn');
@@ -5060,6 +5786,16 @@ document.addEventListener('DOMContentLoaded', () => {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'deal_sheets' }, (payload) => {
           if (payload.new && payload.new.id) {
             const row = payload.new;
+            const remoteTime = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+            // Ignore echo events from our own local saves within last 2 seconds to avoid freeze loops
+            if (Date.now() - lastGSheetLocalSaveTimestamp < 2000 || remoteTime <= lastGSheetLocalSaveTimestamp) {
+              return;
+            }
+            // If the user is currently editing a cell in the active spreadsheet, don't interrupt them
+            if (document.querySelector('.gs-cell-editor')) {
+              return;
+            }
+
             const store = getSheetsStore();
             const sheetId = row.id;
             let sheetsObj = null;

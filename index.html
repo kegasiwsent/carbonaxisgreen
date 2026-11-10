@@ -1498,6 +1498,9 @@
               </label>
 
               <button id="admin-gs-borders-btn" class="gs-tb-btn" title="Borders" type="button"><i class="fa-solid fa-border-all"></i></button>
+              <button id="admin-gs-merge-btn" class="gs-tb-btn font-bold text-xs gap-1" title="Merge selected cells (or Unmerge)" type="button">
+                <i class="fa-solid fa-table-cells-large text-indigo-600"></i> Merge
+              </button>
               <div class="gs-tb-divider"></div>
 
               <!-- Alignments -->
@@ -2074,6 +2077,9 @@
               </label>
 
               <button id="emp-gs-borders-btn" class="gs-tb-btn" title="Borders" type="button"><i class="fa-solid fa-border-all"></i></button>
+              <button id="emp-gs-merge-btn" class="gs-tb-btn font-bold text-xs gap-1" title="Merge selected cells (or Unmerge)" type="button">
+                <i class="fa-solid fa-table-cells-large text-indigo-600"></i> Merge
+              </button>
               <div class="gs-tb-divider"></div>
 
               <!-- Alignments -->
@@ -2886,8 +2892,22 @@
       <div class="gs-menu-left"><i class="fa-solid fa-eraser gs-menu-icon"></i><span class="gs-menu-label">Clear value</span></div>
       <div class="gs-menu-right"><span class="gs-menu-shortcut">Del</span></div>
     </div>
+    <div class="gs-menu-item-row" id="gs-ctx-merge">
+      <div class="gs-menu-left"><i class="fa-solid fa-table-cells-large gs-menu-icon text-indigo-600"></i><span class="gs-menu-label font-bold text-indigo-900">Merge / Unmerge cells</span></div>
+    </div>
+    <div class="gs-menu-divider"></div>
+    <div class="gs-menu-item-row" id="gs-ctx-insert-col-left">
+      <div class="gs-menu-left"><i class="fa-solid fa-plus gs-menu-icon text-blue-600"></i><span class="gs-menu-label">Insert 1 column left</span></div>
+    </div>
+    <div class="gs-menu-item-row" id="gs-ctx-insert-col-right">
+      <div class="gs-menu-left"><i class="fa-solid fa-plus gs-menu-icon text-blue-600"></i><span class="gs-menu-label">Insert 1 column right</span></div>
+    </div>
+    <div class="gs-menu-item-row" id="gs-ctx-delete-col">
+      <div class="gs-menu-left"><i class="fa-solid fa-trash-can gs-menu-icon text-rose-600"></i><span class="gs-menu-label text-rose-600">Delete column</span></div>
+    </div>
+    <div class="gs-menu-divider"></div>
     <div class="gs-menu-item-row" id="gs-ctx-insert-row">
-      <div class="gs-menu-left"><i class="fa-solid fa-plus gs-menu-icon text-emerald-600"></i><span class="gs-menu-label">Insert row below</span></div>
+      <div class="gs-menu-left"><i class="fa-solid fa-plus gs-menu-icon text-emerald-600"></i><span class="gs-menu-label">Insert 1 row below</span></div>
     </div>
     <div class="gs-menu-item-row" id="gs-ctx-delete-row">
       <div class="gs-menu-left"><i class="fa-solid fa-trash-can gs-menu-icon text-rose-600"></i><span class="gs-menu-label text-rose-600">Delete row</span></div>

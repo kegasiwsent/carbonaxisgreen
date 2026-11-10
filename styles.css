@@ -549,6 +549,29 @@ body {
   z-index: 15;
 }
 
+.gs-cell.gs-range-selected {
+  background-color: #e8f0fe !important;
+}
+
+.gs-merged-cell {
+  text-align: center;
+  overflow: hidden;
+}
+
+.gs-col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 35;
+}
+.gs-col-resizer:hover, .gs-col-resizer.gs-resizing {
+  background-color: #1a73e8;
+}
+
 /* Fill Handle (Blue resize/drag square in Google Sheets) */
 .gs-drag-handle {
   position: absolute;
