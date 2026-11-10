@@ -601,9 +601,9 @@ body {
 }
 
 .gs-add-tab-btn, .gs-all-tabs-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   background: transparent;
   border: none;
   color: #444746;
@@ -612,18 +612,20 @@ body {
   justify-content: center;
   cursor: pointer;
   font-size: 13px;
-  transition: background 0.12s;
+  transition: all 0.15s ease;
 }
 .gs-add-tab-btn:hover, .gs-all-tabs-btn:hover {
-  background: #dfe4ec;
+  background: #e8eaed;
+  color: #1f1f1f;
 }
 
 .gs-tabs-scroll-container {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  align-items: flex-end;
+  gap: 0;
   overflow-x: auto;
-  max-width: 580px;
+  max-width: 640px;
+  height: 100%;
   scrollbar-width: thin;
 }
 .gs-tabs-scroll-container::-webkit-scrollbar {
@@ -634,51 +636,76 @@ body {
   border-radius: 3px;
 }
 
+/* Authentic Google Sheets Tab Styling (matches user Image 2) */
 .gs-sheet-tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 6px 6px 0 0;
-  background: #e8eaed;
-  border: 1px solid #dadce0;
-  border-bottom: 2px solid transparent;
-  color: #3c4043;
-  font-size: 12px;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-right: 1px solid #e1e3e1;
+  border-bottom: 3px solid transparent;
+  color: #444746;
+  font-size: 13px;
+  font-family: 'Google Sans', Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
-  transition: all 0.12s;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  box-sizing: border-box;
 }
 .gs-sheet-tab:hover {
-  background: #dfe1e5;
-  color: #202124;
+  background: #ebeef3;
+  color: #1f1f1f;
 }
 .gs-sheet-tab.active {
-  background: #ffffff;
-  border-color: #dadce0;
-  border-bottom: 2px solid #0f9d58;
-  color: #0f9d58;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  background: #e8f0fe;
+  border-color: transparent;
+  border-right: 1px solid #d2e3fc;
+  border-bottom: 3px solid #0b57d0;
+  color: #0b57d0;
+  font-weight: 600;
 }
 .gs-tab-title {
   cursor: pointer;
+  line-height: 1;
 }
 .gs-tab-caret {
   border: none;
   background: transparent;
-  padding: 1px 3px;
-  color: #70757a;
+  padding: 2px 3px;
+  color: inherit;
   border-radius: 3px;
   display: inline-flex;
   align-items: center;
   cursor: pointer;
+  transition: background 0.1s;
 }
 .gs-tab-caret:hover {
-  background: rgba(0,0,0,0.08);
-  color: #202124;
+  background: rgba(0, 0, 0, 0.08);
+}
+.gs-sheet-tab.active .gs-tab-caret {
+  color: #0b57d0;
+}
+
+/* Inline Sheet Tab Rename Input */
+.gs-tab-rename-input {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b57d0;
+  background: #ffffff;
+  border: 1px solid #0b57d0;
+  outline: none;
+  padding: 1px 6px;
+  border-radius: 4px;
+  min-width: 60px;
+  max-width: 150px;
+  box-shadow: 0 0 0 2px rgba(11, 87, 208, 0.2);
 }
 
 .gs-tabs-right {

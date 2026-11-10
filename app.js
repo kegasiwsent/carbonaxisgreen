@@ -2633,7 +2633,127 @@ document.addEventListener('DOMContentLoaded', () => {
       saveGSheetState(state);
       renderGSheet('emp');
       renderGSheet('admin');
+
+      const curEmp = getCurrentEmployee();
+      logEmployeeActivity({
+        employee: curEmp || { name: 'Staff', username: 'staff', role: 'Staff Member' },
+        action_type: 'GSHEET_RENAME_TAB',
+        action_label: 'Renamed Sheet Tab',
+        details: `Renamed sheet tab to "${target.name}" in workbook "${state.title}".`
+      });
     }
+  }
+
+  function startTabInlineRename(tabId, mode) {
+    const container = document.getElementById(`${mode || 'emp'}-gs-tabs-container`);
+    if (!container) return;
+    const tabEl = container.querySelector(`.gs-sheet-tab[data-tab-id="${tabId}"]`);
+    if (!tabEl) return;
+    const titleSpan = tabEl.querySelector('.gs-tab-title');
+    if (!titleSpan) return;
+    if (tabEl.querySelector('.gs-tab-rename-input')) return;
+
+    const currentName = titleSpan.textContent.trim();
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'gs-tab-rename-input';
+    input.value = currentName;
+    input.spellcheck = false;
+
+    titleSpan.style.display = 'none';
+    titleSpan.parentNode.insertBefore(input, titleSpan);
+    input.focus();
+    input.select();
+
+    let committed = false;
+    function commitRename() {
+      if (committed) return;
+      committed = true;
+      const newName = input.value.trim();
+      if (newName && newName !== currentName) {
+        renameWorkbookTab(tabId, newName);
+      } else {
+        renderGSheetTabs('emp');
+        renderGSheetTabs('admin');
+      }
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commitRename();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        committed = true;
+        renderGSheetTabs('emp');
+        renderGSheetTabs('admin');
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      commitRename();
+    });
+
+    input.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    input.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  function showAllSheetsMenu(mode) {
+    closeAllGSheetMenus();
+    const btn = document.getElementById(`${mode}-gs-all-tabs`);
+    const menu = document.getElementById('gs-all-sheets-menu');
+    const list = document.getElementById('gs-all-sheets-menu-list');
+    if (!btn || !menu || !list) return;
+
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+
+    const rect = btn.getBoundingClientRect();
+    menu.style.left = `${Math.max(10, rect.left)}px`;
+    menu.style.top = `${Math.max(10, rect.top - 180)}px`;
+
+    list.innerHTML = state.tabs.map(tab => {
+      const isActive = tab.id === state.activeTabId;
+      return `
+        <div class="gs-menu-item-row" data-tab-id="${tab.id}">
+          <div class="gs-menu-left">
+            <i class="fa-solid ${isActive ? 'fa-check text-blue-600' : 'fa-table text-slate-300'} gs-menu-icon"></i>
+            <span class="gs-menu-label ${isActive ? 'font-bold text-blue-600' : ''}">${escapeHtml(tab.name)}</span>
+          </div>
+        </div>
+      `;
+    }).join('') + `
+      <div class="gs-menu-divider"></div>
+      <div class="gs-menu-item-row" id="gs-all-sheets-add-btn">
+        <div class="gs-menu-left">
+          <i class="fa-solid fa-plus text-blue-600 gs-menu-icon"></i>
+          <span class="gs-menu-label font-bold text-blue-700">Add sheet</span>
+        </div>
+      </div>
+    `;
+
+    list.querySelectorAll('.gs-menu-item-row[data-tab-id]').forEach(row => {
+      row.addEventListener('click', () => {
+        const tabId = row.getAttribute('data-tab-id');
+        closeAllGSheetMenus();
+        switchWorkbookTab(tabId);
+      });
+    });
+
+    const addBtn = document.getElementById('gs-all-sheets-add-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        addWorkbookTab(mode);
+      });
+    }
+
+    menu.classList.remove('hidden');
   }
 
   function duplicateWorkbookTab(tabId) {
@@ -2720,9 +2840,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const isActive = tab.id === state.activeTabId;
       return `
         <div class="gs-sheet-tab ${isActive ? 'active' : ''}" data-tab-id="${tab.id}" title="${escapeHtml(tab.name)} (Click to switch, double-click to rename)">
-          <i class="fa-solid fa-table ${isActive ? 'text-emerald-600' : 'text-slate-400'} text-xs"></i>
           <span class="gs-tab-title" data-tab-id="${tab.id}">${escapeHtml(tab.name)}</span>
-          <button class="gs-tab-caret" data-tab-id="${tab.id}" type="button" title="Sheet options">
+          <button class="gs-tab-caret ${isActive ? 'text-[#0b57d0]' : 'text-slate-500'}" data-tab-id="${tab.id}" type="button" title="Sheet options">
             <i class="fa-solid fa-caret-down text-[9px]"></i>
           </button>
         </div>
@@ -2733,13 +2852,15 @@ document.addEventListener('DOMContentLoaded', () => {
     container.querySelectorAll('.gs-sheet-tab').forEach(tabEl => {
       const tabId = tabEl.getAttribute('data-tab-id');
       tabEl.addEventListener('click', (e) => {
-        if (e.target.closest('.gs-tab-caret')) return;
+        if (e.target.closest('.gs-tab-caret') || e.target.closest('.gs-tab-rename-input')) return;
         switchWorkbookTab(tabId);
       });
 
-      // Double-click to rename
-      tabEl.addEventListener('dblclick', () => {
-        renameWorkbookTab(tabId);
+      // Double-click to rename inline
+      tabEl.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.gs-tab-caret') || e.target.closest('.gs-tab-rename-input')) return;
+        e.stopPropagation();
+        startTabInlineRename(tabId, mode);
       });
 
       // Right-click on tab
@@ -4524,6 +4645,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminEditDropdown = document.getElementById('admin-gs-edit-dropdown');
     const tabContextMenu = document.getElementById('gs-tab-context-menu');
     const cellContextMenu = document.getElementById('gs-cell-context-menu');
+    const allSheetsMenu = document.getElementById('gs-all-sheets-menu');
 
     if (empFileDropdown) empFileDropdown.classList.add('hidden');
     if (adminFileDropdown) adminFileDropdown.classList.add('hidden');
@@ -4531,6 +4653,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (adminEditDropdown) adminEditDropdown.classList.add('hidden');
     if (tabContextMenu) tabContextMenu.classList.add('hidden');
     if (cellContextMenu) cellContextMenu.classList.add('hidden');
+    if (allSheetsMenu) allSheetsMenu.classList.add('hidden');
   }
 
   // Setup File & Edit Menus, Toolbars, and Tab Controls for Emp & Admin
@@ -4604,18 +4727,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (allTabsBtn) {
       allTabsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const state = getGSheetState();
-        ensureWorkbookTabs(state);
-        const names = Object.values(state.sheets).map((s, idx) => `${idx + 1}. ${s.name}`).join('\n');
-        const choice = prompt(`Workbook Sheet Tabs:\n${names}\n\nEnter sheet name to jump to:`, state.sheets[state.activeTabId]?.name);
-        if (choice) {
-          const match = Object.values(state.sheets).find(s => s.name.toLowerCase() === choice.trim().toLowerCase());
-          if (match) switchWorkbookTab(match.id);
-        }
+        showAllSheetsMenu(mode);
       });
     }
 
     // 7. File Menu Items
+    const fileNewTabBtn = document.getElementById(`${mode}-file-new-tab`);
+    if (fileNewTabBtn) {
+      fileNewTabBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        addWorkbookTab(mode);
+      });
+    }
+
     const newSheetBtn = document.getElementById(`${mode}-file-new-sheet`);
     if (newSheetBtn) {
       newSheetBtn.addEventListener('click', () => {
@@ -4737,9 +4861,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabCtxAdd = document.getElementById('gs-tab-ctx-add');
   const tabCtxDelete = document.getElementById('gs-tab-ctx-delete');
 
-  if (tabCtxRename) tabCtxRename.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextTabId) renameWorkbookTab(activeContextTabId); });
+  if (tabCtxRename) tabCtxRename.addEventListener('click', () => {
+    closeAllGSheetMenus();
+    if (activeContextTabId) {
+      const isEmp = !document.getElementById('view-employee')?.classList.contains('hidden');
+      startTabInlineRename(activeContextTabId, isEmp ? 'emp' : 'admin');
+    }
+  });
   if (tabCtxDuplicate) tabCtxDuplicate.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextTabId) duplicateWorkbookTab(activeContextTabId); });
-  if (tabCtxAdd) tabCtxAdd.addEventListener('click', () => { closeAllGSheetMenus(); addWorkbookTab('emp'); });
+  if (tabCtxAdd) tabCtxAdd.addEventListener('click', () => {
+    closeAllGSheetMenus();
+    const isEmp = !document.getElementById('view-employee')?.classList.contains('hidden');
+    addWorkbookTab(isEmp ? 'emp' : 'admin');
+  });
   if (tabCtxDelete) tabCtxDelete.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextTabId) deleteWorkbookTab(activeContextTabId); });
 
   // Cell Context Menu Item Listeners
@@ -4778,7 +4912,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global click outside to close menus
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.gs-menu-wrapper') && !e.target.closest('#gs-tab-context-menu') && !e.target.closest('#gs-cell-context-menu')) {
+    if (!e.target.closest('.gs-menu-wrapper') && !e.target.closest('#gs-tab-context-menu') && !e.target.closest('#gs-cell-context-menu') && !e.target.closest('#gs-all-sheets-menu') && !e.target.closest('.gs-all-tabs-btn')) {
       closeAllGSheetMenus();
     }
   });
@@ -5112,6 +5246,15 @@ document.addEventListener('DOMContentLoaded', () => {
       renderGSheet('admin');
     }
   };
+
+  // Expose tab workbook methods globally on window for inline HTML onclick handlers and cross-module access
+  window.addWorkbookTab = addWorkbookTab;
+  window.switchWorkbookTab = switchWorkbookTab;
+  window.renameWorkbookTab = renameWorkbookTab;
+  window.duplicateWorkbookTab = duplicateWorkbookTab;
+  window.deleteWorkbookTab = deleteWorkbookTab;
+  window.startTabInlineRename = startTabInlineRename;
+  window.showAllSheetsMenu = showAllSheetsMenu;
 
   function renderEmployeeSpreadsheet() {
     window.renderEmployeeSpreadsheet();

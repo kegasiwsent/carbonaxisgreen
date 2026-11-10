@@ -1188,6 +1188,12 @@
                             </div>
                           </div>
                           <div class="gs-submenu">
+                            <div class="gs-menu-item-row" id="admin-file-new-tab">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-plus text-blue-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label font-bold text-blue-700">New Sheet Tab (+)</span>
+                              </div>
+                            </div>
                             <div class="gs-menu-item-row" id="admin-file-new-sheet">
                               <div class="gs-menu-left">
                                 <i class="fa-solid fa-table text-emerald-600 gs-menu-icon"></i>
@@ -1537,8 +1543,8 @@
             <!-- 5. Bottom Sheet Tabs Bar -->
             <div class="gs-bottom-bar">
               <div class="gs-tabs-left">
-                <button class="gs-add-tab-btn" title="Add Sheet Tab (+)" type="button" id="admin-gs-add-tab"><i class="fa-solid fa-plus"></i></button>
-                <button class="gs-all-tabs-btn" title="All sheets in workbook" type="button" id="admin-gs-all-tabs"><i class="fa-solid fa-bars"></i></button>
+                <button class="gs-add-tab-btn" title="Add Sheet Tab (+)" type="button" id="admin-gs-add-tab" onclick="window.addWorkbookTab('admin')"><i class="fa-solid fa-plus"></i></button>
+                <button class="gs-all-tabs-btn" title="All sheets in workbook" type="button" id="admin-gs-all-tabs" onclick="window.showAllSheetsMenu('admin')"><i class="fa-solid fa-bars"></i></button>
                 <div id="admin-gs-tabs-container" class="gs-tabs-scroll-container">
                   <!-- Dynamically rendered sheet tabs (Sheet1, Sheet2, etc.) -->
                 </div>
@@ -1757,6 +1763,12 @@
                             </div>
                           </div>
                           <div class="gs-submenu">
+                            <div class="gs-menu-item-row" id="emp-file-new-tab">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-plus text-blue-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label font-bold text-blue-700">New Sheet Tab (+)</span>
+                              </div>
+                            </div>
                             <div class="gs-menu-item-row" id="emp-file-new-sheet">
                               <div class="gs-menu-left">
                                 <i class="fa-solid fa-table text-emerald-600 gs-menu-icon"></i>
@@ -2106,8 +2118,8 @@
             <!-- 5. Bottom Sheet Tabs Bar -->
             <div class="gs-bottom-bar">
               <div class="gs-tabs-left">
-                <button class="gs-add-tab-btn" title="Add Sheet Tab (+)" type="button" id="emp-gs-add-tab"><i class="fa-solid fa-plus"></i></button>
-                <button class="gs-all-tabs-btn" title="All sheets in workbook" type="button" id="emp-gs-all-tabs"><i class="fa-solid fa-bars"></i></button>
+                <button class="gs-add-tab-btn" title="Add Sheet Tab (+)" type="button" id="emp-gs-add-tab" onclick="window.addWorkbookTab('emp')"><i class="fa-solid fa-plus"></i></button>
+                <button class="gs-all-tabs-btn" title="All sheets in workbook" type="button" id="emp-gs-all-tabs" onclick="window.showAllSheetsMenu('emp')"><i class="fa-solid fa-bars"></i></button>
                 <div id="emp-gs-tabs-container" class="gs-tabs-scroll-container">
                   <!-- Dynamically rendered sheet tabs (Sheet1, Sheet2, etc.) -->
                 </div>
@@ -2841,6 +2853,11 @@
     <div class="gs-menu-item-row" id="gs-tab-ctx-delete">
       <div class="gs-menu-left"><i class="fa-solid fa-trash gs-menu-icon text-rose-600"></i><span class="gs-menu-label text-rose-600">Delete sheet</span></div>
     </div>
+  </div>
+
+  <!-- All Sheets Popup Menu -->
+  <div id="gs-all-sheets-menu" class="gs-dropdown-menu hidden" style="position:fixed; z-index:99999; min-width:210px; max-height:320px; overflow-y:auto; box-shadow:0 10px 25px -5px rgba(0,0,0,0.2), 0 8px 10px -6px rgba(0,0,0,0.1);">
+    <div id="gs-all-sheets-menu-list"></div>
   </div>
 
   <!-- Spreadsheet Cell Context Menu (Right Click) -->
