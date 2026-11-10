@@ -211,6 +211,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  window.switchView = switchView;
+
+  // URL Hash routing (e.g. #employee, #staff, #admin)
+  function handleHashRoute() {
+    const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+    if (hash === 'employee' || hash === 'staff') {
+      switchView('employee');
+    } else if (hash === 'admin') {
+      switchView('admin');
+    } else if (views[hash]) {
+      switchView(hash);
+    }
+  }
+  window.addEventListener('hashchange', handleHashRoute);
+  setTimeout(handleHashRoute, 100);
+
   // Hook nav links and global data-view delegation
   document.addEventListener('click', (e) => {
     const trigger = e.target.closest('[data-view]');
