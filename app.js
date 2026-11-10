@@ -2180,6 +2180,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==================== 10. Live Spreadsheet Grid System (Google Sheet / Excel Style) ====================
+  const viewEmployee = document.getElementById('view-employee');
   const empTabSheetBtn = document.getElementById('emp-tab-sheet-btn');
   const empTabLeadsBtn = document.getElementById('emp-tab-leads-btn');
   const empTabSheetView = document.getElementById('emp-tab-sheet');
@@ -3143,17 +3144,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const table = document.getElementById(`${mode}-gs-table`);
     if (!table) return;
 
-    // Click cell to select
+    // Click cell to select and start editing immediately in one click
     const cells = table.querySelectorAll('.gs-cell');
     cells.forEach(cellEl => {
       cellEl.addEventListener('click', (e) => {
-        const key = cellEl.getAttribute('data-cell');
+        // If clicking directly inside an active input editor inside this cell, let user place cursor
+        if (e.target && e.target.classList.contains('gs-cell-editor')) return;
         const col = cellEl.getAttribute('data-col');
         const row = parseInt(cellEl.getAttribute('data-row'), 10);
         selectGSheetCell(mode, col, row);
+        startInlineEditing(mode, col, row);
       });
 
-      // Double click to inline edit
+      // Double click to inline edit (also supported)
       cellEl.addEventListener('dblclick', (e) => {
         const col = cellEl.getAttribute('data-col');
         const row = parseInt(cellEl.getAttribute('data-row'), 10);
@@ -3205,6 +3208,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const handle = document.createElement('div');
         handle.className = 'gs-drag-handle';
         targetCell.appendChild(handle);
+        try {
+          targetCell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        } catch (e) {}
       }
 
       const colHeader = document.getElementById(`${mode}-gs-col-${col}`);
@@ -3221,11 +3227,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const cellEl = table.querySelector(`[data-cell="${key}"]`);
     if (!cellEl) return;
 
+    // Commit any other active editor in this table first
+    const activeEditor = table.querySelector('.gs-cell-editor');
+    if (activeEditor) {
+      if (activeEditor.parentElement === cellEl) return;
+      activeEditor.blur();
+    }
+
     const state = getGSheetState();
     const cell = state.cells[key] || {};
     const oldRaw = cell.raw || '';
 
-    // Remove old editor if any
+    // Remove old editor if any in this cell
     const existingInput = cellEl.querySelector('.gs-cell-editor');
     if (existingInput) return;
 
@@ -3260,25 +3273,58 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!state.cells[key]) state.cells[key] = {};
       state.cells[key].raw = newVal;
       saveGSheetState(state, mode, key, oldRaw, newVal);
-      renderGSheet('emp');
-      renderGSheet('admin');
+
+      // Remove editor and update cell display text cleanly
+      input.remove();
+      const displayVal = evalGSheetCell(key, state);
+      cellEl.textContent = displayVal;
+      updateGSheetKPIs();
+
+      // If formula was entered or modified, re-render dependent cells
+      if (newVal.startsWith('=') || oldRaw.startsWith('=')) {
+        setTimeout(() => {
+          renderGSheet('emp');
+          renderGSheet('admin');
+        }, 10);
+      }
     }
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
+        const nextRow = e.shiftKey ? Math.max(1, row - 1) : Math.min(row + 1, state.rows);
+        if (mode === 'emp') empSelectedCell = { col, row: nextRow };
+        else adminSelectedCell = { col, row: nextRow };
         commitEdit();
-        selectGSheetCell(mode, col, Math.min(row + 1, state.rows));
+        selectGSheetCell(mode, col, nextRow);
       } else if (e.key === 'Tab') {
         e.preventDefault();
-        commitEdit();
         const curIdx = GS_COLS.indexOf(col);
-        const nextCol = GS_COLS[Math.min(curIdx + 1, GS_COLS.length - 1)];
+        const nextCol = e.shiftKey
+          ? GS_COLS[Math.max(0, curIdx - 1)]
+          : GS_COLS[Math.min(curIdx + 1, GS_COLS.length - 1)];
+        if (mode === 'emp') empSelectedCell = { col: nextCol, row };
+        else adminSelectedCell = { col: nextCol, row };
+        commitEdit();
         selectGSheetCell(mode, nextCol, row);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const nextRow = Math.min(row + 1, state.rows);
+        if (mode === 'emp') empSelectedCell = { col, row: nextRow };
+        else adminSelectedCell = { col, row: nextRow };
+        commitEdit();
+        selectGSheetCell(mode, col, nextRow);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prevRow = Math.max(1, row - 1);
+        if (mode === 'emp') empSelectedCell = { col, row: prevRow };
+        else adminSelectedCell = { col, row: prevRow };
+        commitEdit();
+        selectGSheetCell(mode, col, prevRow);
       } else if (e.key === 'Escape') {
         committed = true;
         input.remove();
-        renderGSheet(mode);
+        cellEl.textContent = evalGSheetCell(key, state);
       }
     });
 
@@ -3653,8 +3699,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Determine which view is currently open
-    const isEmpVisible = empTabSheetView && !empTabSheetView.classList.contains('hidden') && viewEmployee && !viewEmployee.classList.contains('hidden');
-    const isAdminVisible = tabSheetView && !tabSheetView.classList.contains('hidden') && adminDashboardView && !adminDashboardView.classList.contains('hidden');
+    const empViewEl = document.getElementById('view-employee');
+    const adminViewEl = document.getElementById('admin-dashboard-view');
+    const isEmpVisible = empTabSheetView && !empTabSheetView.classList.contains('hidden') && empViewEl && !empViewEl.classList.contains('hidden');
+    const isAdminVisible = tabSheetView && !tabSheetView.classList.contains('hidden') && adminViewEl && !adminViewEl.classList.contains('hidden');
 
     if (!isEmpVisible && !isAdminVisible) return;
     const mode = isEmpVisible ? 'emp' : 'admin';
@@ -3680,7 +3728,17 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       selectGSheetCell(mode, GS_COLS[Math.min(GS_COLS.length - 1, colIdx + 1)], sel.row);
-    } else if (e.key === 'Enter' || e.key === 'F2') {
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const nextRow = e.shiftKey ? Math.max(1, sel.row - 1) : Math.min(state.rows, sel.row + 1);
+      selectGSheetCell(mode, sel.col, nextRow);
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      const nextCol = e.shiftKey
+        ? GS_COLS[Math.max(0, colIdx - 1)]
+        : GS_COLS[Math.min(GS_COLS.length - 1, colIdx + 1)];
+      selectGSheetCell(mode, nextCol, sel.row);
+    } else if (e.key === 'F2') {
       e.preventDefault();
       startInlineEditing(mode, sel.col, sel.row);
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -5166,8 +5224,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard shortcut Ctrl+O / Cmd+O to open file dialog
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'o' || e.key === 'O')) {
-      const isEmpVisible = empTabSheetView && !empTabSheetView.classList.contains('hidden') && viewEmployee && !viewEmployee.classList.contains('hidden');
-      const isAdminVisible = tabSheetView && !tabSheetView.classList.contains('hidden') && adminDashboardView && !adminDashboardView.classList.contains('hidden');
+      const empViewEl = document.getElementById('view-employee');
+      const adminViewEl = document.getElementById('admin-dashboard-view');
+      const isEmpVisible = empTabSheetView && !empTabSheetView.classList.contains('hidden') && empViewEl && !empViewEl.classList.contains('hidden');
+      const isAdminVisible = tabSheetView && !tabSheetView.classList.contains('hidden') && adminViewEl && !adminViewEl.classList.contains('hidden');
       if (isEmpVisible || isAdminVisible) {
         e.preventDefault();
         openExistingSheetsDialog('recent');
