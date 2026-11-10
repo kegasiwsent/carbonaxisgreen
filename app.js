@@ -2205,12 +2205,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let adminInlineEditor = null;
 
   function initDefaultGSheetState() {
-    const state = {
-      title: 'CarbonAxis Master Deals 2026',
-      rows: GS_DEFAULT_ROWS,
-      starred: true,
-      cells: {}
-    };
+    const defaultSheetId = 'sheet_1';
+    const initialCells = {};
 
     // Row 1: Column Headers
     const headers = [
@@ -2231,7 +2227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     headers.forEach(h => {
-      state.cells[h.col + '1'] = {
+      initialCells[h.col + '1'] = {
         raw: h.val,
         bold: true,
         bg: '#f8fafd',
@@ -2241,100 +2237,130 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Row 2: Microsoft
-    state.cells['A2'] = { raw: 'Microsoft Sustainability Fund', bold: true };
-    state.cells['B2'] = { raw: 'carbon-procure@microsoft.com' };
-    state.cells['C2'] = { raw: 'Icelandic Direct Air Capture (PRJ-DAC-0419)' };
-    state.cells['D2'] = { raw: '5200', align: 'right', fmt: 'number' };
-    state.cells['E2'] = { raw: '48.00', align: 'right', fmt: 'currency' };
-    state.cells['F2'] = { raw: '=D2*E2', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
-    state.cells['G2'] = { raw: 'Term Sheet Sent', align: 'center', bold: true, color: '#6b21a8', bg: '#f3e8ff' };
-    state.cells['H2'] = { raw: 'Requires Gold Standard retirement serial numbers for 2026 fiscal ESG audit.' };
-    state.cells['I2'] = { raw: 'Alex Morgan (@alex_broker)' };
-    state.cells['J2'] = { raw: '2025-2026', align: 'center' };
-    state.cells['K2'] = { raw: 'Gold Standard Verified', align: 'center', color: '#047857' };
-    state.cells['L2'] = { raw: '2026-11-15', align: 'center' };
-    state.cells['M2'] = { raw: 'CA-MSFT-09', align: 'center' };
-    state.cells['N2'] = { raw: '=F2*0.03', align: 'right', fmt: 'currency' };
+    initialCells['A2'] = { raw: 'Microsoft Sustainability Fund', bold: true };
+    initialCells['B2'] = { raw: 'carbon-procure@microsoft.com' };
+    initialCells['C2'] = { raw: 'Icelandic Direct Air Capture (PRJ-DAC-0419)' };
+    initialCells['D2'] = { raw: '5200', align: 'right', fmt: 'number' };
+    initialCells['E2'] = { raw: '48.00', align: 'right', fmt: 'currency' };
+    initialCells['F2'] = { raw: '=D2*E2', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    initialCells['G2'] = { raw: 'Term Sheet Sent', align: 'center', bold: true, color: '#6b21a8', bg: '#f3e8ff' };
+    initialCells['H2'] = { raw: 'Requires Gold Standard retirement serial numbers for 2026 fiscal ESG audit.' };
+    initialCells['I2'] = { raw: 'Alex Morgan (@alex_broker)' };
+    initialCells['J2'] = { raw: '2025-2026', align: 'center' };
+    initialCells['K2'] = { raw: 'Gold Standard Verified', align: 'center', color: '#047857' };
+    initialCells['L2'] = { raw: '2026-11-15', align: 'center' };
+    initialCells['M2'] = { raw: 'CA-MSFT-09', align: 'center' };
+    initialCells['N2'] = { raw: '=F2*0.03', align: 'right', fmt: 'currency' };
 
     // Row 3: Delta Global
-    state.cells['A3'] = { raw: 'Delta Global Logistics', bold: true };
-    state.cells['B3'] = { raw: 'esg-offsets@deltaglobal.com' };
-    state.cells['C3'] = { raw: 'Acre Canopy Protection (PRJ-GS-0104)' };
-    state.cells['D3'] = { raw: '12000', align: 'right', fmt: 'number' };
-    state.cells['E3'] = { raw: '15.00', align: 'right', fmt: 'currency' };
-    state.cells['F3'] = { raw: '=D3*E3', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
-    state.cells['G3'] = { raw: 'Negotiation', align: 'center', bold: true, color: '#1d4ed8', bg: '#eff6ff' };
-    state.cells['H3'] = { raw: 'Negotiating long-term forward off-take agreement for vintage 2024-2025.' };
-    state.cells['I3'] = { raw: 'Alex Morgan (@alex_broker)' };
-    state.cells['J3'] = { raw: '2024', align: 'center' };
-    state.cells['K3'] = { raw: 'Verra VCS Active', align: 'center', color: '#047857' };
-    state.cells['L3'] = { raw: '2026-11-20', align: 'center' };
-    state.cells['M3'] = { raw: 'CA-DLT-41', align: 'center' };
-    state.cells['N3'] = { raw: '=F3*0.03', align: 'right', fmt: 'currency' };
+    initialCells['A3'] = { raw: 'Delta Global Logistics', bold: true };
+    initialCells['B3'] = { raw: 'esg-offsets@deltaglobal.com' };
+    initialCells['C3'] = { raw: 'Acre Canopy Protection (PRJ-GS-0104)' };
+    initialCells['D3'] = { raw: '12000', align: 'right', fmt: 'number' };
+    initialCells['E3'] = { raw: '15.00', align: 'right', fmt: 'currency' };
+    initialCells['F3'] = { raw: '=D3*E3', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    initialCells['G3'] = { raw: 'Negotiation', align: 'center', bold: true, color: '#1d4ed8', bg: '#eff6ff' };
+    initialCells['H3'] = { raw: 'Negotiating long-term forward off-take agreement for vintage 2024-2025.' };
+    initialCells['I3'] = { raw: 'Alex Morgan (@alex_broker)' };
+    initialCells['J3'] = { raw: '2024', align: 'center' };
+    initialCells['K3'] = { raw: 'Verra VCS Active', align: 'center', color: '#047857' };
+    initialCells['L3'] = { raw: '2026-11-20', align: 'center' };
+    initialCells['M3'] = { raw: 'CA-DLT-41', align: 'center' };
+    initialCells['N3'] = { raw: '=F3*0.03', align: 'right', fmt: 'currency' };
 
     // Row 4: Starlight Energy
-    state.cells['A4'] = { raw: 'Starlight Energy Group', bold: true };
-    state.cells['B4'] = { raw: 'trading@starlightenergy.co.uk' };
-    state.cells['C4'] = { raw: 'Sahara Solar Lot (PRJ-VCS-0218)' };
-    state.cells['D4'] = { raw: '18500', align: 'right', fmt: 'number' };
-    state.cells['E4'] = { raw: '12.00', align: 'right', fmt: 'currency' };
-    state.cells['F4'] = { raw: '=D4*E4', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
-    state.cells['G4'] = { raw: 'Closed Won', align: 'center', bold: true, color: '#15803d', bg: '#dcfce7' };
-    state.cells['H4'] = { raw: 'First tranche clearing complete. Escrow verified via standard registry ledger.' };
-    state.cells['I4'] = { raw: 'Sarah Jenkins (@sarah_broker)' };
-    state.cells['J4'] = { raw: '2025', align: 'center' };
-    state.cells['K4'] = { raw: 'Registry Confirmed', align: 'center', color: '#047857' };
-    state.cells['L4'] = { raw: '2026-10-28', align: 'center' };
-    state.cells['M4'] = { raw: 'CA-SLT-18', align: 'center' };
-    state.cells['N4'] = { raw: '=F4*0.03', align: 'right', fmt: 'currency' };
+    initialCells['A4'] = { raw: 'Starlight Energy Group', bold: true };
+    initialCells['B4'] = { raw: 'trading@starlightenergy.co.uk' };
+    initialCells['C4'] = { raw: 'Sahara Solar Lot (PRJ-VCS-0218)' };
+    initialCells['D4'] = { raw: '18500', align: 'right', fmt: 'number' };
+    initialCells['E4'] = { raw: '12.00', align: 'right', fmt: 'currency' };
+    initialCells['F4'] = { raw: '=D4*E4', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    initialCells['G4'] = { raw: 'Closed Won', align: 'center', bold: true, color: '#15803d', bg: '#dcfce7' };
+    initialCells['H4'] = { raw: 'First tranche clearing complete. Escrow verified via standard registry ledger.' };
+    initialCells['I4'] = { raw: 'Sarah Jenkins (@sarah_broker)' };
+    initialCells['J4'] = { raw: '2025', align: 'center' };
+    initialCells['K4'] = { raw: 'Registry Confirmed', align: 'center', color: '#047857' };
+    initialCells['L4'] = { raw: '2026-10-28', align: 'center' };
+    initialCells['M4'] = { raw: 'CA-SLT-18', align: 'center' };
+    initialCells['N4'] = { raw: '=F4*0.03', align: 'right', fmt: 'currency' };
 
     // Row 5: Amazon Climate Partner
-    state.cells['A5'] = { raw: 'Amazon Climate Partner', bold: true };
-    state.cells['B5'] = { raw: 'netzero@amazonofftake.com' };
-    state.cells['C5'] = { raw: 'Gujarat Wind Corridor (PRJ-VCS-0552)' };
-    state.cells['D5'] = { raw: '25000', align: 'right', fmt: 'number' };
-    state.cells['E5'] = { raw: '9.80', align: 'right', fmt: 'currency' };
-    state.cells['F5'] = { raw: '=D5*E5', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
-    state.cells['G5'] = { raw: 'Lead Inbound', align: 'center', bold: true, color: '#475569', bg: '#f1f5f9' };
-    state.cells['H5'] = { raw: 'Requested technical documentation on additionality and local community co-benefits.' };
-    state.cells['I2'] = { raw: 'Alex Morgan (@alex_broker)' };
-    state.cells['J5'] = { raw: '2025', align: 'center' };
-    state.cells['K5'] = { raw: 'VCS Registered', align: 'center', color: '#047857' };
-    state.cells['L5'] = { raw: '2026-12-01', align: 'center' };
-    state.cells['M5'] = { raw: 'CA-AMZ-77', align: 'center' };
-    state.cells['N5'] = { raw: '=F5*0.03', align: 'right', fmt: 'currency' };
+    initialCells['A5'] = { raw: 'Amazon Climate Partner', bold: true };
+    initialCells['B5'] = { raw: 'netzero@amazonofftake.com' };
+    initialCells['C5'] = { raw: 'Gujarat Wind Corridor (PRJ-VCS-0552)' };
+    initialCells['D5'] = { raw: '25000', align: 'right', fmt: 'number' };
+    initialCells['E5'] = { raw: '9.80', align: 'right', fmt: 'currency' };
+    initialCells['F5'] = { raw: '=D5*E5', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    initialCells['G5'] = { raw: 'Lead Inbound', align: 'center', bold: true, color: '#475569', bg: '#f1f5f9' };
+    initialCells['H5'] = { raw: 'Requested technical documentation on additionality and local community co-benefits.' };
+    initialCells['I5'] = { raw: 'Alex Morgan (@alex_broker)' };
+    initialCells['J5'] = { raw: '2025', align: 'center' };
+    initialCells['K5'] = { raw: 'VCS Registered', align: 'center', color: '#047857' };
+    initialCells['L5'] = { raw: '2026-12-01', align: 'center' };
+    initialCells['M5'] = { raw: 'CA-AMZ-77', align: 'center' };
+    initialCells['N5'] = { raw: '=F5*0.03', align: 'right', fmt: 'currency' };
 
     // Row 6: Nordic Clean Maritime
-    state.cells['A6'] = { raw: 'Nordic Clean Maritime', bold: true };
-    state.cells['B6'] = { raw: 'offsets@nordicmaritime.no' };
-    state.cells['C6'] = { raw: 'Mombasa Mangrove Replanting (PRJ-PV-0342)' };
-    state.cells['D6'] = { raw: '8400', align: 'right', fmt: 'number' };
-    state.cells['E6'] = { raw: '18.50', align: 'right', fmt: 'currency' };
-    state.cells['F6'] = { raw: '=D6*E6', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
-    state.cells['G6'] = { raw: 'Call Scheduled', align: 'center', bold: true, color: '#b45309', bg: '#fef3c7' };
-    state.cells['H6'] = { raw: 'Blue carbon credits desired to meet EU FuelMaritime emission quota.' };
-    state.cells['I6'] = { raw: 'Alex Morgan (@alex_broker)' };
-    state.cells['J6'] = { raw: '2025', align: 'center' };
-    state.cells['K6'] = { raw: 'Plan Vivo Verified', align: 'center', color: '#047857' };
-    state.cells['L6'] = { raw: '2026-11-30', align: 'center' };
-    state.cells['M6'] = { raw: 'CA-NDM-03', align: 'center' };
-    state.cells['N6'] = { raw: '=F6*0.03', align: 'right', fmt: 'currency' };
+    initialCells['A6'] = { raw: 'Nordic Clean Maritime', bold: true };
+    initialCells['B6'] = { raw: 'offsets@nordicmaritime.no' };
+    initialCells['C6'] = { raw: 'Mombasa Mangrove Replanting (PRJ-PV-0342)' };
+    initialCells['D6'] = { raw: '8400', align: 'right', fmt: 'number' };
+    initialCells['E6'] = { raw: '18.50', align: 'right', fmt: 'currency' };
+    initialCells['F6'] = { raw: '=D6*E6', align: 'right', bold: true, color: '#047857', fmt: 'currency' };
+    initialCells['G6'] = { raw: 'Call Scheduled', align: 'center', bold: true, color: '#b45309', bg: '#fef3c7' };
+    initialCells['H6'] = { raw: 'Blue carbon credits desired to meet EU FuelMaritime emission quota.' };
+    initialCells['I6'] = { raw: 'Alex Morgan (@alex_broker)' };
+    initialCells['J6'] = { raw: '2025', align: 'center' };
+    initialCells['K6'] = { raw: 'Plan Vivo Verified', align: 'center', color: '#047857' };
+    initialCells['L6'] = { raw: '2026-11-30', align: 'center' };
+    initialCells['M6'] = { raw: 'CA-NDM-03', align: 'center' };
+    initialCells['N6'] = { raw: '=F6*0.03', align: 'right', fmt: 'currency' };
 
     // Row 7: Portfolio Summary Totals (Google Sheet Functions)
-    state.cells['A7'] = { raw: 'PORTFOLIO TOTALS', bold: true, bg: '#ecfdf5', color: '#065f46' };
-    state.cells['B7'] = { raw: '', bg: '#ecfdf5' };
-    state.cells['C7'] = { raw: '', bg: '#ecfdf5' };
-    state.cells['D7'] = { raw: '=SUM(D2:D6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#1e40af', fmt: 'number' };
-    state.cells['E7'] = { raw: '=AVERAGE(E2:E6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#065f46', fmt: 'currency' };
-    state.cells['F7'] = { raw: '=SUM(F2:F6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#047857', fmt: 'currency' };
-    state.cells['G7'] = { raw: 'ACTIVE PIPELINE', bold: true, bg: '#ecfdf5', align: 'center', color: '#065f46' };
-    state.cells['H7'] = { raw: 'Verified CarbonAxis Deal Desk Ledger', bg: '#ecfdf5', color: '#047857' };
-    state.cells['I7'] = { raw: 'All Active Brokers', bg: '#ecfdf5', color: '#065f46' };
-    state.cells['J7'] = { raw: '', bg: '#ecfdf5' };
-    state.cells['K7'] = { raw: '', bg: '#ecfdf5' };
-    state.cells['L7'] = { raw: '', bg: '#ecfdf5' };
-    state.cells['M7'] = { raw: '', bg: '#ecfdf5' };
-    state.cells['N7'] = { raw: '=SUM(N2:N6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#047857', fmt: 'currency' };
+    initialCells['A7'] = { raw: 'PORTFOLIO TOTALS', bold: true, bg: '#ecfdf5', color: '#065f46' };
+    initialCells['B7'] = { raw: '', bg: '#ecfdf5' };
+    initialCells['C7'] = { raw: '', bg: '#ecfdf5' };
+    initialCells['D7'] = { raw: '=SUM(D2:D6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#1e40af', fmt: 'number' };
+    initialCells['E7'] = { raw: '=AVERAGE(E2:E6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#065f46', fmt: 'currency' };
+    initialCells['F7'] = { raw: '=SUM(F2:F6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#047857', fmt: 'currency' };
+    initialCells['G7'] = { raw: 'ACTIVE PIPELINE', bold: true, bg: '#ecfdf5', align: 'center', color: '#065f46' };
+    initialCells['H7'] = { raw: 'Verified CarbonAxis Deal Desk Ledger', bg: '#ecfdf5', color: '#047857' };
+    initialCells['I7'] = { raw: 'All Active Brokers', bg: '#ecfdf5', color: '#065f46' };
+    initialCells['J7'] = { raw: '', bg: '#ecfdf5' };
+    initialCells['K7'] = { raw: '', bg: '#ecfdf5' };
+    initialCells['L7'] = { raw: '', bg: '#ecfdf5' };
+    initialCells['M7'] = { raw: '', bg: '#ecfdf5' };
+    initialCells['N7'] = { raw: '=SUM(N2:N6)', bold: true, bg: '#ecfdf5', align: 'right', color: '#047857', fmt: 'currency' };
+
+    const state = {
+      id: 'sheet_master_2026',
+      title: 'CarbonAxis Master Deals 2026',
+      rows: GS_DEFAULT_ROWS,
+      starred: true,
+      author: 'Alex Morgan (@alex_broker)',
+      createdAt: '2026-10-31T09:00:00.000Z',
+      updatedAt: new Date().toISOString(),
+      activeTabId: defaultSheetId,
+      sheets: {
+        [defaultSheetId]: {
+          id: defaultSheetId,
+          name: 'Sheet1',
+          gridData: initialCells,
+          rowCount: GS_DEFAULT_ROWS,
+          colCount: GS_COLS.length,
+          history: []
+        }
+      },
+      tabs: [
+        {
+          id: defaultSheetId,
+          name: 'Sheet1',
+          rows: GS_DEFAULT_ROWS,
+          cells: initialCells
+        }
+      ],
+      cells: initialCells
+    };
 
     return state;
   }
@@ -2352,10 +2378,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (!store || Object.keys(store).length === 0) {
       const defaultState = initDefaultGSheetState();
-      defaultState.id = 'sheet_master_2026';
-      defaultState.author = 'Alex Morgan (@alex_broker)';
-      defaultState.createdAt = '2026-10-31T09:00:00.000Z';
-      defaultState.updatedAt = new Date().toISOString();
       store = { 'sheet_master_2026': defaultState };
       localStorage.setItem(SHEETS_STORE_KEY, JSON.stringify(store));
       localStorage.setItem(ACTIVE_SHEET_KEY, 'sheet_master_2026');
@@ -2377,25 +2399,98 @@ document.addEventListener('DOMContentLoaded', () => {
     return id;
   }
 
+  // Multi-Sheet normalization & pointer guarantee
+  function ensureWorkbookTabs(state) {
+    if (!state) return state;
+
+    // 1. Ensure central sheets dictionary exists
+    if (!state.sheets || typeof state.sheets !== 'object') {
+      state.sheets = {};
+    }
+
+    // 2. Migrate legacy tabs or cells if sheets dictionary is empty
+    if (Object.keys(state.sheets).length === 0) {
+      if (Array.isArray(state.tabs) && state.tabs.length > 0) {
+        state.tabs.forEach(t => {
+          const tabId = t.id || ('sheet_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
+          state.sheets[tabId] = {
+            id: tabId,
+            name: t.name || 'Sheet1',
+            gridData: t.cells || t.gridData || {},
+            rowCount: t.rows || state.rows || GS_DEFAULT_ROWS,
+            colCount: GS_COLS.length,
+            history: []
+          };
+        });
+      } else {
+        const defaultId = 'sheet_1';
+        state.sheets[defaultId] = {
+          id: defaultId,
+          name: 'Sheet1',
+          gridData: state.cells || {},
+          rowCount: state.rows || GS_DEFAULT_ROWS,
+          colCount: GS_COLS.length,
+          history: []
+        };
+      }
+    }
+
+    // 3. Ensure activeTabId is valid
+    const sheetIds = Object.keys(state.sheets);
+    if (!state.activeTabId || !state.sheets[state.activeTabId]) {
+      state.activeTabId = sheetIds[0] || 'sheet_1';
+    }
+
+    // 4. Synchronize state.tabs array in order for UI tabs display
+    state.tabs = sheetIds.map(id => {
+      const s = state.sheets[id];
+      return {
+        id: s.id,
+        name: s.name,
+        rows: s.rowCount || GS_DEFAULT_ROWS,
+        cells: s.gridData || {}
+      };
+    });
+
+    // 5. Point state.cells and state.rows directly to the active sheet
+    const activeSheet = state.sheets[state.activeTabId];
+    if (activeSheet) {
+      state.cells = activeSheet.gridData || {};
+      state.rows = activeSheet.rowCount || GS_DEFAULT_ROWS;
+    }
+
+    return state;
+  }
+
   function getGSheetState() {
     const store = getSheetsStore();
     const activeId = getActiveSheetId();
-    if (!store[activeId]) {
+    let state = store[activeId];
+    if (!state) {
       const firstId = Object.keys(store)[0];
-      return store[firstId] || initDefaultGSheetState();
+      state = store[firstId] || initDefaultGSheetState();
     }
-    return store[activeId];
+    ensureWorkbookTabs(state);
+    return state;
   }
 
   function saveGSheetState(state, editorRole, cellKey, oldVal, newVal) {
     const store = getSheetsStore();
     const activeId = state.id || getActiveSheetId();
     state.id = activeId;
+    ensureWorkbookTabs(state);
+
+    // Synchronize active sheet gridData with latest state.cells & state.rows
+    if (state.sheets && state.sheets[state.activeTabId]) {
+      state.sheets[state.activeTabId].gridData = state.cells;
+      state.sheets[state.activeTabId].rowCount = state.rows;
+    }
+
     state.updatedAt = new Date().toISOString();
     store[activeId] = state;
     saveSheetsStore(store);
 
-    // Update cloud status
+    // Update Drive saving indicator
     ['emp', 'admin'].forEach(prefix => {
       const statusText = document.getElementById(`${prefix}-gs-status-text`);
       if (statusText) {
@@ -2409,24 +2504,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Log employee action if a cell was edited
     if (cellKey && oldVal !== newVal) {
       const curEmp = getCurrentEmployee();
+      const curSheet = state.sheets[state.activeTabId];
       logEmployeeActivity({
         employee: curEmp || { name: 'Admin', username: 'admin', role: 'Administrator' },
         action_type: 'GSHEET_CELL_EDIT',
         action_label: 'Google Sheet Cell Edited',
-        details: `Updated [${cellKey}] in "${state.title}" from "${oldVal || ''}" to "${newVal || ''}".`
+        details: `Updated [${cellKey}] in "${state.title} (${curSheet ? curSheet.name : 'Sheet1'})" from "${oldVal || ''}" to "${newVal || ''}".`
       });
     }
 
-    // Sync to Supabase deal_sheets cloud table if connected
+    // Sync to Supabase deal_sheets cloud table
     if (supabaseClient) {
       try {
-        supabaseClient.from('deal_sheets').upsert([{
+        const payload = {
           id: activeId,
           title: state.title,
-          cells: state.cells,
+          cells: {
+            ...state.sheets[state.activeTabId].gridData,
+            __sheets: state.sheets,
+            __active_tab_id: state.activeTabId,
+            __tabs: state.tabs
+          },
           rows: state.rows,
           updated_at: state.updatedAt
-        }]).then(({ error }) => {
+        };
+        supabaseClient.from('deal_sheets').upsert([payload]).then(({ error }) => {
           if (error) console.warn('Supabase deal_sheets sync notice:', error.message);
         }).catch(err => console.warn('Supabase sheet notice:', err));
       } catch (e) {
@@ -2435,6 +2537,227 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateGSheetKPIs();
+  }
+
+  // Switch between sheet tabs cleanly with complete state preservation
+  function switchWorkbookTab(tabId) {
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+
+    if (state.sheets && state.sheets[tabId]) {
+      // 1. Ensure current active sheet has latest cell data in memory
+      if (state.sheets[state.activeTabId]) {
+        state.sheets[state.activeTabId].gridData = state.cells;
+        state.sheets[state.activeTabId].rowCount = state.rows;
+      }
+
+      // 2. Switch activeTabId
+      state.activeTabId = tabId;
+
+      // 3. Point state.cells and state.rows to selected sheet's gridData
+      ensureWorkbookTabs(state);
+
+      // 4. Persist activeTabId
+      saveGSheetState(state);
+
+      // 5. Render exact saved cell values and rowCount
+      renderGSheet('emp');
+      renderGSheet('admin');
+    }
+  }
+
+  // Add a new sheet tab without clearing or mutating existing sheets
+  function addWorkbookTab(mode, optionalName) {
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+
+    // 1. Flush active sheet data to memory
+    if (state.sheets[state.activeTabId]) {
+      state.sheets[state.activeTabId].gridData = state.cells;
+      state.sheets[state.activeTabId].rowCount = state.rows;
+    }
+
+    // 2. Calculate unique sheet name (Sheet2, Sheet3, etc.)
+    const existingNames = Object.values(state.sheets).map(s => s.name);
+    let num = Object.keys(state.sheets).length + 1;
+    while (existingNames.includes('Sheet' + num)) {
+      num++;
+    }
+    const tabName = optionalName || ('Sheet' + num);
+    const newSheetId = 'sheet_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+    // 3. Initialize fresh, independent gridData without mutating or clearing existing sheets
+    const newSheet = {
+      id: newSheetId,
+      name: tabName,
+      gridData: {},
+      rowCount: GS_DEFAULT_ROWS,
+      colCount: GS_COLS.length,
+      history: []
+    };
+
+    // 4. Add to central sheets dictionary
+    state.sheets[newSheetId] = newSheet;
+
+    // 5. Automatically switch activeSheetId to the newly created sheet
+    state.activeTabId = newSheetId;
+
+    // 6. Normalize pointers
+    ensureWorkbookTabs(state);
+
+    // 7. Persist to storage and cloud
+    saveGSheetState(state);
+
+    // 8. Render both employee and admin portals
+    renderGSheet('emp');
+    renderGSheet('admin');
+
+    const curEmp = getCurrentEmployee();
+    logEmployeeActivity({
+      employee: curEmp || { name: 'Staff', username: 'staff', role: 'Staff Member' },
+      action_type: 'GSHEET_ADD_TAB',
+      action_label: 'Added New Sheet Tab',
+      details: `Added new sheet tab "${tabName}" to workbook "${state.title}".`
+    });
+  }
+
+  function renameWorkbookTab(tabId, customName) {
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    const target = state.sheets[tabId];
+    if (!target) return;
+    const newName = customName !== undefined ? customName : prompt(`Enter new sheet name for "${target.name}":`, target.name);
+    if (newName && newName.trim() && newName.trim() !== target.name) {
+      target.name = newName.trim();
+      ensureWorkbookTabs(state);
+      saveGSheetState(state);
+      renderGSheet('emp');
+      renderGSheet('admin');
+    }
+  }
+
+  function duplicateWorkbookTab(tabId) {
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    const target = state.sheets[tabId];
+    if (!target) return;
+
+    const clonedGrid = JSON.parse(JSON.stringify(target.gridData || {}));
+    const newSheetId = 'sheet_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const newName = `${target.name} (Copy)`;
+
+    state.sheets[newSheetId] = {
+      id: newSheetId,
+      name: newName,
+      gridData: clonedGrid,
+      rowCount: target.rowCount || GS_DEFAULT_ROWS,
+      colCount: GS_COLS.length,
+      history: []
+    };
+
+    state.activeTabId = newSheetId;
+    ensureWorkbookTabs(state);
+    saveGSheetState(state);
+    renderGSheet('emp');
+    renderGSheet('admin');
+  }
+
+  function deleteWorkbookTab(tabId) {
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+
+    const sheetIds = Object.keys(state.sheets);
+    if (sheetIds.length <= 1) {
+      alert('Cannot delete: A workbook must contain at least one sheet tab.');
+      return;
+    }
+
+    const targetSheet = state.sheets[tabId];
+    if (!targetSheet) return;
+    if (!confirm(`Are you sure you want to delete sheet "${targetSheet.name}"? Data in this sheet will be permanently lost.`)) return;
+
+    delete state.sheets[tabId];
+    if (state.activeTabId === tabId) {
+      state.activeTabId = Object.keys(state.sheets)[0];
+    }
+    ensureWorkbookTabs(state);
+    saveGSheetState(state);
+    renderGSheet('emp');
+    renderGSheet('admin');
+  }
+
+  let activeContextTabId = null;
+  function openTabContextMenu(x, y, tabId) {
+    closeAllGSheetMenus();
+    activeContextTabId = tabId;
+    const menu = document.getElementById('gs-tab-context-menu');
+    if (!menu) return;
+    menu.style.left = `${Math.min(window.innerWidth - 190, Math.max(10, x))}px`;
+    menu.style.top = `${Math.max(10, y)}px`;
+    menu.classList.remove('hidden');
+  }
+
+  let activeContextCellCoord = null;
+  function openCellContextMenu(x, y, mode, col, row) {
+    closeAllGSheetMenus();
+    selectGSheetCell(mode, col, row);
+    activeContextCellCoord = { mode, col, row };
+    const menu = document.getElementById('gs-cell-context-menu');
+    if (!menu) return;
+    menu.style.left = `${Math.min(window.innerWidth - 200, Math.max(10, x))}px`;
+    menu.style.top = `${Math.min(window.innerHeight - 260, Math.max(10, y))}px`;
+    menu.classList.remove('hidden');
+  }
+
+  function renderGSheetTabs(mode) {
+    const container = document.getElementById(`${mode}-gs-tabs-container`);
+    if (!container) return;
+
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+
+    container.innerHTML = state.tabs.map(tab => {
+      const isActive = tab.id === state.activeTabId;
+      return `
+        <div class="gs-sheet-tab ${isActive ? 'active' : ''}" data-tab-id="${tab.id}" title="${escapeHtml(tab.name)} (Click to switch, double-click to rename)">
+          <i class="fa-solid fa-table ${isActive ? 'text-emerald-600' : 'text-slate-400'} text-xs"></i>
+          <span class="gs-tab-title" data-tab-id="${tab.id}">${escapeHtml(tab.name)}</span>
+          <button class="gs-tab-caret" data-tab-id="${tab.id}" type="button" title="Sheet options">
+            <i class="fa-solid fa-caret-down text-[9px]"></i>
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    // Attach tab click events
+    container.querySelectorAll('.gs-sheet-tab').forEach(tabEl => {
+      const tabId = tabEl.getAttribute('data-tab-id');
+      tabEl.addEventListener('click', (e) => {
+        if (e.target.closest('.gs-tab-caret')) return;
+        switchWorkbookTab(tabId);
+      });
+
+      // Double-click to rename
+      tabEl.addEventListener('dblclick', () => {
+        renameWorkbookTab(tabId);
+      });
+
+      // Right-click on tab
+      tabEl.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        openTabContextMenu(e.clientX, e.clientY - 120, tabId);
+      });
+    });
+
+    // Caret button click
+    container.querySelectorAll('.gs-tab-caret').forEach(caretBtn => {
+      caretBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tabId = caretBtn.getAttribute('data-tab-id');
+        const rect = caretBtn.getBoundingClientRect();
+        openTabContextMenu(rect.left, rect.top - 120, tabId);
+      });
+    });
   }
 
   // Range and Cell evaluation
@@ -2675,6 +2998,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateGSheetKPIs();
+    renderGSheetTabs(mode);
     attachGSheetEvents(mode);
   }
 
@@ -2697,6 +3021,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const col = cellEl.getAttribute('data-col');
         const row = parseInt(cellEl.getAttribute('data-row'), 10);
         startInlineEditing(mode, col, row);
+      });
+
+      // Right-click on cell to show context menu
+      cellEl.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const col = cellEl.getAttribute('data-col');
+        const row = parseInt(cellEl.getAttribute('data-row'), 10);
+        openCellContextMenu(e.clientX, e.clientY, mode, col, row);
       });
     });
   }
@@ -2745,7 +3077,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function startInlineEditing(mode, col, row) {
+  function startInlineEditing(mode, col, row, initialChar) {
     const table = document.getElementById(`${mode}-gs-table`);
     if (!table) return;
     const key = col + row;
@@ -2763,18 +3095,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'gs-cell-editor';
-    input.value = oldRaw;
+    if (initialChar !== undefined) {
+      input.value = initialChar;
+    } else {
+      input.value = oldRaw;
+    }
     cellEl.appendChild(input);
     input.focus();
-    input.select();
+    if (initialChar !== undefined) {
+      input.setSelectionRange(input.value.length, input.value.length);
+    } else {
+      input.select();
+    }
 
     const formulaInput = document.getElementById(`${mode}-gs-formula-input`);
+    if (formulaInput) formulaInput.value = input.value;
 
     input.addEventListener('input', () => {
       if (formulaInput) formulaInput.value = input.value;
     });
 
+    let committed = false;
     function commitEdit() {
+      if (committed) return;
+      committed = true;
       const newVal = input.value;
       if (!state.cells[key]) state.cells[key] = {};
       state.cells[key].raw = newVal;
@@ -2787,16 +3131,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') {
         e.preventDefault();
         commitEdit();
-        // Move to next row
         selectGSheetCell(mode, col, Math.min(row + 1, state.rows));
       } else if (e.key === 'Tab') {
         e.preventDefault();
         commitEdit();
-        // Move to next col
         const curIdx = GS_COLS.indexOf(col);
         const nextCol = GS_COLS[Math.min(curIdx + 1, GS_COLS.length - 1)];
         selectGSheetCell(mode, nextCol, row);
       } else if (e.key === 'Escape') {
+        committed = true;
         input.remove();
         renderGSheet(mode);
       }
@@ -2807,7 +3150,364 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Keyboard navigation on spreadsheet
+  // Clipboard & Undo/Redo Engine
+  let sheetClipboard = { text: '', cellData: null, isCut: false, sourceCell: null, sourceTabId: null };
+  const gsheetHistory = [];
+  const gsheetRedoHistory = [];
+
+  function undoGSheetAction(mode) {
+    if (gsheetHistory.length === 0) {
+      alert('Nothing to undo.');
+      return;
+    }
+    const item = gsheetHistory.pop();
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    if (!state.sheets[item.tabId]) return;
+
+    const curCell = state.sheets[item.tabId].gridData[item.key];
+    gsheetRedoHistory.push({
+      tabId: item.tabId,
+      key: item.key,
+      cell: curCell ? JSON.parse(JSON.stringify(curCell)) : null
+    });
+
+    if (item.cell) {
+      state.sheets[item.tabId].gridData[item.key] = JSON.parse(JSON.stringify(item.cell));
+    } else {
+      delete state.sheets[item.tabId].gridData[item.key];
+    }
+    if (state.activeTabId !== item.tabId) {
+      state.activeTabId = item.tabId;
+    }
+    ensureWorkbookTabs(state);
+    saveGSheetState(state, mode);
+    renderGSheet('emp');
+    renderGSheet('admin');
+  }
+
+  function redoGSheetAction(mode) {
+    if (gsheetRedoHistory.length === 0) {
+      alert('Nothing to redo.');
+      return;
+    }
+    const item = gsheetRedoHistory.pop();
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    if (!state.sheets[item.tabId]) return;
+
+    const curCell = state.sheets[item.tabId].gridData[item.key];
+    gsheetHistory.push({
+      tabId: item.tabId,
+      key: item.key,
+      cell: curCell ? JSON.parse(JSON.stringify(curCell)) : null
+    });
+
+    if (item.cell) {
+      state.sheets[item.tabId].gridData[item.key] = JSON.parse(JSON.stringify(item.cell));
+    } else {
+      delete state.sheets[item.tabId].gridData[item.key];
+    }
+    if (state.activeTabId !== item.tabId) {
+      state.activeTabId = item.tabId;
+    }
+    ensureWorkbookTabs(state);
+    saveGSheetState(state, mode);
+    renderGSheet('emp');
+    renderGSheet('admin');
+  }
+
+  function cutSelectedCell(mode) {
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const key = sel.col + sel.row;
+    const state = getGSheetState();
+    const cell = state.cells[key] || {};
+    sheetClipboard = {
+      text: cell.raw || '',
+      cellData: JSON.parse(JSON.stringify(cell)),
+      isCut: true,
+      sourceCell: key,
+      sourceTabId: state.activeTabId
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(sheetClipboard.text).catch(() => {});
+    }
+    closeAllGSheetMenus();
+  }
+
+  function copySelectedCell(mode) {
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const key = sel.col + sel.row;
+    const state = getGSheetState();
+    const cell = state.cells[key] || {};
+    sheetClipboard = {
+      text: cell.raw || '',
+      cellData: JSON.parse(JSON.stringify(cell)),
+      isCut: false,
+      sourceCell: null,
+      sourceTabId: null
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(sheetClipboard.text).catch(() => {});
+    }
+    closeAllGSheetMenus();
+  }
+
+  async function pasteIntoSelectedCell(mode, valuesOnly = false) {
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const key = sel.col + sel.row;
+    const state = getGSheetState();
+    const oldVal = state.cells[key] ? state.cells[key].raw : '';
+
+    if (sheetClipboard.cellData) {
+      if (valuesOnly) {
+        if (!state.cells[key]) state.cells[key] = {};
+        state.cells[key].raw = sheetClipboard.cellData.raw || '';
+      } else {
+        state.cells[key] = JSON.parse(JSON.stringify(sheetClipboard.cellData));
+      }
+
+      if (sheetClipboard.isCut && sheetClipboard.sourceCell && sheetClipboard.sourceTabId) {
+        if (state.sheets[sheetClipboard.sourceTabId] && sheetClipboard.sourceCell !== key) {
+          delete state.sheets[sheetClipboard.sourceTabId].gridData[sheetClipboard.sourceCell];
+        }
+        sheetClipboard.isCut = false;
+        sheetClipboard.sourceCell = null;
+        sheetClipboard.sourceTabId = null;
+      }
+
+      saveGSheetState(state, mode, key, oldVal, state.cells[key].raw);
+      renderGSheet('emp');
+      renderGSheet('admin');
+    } else {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const clipText = await navigator.clipboard.readText();
+          if (clipText) {
+            if (!state.cells[key]) state.cells[key] = {};
+            state.cells[key].raw = clipText;
+            saveGSheetState(state, mode, key, oldVal, clipText);
+            renderGSheet('emp');
+            renderGSheet('admin');
+          }
+        }
+      } catch (e) {
+        // clipboard access blocked
+      }
+    }
+    closeAllGSheetMenus();
+  }
+
+  function clearSelectedCell(mode) {
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const key = sel.col + sel.row;
+    const state = getGSheetState();
+    if (state.cells[key]) {
+      const oldVal = state.cells[key].raw;
+      state.cells[key].raw = '';
+      saveGSheetState(state, mode, key, oldVal, '');
+      renderGSheet('emp');
+      renderGSheet('admin');
+    }
+    closeAllGSheetMenus();
+  }
+
+  function insertRowBelow(mode) {
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const rIdx = sel.row;
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+
+    const activeSheet = state.sheets[state.activeTabId];
+    if (!activeSheet) return;
+
+    const newGrid = {};
+    Object.keys(activeSheet.gridData || {}).forEach(k => {
+      const parsed = parseCellCoord(k);
+      if (parsed) {
+        if (parsed.row > rIdx) {
+          newGrid[parsed.col + (parsed.row + 1)] = activeSheet.gridData[k];
+        } else {
+          newGrid[k] = activeSheet.gridData[k];
+        }
+      }
+    });
+
+    activeSheet.gridData = newGrid;
+    activeSheet.rowCount = (activeSheet.rowCount || GS_DEFAULT_ROWS) + 1;
+    state.rows = activeSheet.rowCount;
+    state.cells = newGrid;
+
+    saveGSheetState(state, mode);
+    selectGSheetCell(mode, sel.col, sel.row + 1);
+    renderGSheet('emp');
+    renderGSheet('admin');
+    closeAllGSheetMenus();
+  }
+
+  function deleteCurrentRow(mode) {
+    const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+    const rIdx = sel.row;
+    const state = getGSheetState();
+    ensureWorkbookTabs(state);
+
+    const activeSheet = state.sheets[state.activeTabId];
+    if (!activeSheet) return;
+
+    const newGrid = {};
+    Object.keys(activeSheet.gridData || {}).forEach(k => {
+      const parsed = parseCellCoord(k);
+      if (parsed) {
+        if (parsed.row === rIdx) {
+          // deleted
+        } else if (parsed.row > rIdx) {
+          newGrid[parsed.col + (parsed.row - 1)] = activeSheet.gridData[k];
+        } else {
+          newGrid[k] = activeSheet.gridData[k];
+        }
+      }
+    });
+
+    activeSheet.gridData = newGrid;
+    activeSheet.rowCount = Math.max(10, (activeSheet.rowCount || GS_DEFAULT_ROWS) - 1);
+    state.rows = activeSheet.rowCount;
+    state.cells = newGrid;
+
+    saveGSheetState(state, mode);
+    selectGSheetCell(mode, sel.col, Math.min(sel.row, state.rows));
+    renderGSheet('emp');
+    renderGSheet('admin');
+    closeAllGSheetMenus();
+  }
+
+  function selectAllCells(mode) {
+    const table = document.getElementById(`${mode}-gs-table`);
+    if (table) {
+      table.querySelectorAll('.gs-cell').forEach(c => c.classList.add('gs-selected'));
+    }
+    closeAllGSheetMenus();
+  }
+
+  // Find & Replace Search Engine
+  let findMatches = [];
+  let currentFindIndex = -1;
+
+  function openFindReplaceModal() {
+    closeAllGSheetMenus();
+    const modal = document.getElementById('gs-find-replace-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    const input = document.getElementById('gs-find-input');
+    if (input) {
+      input.focus();
+      input.select();
+    }
+    findMatches = [];
+    currentFindIndex = -1;
+  }
+
+  function executeFindNext() {
+    const findInput = document.getElementById('gs-find-input');
+    const badge = document.getElementById('gs-find-results-badge');
+    const query = (findInput?.value || '').trim().toLowerCase();
+    if (!query) {
+      if (badge) badge.textContent = 'Please enter search text.';
+      return;
+    }
+
+    const state = getGSheetState();
+    findMatches = [];
+
+    for (let r = 1; r <= state.rows; r++) {
+      GS_COLS.forEach(col => {
+        const k = col + r;
+        const cell = state.cells[k];
+        if (cell && cell.raw && String(cell.raw).toLowerCase().includes(query)) {
+          findMatches.push({ col, row: r, key: k });
+        }
+      });
+    }
+
+    if (findMatches.length === 0) {
+      if (badge) badge.textContent = `No matches found for "${query}".`;
+      return;
+    }
+
+    currentFindIndex = (currentFindIndex + 1) % findMatches.length;
+    const match = findMatches[currentFindIndex];
+    selectGSheetCell('emp', match.col, match.row);
+    selectGSheetCell('admin', match.col, match.row);
+
+    const cellEl = document.querySelector(`[data-cell="${match.key}"]`);
+    if (cellEl) cellEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+
+    if (badge) badge.textContent = `Match ${currentFindIndex + 1} of ${findMatches.length} at cell ${match.key}`;
+  }
+
+  function executeReplaceOne() {
+    if (findMatches.length === 0 || currentFindIndex === -1) {
+      executeFindNext();
+      return;
+    }
+    const match = findMatches[currentFindIndex];
+    const findInput = document.getElementById('gs-find-input');
+    const replaceInput = document.getElementById('gs-replace-input');
+    const badge = document.getElementById('gs-find-results-badge');
+    const findText = findInput?.value || '';
+    const replaceText = replaceInput?.value || '';
+
+    const state = getGSheetState();
+    const cell = state.cells[match.key];
+    if (cell && cell.raw) {
+      const oldRaw = cell.raw;
+      const re = new RegExp(escapeRegex(findText), 'i');
+      cell.raw = cell.raw.replace(re, replaceText);
+      saveGSheetState(state, 'emp', match.key, oldRaw, cell.raw);
+      renderGSheet('emp');
+      renderGSheet('admin');
+      if (badge) badge.textContent = `Replaced occurrence in cell ${match.key}.`;
+      executeFindNext();
+    }
+  }
+
+  function executeReplaceAll() {
+    const findInput = document.getElementById('gs-find-input');
+    const replaceInput = document.getElementById('gs-replace-input');
+    const badge = document.getElementById('gs-find-results-badge');
+    const findText = (findInput?.value || '').trim();
+    const replaceText = replaceInput?.value || '';
+    if (!findText) {
+      if (badge) badge.textContent = 'Enter text to find.';
+      return;
+    }
+
+    const state = getGSheetState();
+    let count = 0;
+    const re = new RegExp(escapeRegex(findText), 'gi');
+
+    Object.keys(state.cells).forEach(k => {
+      const cell = state.cells[k];
+      if (cell && cell.raw && String(cell.raw).match(re)) {
+        cell.raw = String(cell.raw).replace(re, replaceText);
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      saveGSheetState(state);
+      renderGSheet('emp');
+      renderGSheet('admin');
+      if (badge) badge.textContent = `Successfully replaced ${count} occurrences across active sheet.`;
+    } else {
+      if (badge) badge.textContent = `No occurrences found for "${findText}".`;
+    }
+  }
+
+  function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // Keyboard navigation and instant direct typing on spreadsheet
   document.addEventListener('keydown', (e) => {
     // Only capture if active element is not an input/textarea (unless it's cell editor)
     const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
@@ -2825,6 +3525,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = getGSheetState();
     const colIdx = GS_COLS.indexOf(sel.col);
 
+    // If currently editing inside the cell editor, let editor handle keys
+    if (document.activeElement && document.activeElement.classList.contains('gs-cell-editor')) {
+      return;
+    }
+
+    // Navigation & editing shortcuts
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       selectGSheetCell(mode, sel.col, Math.max(1, sel.row - 1));
@@ -2837,20 +3543,37 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       selectGSheetCell(mode, GS_COLS[Math.min(GS_COLS.length - 1, colIdx + 1)], sel.row);
-    } else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter' || e.key === 'F2') {
       e.preventDefault();
       startInlineEditing(mode, sel.col, sel.row);
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
-      if (document.activeElement && document.activeElement.classList.contains('gs-cell-editor')) return;
       e.preventDefault();
-      const key = sel.col + sel.row;
-      if (state.cells[key]) {
-        const oldVal = state.cells[key].raw;
-        state.cells[key].raw = '';
-        saveGSheetState(state, mode, key, oldVal, '');
-        renderGSheet('emp');
-        renderGSheet('admin');
-      }
+      clearSelectedCell(mode);
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+      e.preventDefault();
+      copySelectedCell(mode);
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'x' || e.key === 'X')) {
+      e.preventDefault();
+      cutSelectedCell(mode);
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
+      e.preventDefault();
+      pasteIntoSelectedCell(mode, false);
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+      e.preventDefault();
+      undoGSheetAction(mode);
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+      e.preventDefault();
+      redoGSheetAction(mode);
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'h' || e.key === 'H')) {
+      e.preventDefault();
+      openFindReplaceModal();
+    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+      e.preventDefault();
+      selectAllCells(mode);
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // Direct typing into selected cell: start inline editing immediately with typed character!
+      e.preventDefault();
+      startInlineEditing(mode, sel.col, sel.row, e.key);
     }
   });
 
@@ -3679,30 +4402,83 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsText(file);
   }
 
-  // Export Excel (.xlsx compatible CSV with UTF-8 BOM)
+  // Export Multi-Sheet Excel Workbook (.xls / .xlsx XML compatible with all sheets preserved)
   function exportGSheetXLSX() {
     const state = getGSheetState();
-    const rows = [];
+    ensureWorkbookTabs(state);
 
-    for (let r = 1; r <= state.rows; r++) {
-      const rowVals = [];
-      let hasData = false;
-      GS_COLS.forEach(col => {
-        const key = col + r;
-        const val = evalGSheetCell(key, state);
-        if (val !== '' && val !== null && val !== undefined) hasData = true;
-        rowVals.push(`"${String(val).replace(/"/g, '""')}"`);
-      });
-      if (hasData || r <= 15) {
-        rows.push(rowVals.join(','));
+    let xml = '<?xml version="1.0"?>\r\n';
+    xml += '<?mso-application progid="Excel.Sheet"?>\r\n';
+    xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\r\n';
+    xml += ' xmlns:o="urn:schemas-microsoft-com:office:office"\r\n';
+    xml += ' xmlns:x="urn:schemas-microsoft-com:office:excel"\r\n';
+    xml += ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"\r\n';
+    xml += ' xmlns:html="http://www.w3.org/TR/REC-html40">\r\n';
+    xml += '  <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">\r\n';
+    xml += `    <Title>${escapeHtml(state.title || 'CarbonAxis Master Deals')}</Title>\r\n`;
+    xml += `    <Author>${escapeHtml(state.author || 'CarbonAxis Deal Desk')}</Author>\r\n`;
+    xml += `    <Created>${new Date().toISOString()}</Created>\r\n`;
+    xml += '  </DocumentProperties>\r\n';
+    xml += '  <Styles>\r\n';
+    xml += '    <Style ss:ID="Default" ss:Name="Normal">\r\n';
+    xml += '      <Alignment ss:Vertical="Bottom"/>\r\n';
+    xml += '      <Font ss:FontName="Calibri" ss:Size="11" ss:Color="#1f1f1f"/>\r\n';
+    xml += '    </Style>\r\n';
+    xml += '    <Style ss:ID="Header">\r\n';
+    xml += '      <Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1" ss:Color="#0f172a"/>\r\n';
+    xml += '      <Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/>\r\n';
+    xml += '    </Style>\r\n';
+    xml += '    <Style ss:ID="BoldCell">\r\n';
+    xml += '      <Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1"/>\r\n';
+    xml += '    </Style>\r\n';
+    xml += '  </Styles>\r\n';
+
+    // Loop through every sheet in workbook and create a separate Worksheet tab
+    const sheetIds = Object.keys(state.sheets);
+    sheetIds.forEach(sheetId => {
+      const sheet = state.sheets[sheetId];
+      const sheetName = (sheet.name || 'Sheet').replace(/[:\\/?*\[\]]/g, ' ').slice(0, 31);
+      const maxRows = sheet.rowCount || GS_DEFAULT_ROWS;
+      const grid = sheet.gridData || {};
+
+      xml += `  <Worksheet ss:Name="${escapeHtml(sheetName)}">\r\n`;
+      xml += '    <Table>\r\n';
+
+      for (let r = 1; r <= maxRows; r++) {
+        let rowCellsXml = '';
+        let rowHasData = false;
+
+        GS_COLS.forEach(col => {
+          const key = col + r;
+          const cell = grid[key];
+          if (cell && cell.raw !== undefined && cell.raw !== null && String(cell.raw).trim() !== '') {
+            rowHasData = true;
+            const rawVal = String(cell.raw);
+            const isNumeric = !isNaN(Number(rawVal)) && !rawVal.startsWith('=') && rawVal !== '';
+            const dataType = isNumeric ? 'Number' : 'String';
+            const val = isNumeric ? Number(rawVal) : escapeHtml(rawVal);
+            const styleAttr = (r === 1) ? ' ss:StyleID="Header"' : (cell.bold ? ' ss:StyleID="BoldCell"' : '');
+            rowCellsXml += `        <Cell${styleAttr}><Data ss:Type="${dataType}">${val}</Data></Cell>\r\n`;
+          } else {
+            rowCellsXml += '        <Cell><Data ss:Type="String"></Data></Cell>\r\n';
+          }
+        });
+
+        if (rowHasData || r <= 15) {
+          xml += `      <Row ss:Index="${r}">\r\n${rowCellsXml}      </Row>\r\n`;
+        }
       }
-    }
 
-    const bom = '\uFEFF';
-    const csvContent = 'data:application/vnd.ms-excel;charset=utf-8,' + encodeURIComponent(bom + rows.join('\r\n'));
+      xml += '    </Table>\r\n';
+      xml += '  </Worksheet>\r\n';
+    });
+
+    xml += '</Workbook>';
+
+    const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const link = document.createElement('a');
-    link.setAttribute('href', csvContent);
-    link.setAttribute('download', `${(state.title || 'CarbonAxis_Master_Deals').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    link.href = URL.createObjectURL(blob);
+    link.download = `${(state.title || 'CarbonAxis_Master_Deals').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -3742,17 +4518,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeAllGSheetMenus() {
-    const empDropdown = document.getElementById('emp-gs-file-dropdown');
-    const adminDropdown = document.getElementById('admin-gs-file-dropdown');
-    if (empDropdown) empDropdown.classList.add('hidden');
-    if (adminDropdown) adminDropdown.classList.add('hidden');
+    const empFileDropdown = document.getElementById('emp-gs-file-dropdown');
+    const adminFileDropdown = document.getElementById('admin-gs-file-dropdown');
+    const empEditDropdown = document.getElementById('emp-gs-edit-dropdown');
+    const adminEditDropdown = document.getElementById('admin-gs-edit-dropdown');
+    const tabContextMenu = document.getElementById('gs-tab-context-menu');
+    const cellContextMenu = document.getElementById('gs-cell-context-menu');
+
+    if (empFileDropdown) empFileDropdown.classList.add('hidden');
+    if (adminFileDropdown) adminFileDropdown.classList.add('hidden');
+    if (empEditDropdown) empEditDropdown.classList.add('hidden');
+    if (adminEditDropdown) adminEditDropdown.classList.add('hidden');
+    if (tabContextMenu) tabContextMenu.classList.add('hidden');
+    if (cellContextMenu) cellContextMenu.classList.add('hidden');
   }
 
-  // Setup File Menu Dropdowns & Action Handlers
+  // Setup File & Edit Menus, Toolbars, and Tab Controls for Emp & Admin
   ['emp', 'admin'].forEach(mode => {
+    // 1. File Menu Toggle
     const fileMenuBtn = document.getElementById(`${mode}-gs-menu-file`);
     const fileDropdown = document.getElementById(`${mode}-gs-file-dropdown`);
-
     if (fileMenuBtn && fileDropdown) {
       fileMenuBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -3762,7 +4547,75 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // New Spreadsheet
+    // 2. Edit Menu Toggle
+    const editMenuBtn = document.getElementById(`${mode}-gs-menu-edit`);
+    const editDropdown = document.getElementById(`${mode}-gs-edit-dropdown`);
+    if (editMenuBtn && editDropdown) {
+      editMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isClosed = editDropdown.classList.contains('hidden');
+        closeAllGSheetMenus();
+        if (isClosed) editDropdown.classList.remove('hidden');
+      });
+    }
+
+    // 3. Ribbon Toolbar "Edit Cell" Button
+    const editCellBtn = document.getElementById(`${mode}-gs-edit-cell-btn`);
+    if (editCellBtn) {
+      editCellBtn.addEventListener('click', () => {
+        const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+        startInlineEditing(mode, sel.col, sel.row);
+      });
+    }
+
+    // 4. Edit Dropdown Action Items
+    const bindEdit = (id, fn) => {
+      const el = document.getElementById(`${mode}-edit-${id}`);
+      if (el) el.addEventListener('click', () => { closeAllGSheetMenus(); fn(); });
+    };
+
+    bindEdit('undo', () => undoGSheetAction(mode));
+    bindEdit('redo', () => redoGSheetAction(mode));
+    bindEdit('cut', () => cutSelectedCell(mode));
+    bindEdit('copy', () => copySelectedCell(mode));
+    bindEdit('paste', () => pasteIntoSelectedCell(mode, false));
+    bindEdit('paste-values', () => pasteIntoSelectedCell(mode, true));
+    bindEdit('cell', () => {
+      const sel = mode === 'emp' ? empSelectedCell : adminSelectedCell;
+      startInlineEditing(mode, sel.col, sel.row);
+    });
+    bindEdit('clear', () => clearSelectedCell(mode));
+    bindEdit('insert-row', () => insertRowBelow(mode));
+    bindEdit('delete-row', () => deleteCurrentRow(mode));
+    bindEdit('find-replace', () => openFindReplaceModal());
+    bindEdit('select-all', () => selectAllCells(mode));
+
+    // 5. Bottom Tabs: "+" Add Sheet Button
+    const addTabBtn = document.getElementById(`${mode}-gs-add-tab`);
+    if (addTabBtn) {
+      addTabBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        addWorkbookTab(mode);
+      });
+    }
+
+    // 6. Bottom Tabs: All Sheets Selector
+    const allTabsBtn = document.getElementById(`${mode}-gs-all-tabs`);
+    if (allTabsBtn) {
+      allTabsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const state = getGSheetState();
+        ensureWorkbookTabs(state);
+        const names = Object.values(state.sheets).map((s, idx) => `${idx + 1}. ${s.name}`).join('\n');
+        const choice = prompt(`Workbook Sheet Tabs:\n${names}\n\nEnter sheet name to jump to:`, state.sheets[state.activeTabId]?.name);
+        if (choice) {
+          const match = Object.values(state.sheets).find(s => s.name.toLowerCase() === choice.trim().toLowerCase());
+          if (match) switchWorkbookTab(match.id);
+        }
+      });
+    }
+
+    // 7. File Menu Items
     const newSheetBtn = document.getElementById(`${mode}-file-new-sheet`);
     if (newSheetBtn) {
       newSheetBtn.addEventListener('click', () => {
@@ -3773,7 +4626,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // New from Template
     const newTemplateBtn = document.getElementById(`${mode}-file-new-template`);
     if (newTemplateBtn) {
       newTemplateBtn.addEventListener('click', () => {
@@ -3784,25 +4636,21 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Open Existing Sheets
     const openBtn = document.getElementById(`${mode}-file-open-btn`);
     if (openBtn) {
       openBtn.addEventListener('click', () => openExistingSheetsDialog('recent'));
     }
 
-    // Import File
     const importBtn = document.getElementById(`${mode}-file-import-btn`);
     if (importBtn) {
       importBtn.addEventListener('click', () => openExistingSheetsDialog('upload'));
     }
 
-    // Make a copy
     const copyBtn = document.getElementById(`${mode}-file-copy-btn`);
     if (copyBtn) {
       copyBtn.addEventListener('click', () => duplicateSpreadsheet(getActiveSheetId(), mode));
     }
 
-    // Share Team
     const shareTeamBtn = document.getElementById(`${mode}-file-share-team`);
     if (shareTeamBtn) {
       shareTeamBtn.addEventListener('click', () => {
@@ -3811,7 +4659,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Share Link
     const shareLinkBtn = document.getElementById(`${mode}-file-share-link`);
     if (shareLinkBtn) {
       shareLinkBtn.addEventListener('click', () => {
@@ -3821,7 +4668,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Download CSV
     const dlCsvBtn = document.getElementById(`${mode}-file-dl-csv`);
     if (dlCsvBtn) {
       dlCsvBtn.addEventListener('click', () => {
@@ -3830,7 +4676,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Download XLSX
     const dlXlsxBtn = document.getElementById(`${mode}-file-dl-xlsx`);
     if (dlXlsxBtn) {
       dlXlsxBtn.addEventListener('click', () => {
@@ -3839,7 +4684,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Download PDF
     const dlPdfBtn = document.getElementById(`${mode}-file-dl-pdf`);
     if (dlPdfBtn) {
       dlPdfBtn.addEventListener('click', () => {
@@ -3848,7 +4692,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Rename
     const renameBtn = document.getElementById(`${mode}-file-rename-btn`);
     if (renameBtn) {
       renameBtn.addEventListener('click', () => {
@@ -3861,19 +4704,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Move to bin / Delete
     const deleteBtn = document.getElementById(`${mode}-file-delete-btn`);
     if (deleteBtn) {
       deleteBtn.addEventListener('click', () => deleteSpreadsheet(getActiveSheetId(), mode));
     }
 
-    // Details
     const detailsBtn = document.getElementById(`${mode}-file-details-btn`);
     if (detailsBtn) {
       detailsBtn.addEventListener('click', showSheetDetailsModal);
     }
 
-    // Settings
     const settingsBtn = document.getElementById(`${mode}-file-settings-btn`);
     if (settingsBtn) {
       settingsBtn.addEventListener('click', () => {
@@ -3882,7 +4722,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Print
     const printMenuBtn = document.getElementById(`${mode}-file-print-btn`);
     if (printMenuBtn) {
       printMenuBtn.addEventListener('click', () => {
@@ -3892,12 +4731,155 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Tab Context Menu Item Listeners
+  const tabCtxRename = document.getElementById('gs-tab-ctx-rename');
+  const tabCtxDuplicate = document.getElementById('gs-tab-ctx-duplicate');
+  const tabCtxAdd = document.getElementById('gs-tab-ctx-add');
+  const tabCtxDelete = document.getElementById('gs-tab-ctx-delete');
+
+  if (tabCtxRename) tabCtxRename.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextTabId) renameWorkbookTab(activeContextTabId); });
+  if (tabCtxDuplicate) tabCtxDuplicate.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextTabId) duplicateWorkbookTab(activeContextTabId); });
+  if (tabCtxAdd) tabCtxAdd.addEventListener('click', () => { closeAllGSheetMenus(); addWorkbookTab('emp'); });
+  if (tabCtxDelete) tabCtxDelete.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextTabId) deleteWorkbookTab(activeContextTabId); });
+
+  // Cell Context Menu Item Listeners
+  const ctxEditCell = document.getElementById('gs-ctx-edit-cell');
+  const ctxCut = document.getElementById('gs-ctx-cut');
+  const ctxCopy = document.getElementById('gs-ctx-copy');
+  const ctxPaste = document.getElementById('gs-ctx-paste');
+  const ctxClear = document.getElementById('gs-ctx-clear');
+  const ctxInsertRow = document.getElementById('gs-ctx-insert-row');
+  const ctxDeleteRow = document.getElementById('gs-ctx-delete-row');
+
+  if (ctxEditCell) ctxEditCell.addEventListener('click', () => {
+    closeAllGSheetMenus();
+    if (activeContextCellCoord) startInlineEditing(activeContextCellCoord.mode, activeContextCellCoord.col, activeContextCellCoord.row);
+  });
+  if (ctxCut) ctxCut.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) cutSelectedCell(activeContextCellCoord.mode); });
+  if (ctxCopy) ctxCopy.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) copySelectedCell(activeContextCellCoord.mode); });
+  if (ctxPaste) ctxPaste.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) pasteIntoSelectedCell(activeContextCellCoord.mode); });
+  if (ctxClear) ctxClear.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) clearSelectedCell(activeContextCellCoord.mode); });
+  if (ctxInsertRow) ctxInsertRow.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) insertRowBelow(activeContextCellCoord.mode); });
+  if (ctxDeleteRow) ctxDeleteRow.addEventListener('click', () => { closeAllGSheetMenus(); if (activeContextCellCoord) deleteCurrentRow(activeContextCellCoord.mode); });
+
+  // Find & Replace Modal Handlers
+  const closeFindReplaceBtn = document.getElementById('close-gs-find-replace-btn');
+  const findNextBtn = document.getElementById('gs-find-next-btn');
+  const replaceOneBtn = document.getElementById('gs-replace-one-btn');
+  const replaceAllBtn = document.getElementById('gs-replace-all-btn');
+
+  if (closeFindReplaceBtn) closeFindReplaceBtn.addEventListener('click', () => {
+    const m = document.getElementById('gs-find-replace-modal');
+    if (m) m.classList.add('hidden');
+  });
+  if (findNextBtn) findNextBtn.addEventListener('click', executeFindNext);
+  if (replaceOneBtn) replaceOneBtn.addEventListener('click', executeReplaceOne);
+  if (replaceAllBtn) replaceAllBtn.addEventListener('click', executeReplaceAll);
+
   // Global click outside to close menus
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.gs-menu-wrapper')) {
+    if (!e.target.closest('.gs-menu-wrapper') && !e.target.closest('#gs-tab-context-menu') && !e.target.closest('#gs-cell-context-menu')) {
       closeAllGSheetMenus();
     }
   });
+
+  // Load and sync all sheets from Supabase deal_sheets table
+  async function loadDealSheetsFromSupabase() {
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient.from('deal_sheets').select('*');
+      if (error) {
+        console.warn('Supabase deal_sheets select notice:', error.message);
+        return;
+      }
+      if (data && data.length > 0) {
+        const store = getSheetsStore();
+        data.forEach(row => {
+          const sheetId = row.id;
+          let sheetsObj = null;
+          let activeTab = 'sheet_1';
+          if (row.cells && row.cells.__sheets) {
+            sheetsObj = row.cells.__sheets;
+            activeTab = row.cells.__active_tab_id || Object.keys(sheetsObj)[0];
+          }
+          if (store[sheetId]) {
+            if (sheetsObj) {
+              store[sheetId].sheets = sheetsObj;
+              store[sheetId].activeTabId = activeTab;
+            }
+            store[sheetId].title = row.title || store[sheetId].title;
+            store[sheetId].updatedAt = row.updated_at || store[sheetId].updatedAt;
+            ensureWorkbookTabs(store[sheetId]);
+          } else {
+            const newDoc = {
+              id: sheetId,
+              title: row.title || 'Carbon Deals Sheet',
+              starred: false,
+              rows: row.rows || GS_DEFAULT_ROWS,
+              author: 'Cloud Sync',
+              createdAt: row.updated_at || new Date().toISOString(),
+              updatedAt: row.updated_at || new Date().toISOString(),
+              sheets: sheetsObj || {
+                'sheet_1': {
+                  id: 'sheet_1',
+                  name: 'Sheet1',
+                  gridData: row.cells || {},
+                  rowCount: row.rows || GS_DEFAULT_ROWS,
+                  colCount: GS_COLS.length,
+                  history: []
+                }
+              },
+              activeTabId: activeTab
+            };
+            ensureWorkbookTabs(newDoc);
+            store[sheetId] = newDoc;
+          }
+        });
+        saveSheetsStore(store);
+        renderGSheet('emp');
+        renderGSheet('admin');
+      }
+    } catch (e) {
+      console.warn('Error loading sheets from Supabase:', e);
+    }
+  }
+
+  // Real-time synchronization subscription for deal_sheets table
+  if (supabaseClient) {
+    try {
+      supabaseClient
+        .channel('realtime_deal_sheets')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'deal_sheets' }, (payload) => {
+          if (payload.new && payload.new.id) {
+            const row = payload.new;
+            const store = getSheetsStore();
+            const sheetId = row.id;
+            let sheetsObj = null;
+            let activeTab = 'sheet_1';
+            if (row.cells && row.cells.__sheets) {
+              sheetsObj = row.cells.__sheets;
+              activeTab = row.cells.__active_tab_id || Object.keys(sheetsObj)[0];
+            }
+            if (store[sheetId] && sheetsObj) {
+              store[sheetId].sheets = sheetsObj;
+              store[sheetId].activeTabId = activeTab;
+              store[sheetId].title = row.title || store[sheetId].title;
+              store[sheetId].updatedAt = row.updated_at;
+              ensureWorkbookTabs(store[sheetId]);
+              saveSheetsStore(store);
+              renderGSheet('emp');
+              renderGSheet('admin');
+            }
+          }
+        })
+        .subscribe();
+    } catch (e) {
+      // realtime subscription notice
+    }
+  }
+
+  // Trigger cloud load on startup
+  loadDealSheetsFromSupabase();
 
   // Open Modal Tab switching & search filter
   const openTabRecent = document.getElementById('gs-open-nav-recent');

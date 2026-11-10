@@ -136,3 +136,12 @@ DROP POLICY IF EXISTS "Allow public full access on trades" ON public.trades;
 CREATE POLICY "Allow public full access on trades" 
 ON public.trades FOR ALL TO anon, authenticated 
 USING (true) WITH CHECK (true);
+
+-- ============================================================================
+-- Real-time Replication for Multi-Sheet Live Synchronization
+-- Run these statements in Supabase SQL Editor so changes by staff
+-- immediately update on the Administrator portal in real time without refreshing
+-- ============================================================================
+ALTER PUBLICATION supabase_realtime ADD TABLE public.deal_sheets;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.staff_accounts;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_audit_logs;

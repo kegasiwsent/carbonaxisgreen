@@ -1341,8 +1341,60 @@
                           </div>
                         </div>
                       </div>
+                    <div class="gs-menu-wrapper">
+                      <button class="gs-menu-item" type="button" id="admin-gs-menu-edit">Edit</button>
+                      <div id="admin-gs-edit-dropdown" class="gs-dropdown-menu hidden">
+                        <div class="gs-menu-item-row" id="admin-edit-undo">
+                          <div class="gs-menu-left"><i class="fa-solid fa-rotate-left gs-menu-icon"></i><span class="gs-menu-label">Undo</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+Z</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="admin-edit-redo">
+                          <div class="gs-menu-left"><i class="fa-solid fa-rotate-right gs-menu-icon"></i><span class="gs-menu-label">Redo</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+Y</span></div>
+                        </div>
+                        <div class="gs-menu-divider"></div>
+                        <div class="gs-menu-item-row" id="admin-edit-cut">
+                          <div class="gs-menu-left"><i class="fa-solid fa-scissors gs-menu-icon"></i><span class="gs-menu-label">Cut</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+X</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="admin-edit-copy">
+                          <div class="gs-menu-left"><i class="fa-solid fa-copy gs-menu-icon"></i><span class="gs-menu-label">Copy</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+C</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="admin-edit-paste">
+                          <div class="gs-menu-left"><i class="fa-solid fa-paste gs-menu-icon"></i><span class="gs-menu-label">Paste</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+V</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="admin-edit-paste-values">
+                          <div class="gs-menu-left"><i class="fa-solid fa-clipboard-check gs-menu-icon"></i><span class="gs-menu-label">Paste values only</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+Shift+V</span></div>
+                        </div>
+                        <div class="gs-menu-divider"></div>
+                        <div class="gs-menu-item-row" id="admin-edit-cell">
+                          <div class="gs-menu-left"><i class="fa-solid fa-pen-to-square gs-menu-icon text-emerald-600"></i><span class="gs-menu-label font-bold text-slate-900">Edit active cell</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Enter / F2</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="admin-edit-clear">
+                          <div class="gs-menu-left"><i class="fa-solid fa-eraser gs-menu-icon"></i><span class="gs-menu-label">Clear cell values</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Del</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="admin-edit-insert-row">
+                          <div class="gs-menu-left"><i class="fa-solid fa-plus gs-menu-icon text-emerald-600"></i><span class="gs-menu-label">Insert row below</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="admin-edit-delete-row">
+                          <div class="gs-menu-left"><i class="fa-solid fa-trash-can gs-menu-icon text-rose-600"></i><span class="gs-menu-label text-rose-600">Delete current row</span></div>
+                        </div>
+                        <div class="gs-menu-divider"></div>
+                        <div class="gs-menu-item-row" id="admin-edit-find-replace">
+                          <div class="gs-menu-left"><i class="fa-solid fa-magnifying-glass gs-menu-icon"></i><span class="gs-menu-label">Find and replace</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+H</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="admin-edit-select-all">
+                          <div class="gs-menu-left"><i class="fa-solid fa-object-group gs-menu-icon"></i><span class="gs-menu-label">Select all cells</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+A</span></div>
+                        </div>
+                      </div>
                     </div>
-                    <button class="gs-menu-item" type="button" id="admin-gs-menu-edit">Edit</button>
                     <button class="gs-menu-item" type="button" id="admin-gs-menu-view">View</button>
                     <button class="gs-menu-item" type="button" id="admin-gs-menu-insert">Insert</button>
                     <button class="gs-menu-item" type="button" id="admin-gs-menu-format">Format</button>
@@ -1374,6 +1426,11 @@
 
             <!-- 2. Action / Formatting Ribbon Toolbar -->
             <div class="gs-toolbar custom-scrollbar">
+              <button id="admin-gs-edit-cell-btn" class="gs-tb-btn font-bold text-xs gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 rounded-lg shadow-sm" title="Edit Active Cell (Enter or F2)" type="button">
+                <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
+                <span class="font-bold">Edit Cell</span>
+              </button>
+              <div class="gs-tb-divider"></div>
               <button id="admin-gs-search-btn" class="gs-tb-btn" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
               <button id="admin-gs-undo-btn" class="gs-tb-btn" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
               <button id="admin-gs-redo-btn" class="gs-tb-btn" title="Redo (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
@@ -1480,12 +1537,10 @@
             <!-- 5. Bottom Sheet Tabs Bar -->
             <div class="gs-bottom-bar">
               <div class="gs-tabs-left">
-                <button class="gs-add-tab-btn" title="Add sheet" type="button" id="admin-gs-add-tab"><i class="fa-solid fa-plus"></i></button>
-                <button class="gs-all-tabs-btn" title="All sheets" type="button"><i class="fa-solid fa-bars"></i></button>
-                <div class="gs-sheet-tab">
-                  <i class="fa-solid fa-table text-emerald-600 text-xs"></i>
-                  <span>Sheet1</span>
-                  <i class="fa-solid fa-caret-down text-[9px] text-slate-400"></i>
+                <button class="gs-add-tab-btn" title="Add Sheet Tab (+)" type="button" id="admin-gs-add-tab"><i class="fa-solid fa-plus"></i></button>
+                <button class="gs-all-tabs-btn" title="All sheets in workbook" type="button" id="admin-gs-all-tabs"><i class="fa-solid fa-bars"></i></button>
+                <div id="admin-gs-tabs-container" class="gs-tabs-scroll-container">
+                  <!-- Dynamically rendered sheet tabs (Sheet1, Sheet2, etc.) -->
                 </div>
               </div>
 
@@ -1855,8 +1910,60 @@
                           </div>
                         </div>
                       </div>
+                    <div class="gs-menu-wrapper">
+                      <button class="gs-menu-item" type="button" id="emp-gs-menu-edit">Edit</button>
+                      <div id="emp-gs-edit-dropdown" class="gs-dropdown-menu hidden">
+                        <div class="gs-menu-item-row" id="emp-edit-undo">
+                          <div class="gs-menu-left"><i class="fa-solid fa-rotate-left gs-menu-icon"></i><span class="gs-menu-label">Undo</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+Z</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="emp-edit-redo">
+                          <div class="gs-menu-left"><i class="fa-solid fa-rotate-right gs-menu-icon"></i><span class="gs-menu-label">Redo</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+Y</span></div>
+                        </div>
+                        <div class="gs-menu-divider"></div>
+                        <div class="gs-menu-item-row" id="emp-edit-cut">
+                          <div class="gs-menu-left"><i class="fa-solid fa-scissors gs-menu-icon"></i><span class="gs-menu-label">Cut</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+X</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="emp-edit-copy">
+                          <div class="gs-menu-left"><i class="fa-solid fa-copy gs-menu-icon"></i><span class="gs-menu-label">Copy</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+C</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="emp-edit-paste">
+                          <div class="gs-menu-left"><i class="fa-solid fa-paste gs-menu-icon"></i><span class="gs-menu-label">Paste</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+V</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="emp-edit-paste-values">
+                          <div class="gs-menu-left"><i class="fa-solid fa-clipboard-check gs-menu-icon"></i><span class="gs-menu-label">Paste values only</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+Shift+V</span></div>
+                        </div>
+                        <div class="gs-menu-divider"></div>
+                        <div class="gs-menu-item-row" id="emp-edit-cell">
+                          <div class="gs-menu-left"><i class="fa-solid fa-pen-to-square gs-menu-icon text-emerald-600"></i><span class="gs-menu-label font-bold text-slate-900">Edit active cell</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Enter / F2</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="emp-edit-clear">
+                          <div class="gs-menu-left"><i class="fa-solid fa-eraser gs-menu-icon"></i><span class="gs-menu-label">Clear cell values</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Del</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="emp-edit-insert-row">
+                          <div class="gs-menu-left"><i class="fa-solid fa-plus gs-menu-icon text-emerald-600"></i><span class="gs-menu-label">Insert row below</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="emp-edit-delete-row">
+                          <div class="gs-menu-left"><i class="fa-solid fa-trash-can gs-menu-icon text-rose-600"></i><span class="gs-menu-label text-rose-600">Delete current row</span></div>
+                        </div>
+                        <div class="gs-menu-divider"></div>
+                        <div class="gs-menu-item-row" id="emp-edit-find-replace">
+                          <div class="gs-menu-left"><i class="fa-solid fa-magnifying-glass gs-menu-icon"></i><span class="gs-menu-label">Find and replace</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+H</span></div>
+                        </div>
+                        <div class="gs-menu-item-row" id="emp-edit-select-all">
+                          <div class="gs-menu-left"><i class="fa-solid fa-object-group gs-menu-icon"></i><span class="gs-menu-label">Select all cells</span></div>
+                          <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+A</span></div>
+                        </div>
+                      </div>
                     </div>
-                    <button class="gs-menu-item" type="button" id="emp-gs-menu-edit">Edit</button>
                     <button class="gs-menu-item" type="button" id="emp-gs-menu-view">View</button>
                     <button class="gs-menu-item" type="button" id="emp-gs-menu-insert">Insert</button>
                     <button class="gs-menu-item" type="button" id="emp-gs-menu-format">Format</button>
@@ -1888,6 +1995,11 @@
 
             <!-- 2. Action / Formatting Ribbon Toolbar -->
             <div class="gs-toolbar custom-scrollbar">
+              <button id="emp-gs-edit-cell-btn" class="gs-tb-btn font-bold text-xs gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 rounded-lg shadow-sm" title="Edit Active Cell (Enter or F2)" type="button">
+                <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
+                <span class="font-bold">Edit Cell</span>
+              </button>
+              <div class="gs-tb-divider"></div>
               <button id="emp-gs-search-btn" class="gs-tb-btn" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
               <button id="emp-gs-undo-btn" class="gs-tb-btn" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
               <button id="emp-gs-redo-btn" class="gs-tb-btn" title="Redo (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
@@ -1994,12 +2106,10 @@
             <!-- 5. Bottom Sheet Tabs Bar -->
             <div class="gs-bottom-bar">
               <div class="gs-tabs-left">
-                <button class="gs-add-tab-btn" title="Add sheet" type="button" id="emp-gs-add-tab"><i class="fa-solid fa-plus"></i></button>
-                <button class="gs-all-tabs-btn" title="All sheets" type="button"><i class="fa-solid fa-bars"></i></button>
-                <div class="gs-sheet-tab">
-                  <i class="fa-solid fa-table text-emerald-600 text-xs"></i>
-                  <span>Sheet1</span>
-                  <i class="fa-solid fa-caret-down text-[9px] text-slate-400"></i>
+                <button class="gs-add-tab-btn" title="Add Sheet Tab (+)" type="button" id="emp-gs-add-tab"><i class="fa-solid fa-plus"></i></button>
+                <button class="gs-all-tabs-btn" title="All sheets in workbook" type="button" id="emp-gs-all-tabs"><i class="fa-solid fa-bars"></i></button>
+                <div id="emp-gs-tabs-container" class="gs-tabs-scroll-container">
+                  <!-- Dynamically rendered sheet tabs (Sheet1, Sheet2, etc.) -->
                 </div>
               </div>
 
@@ -2712,6 +2822,85 @@
         <button id="close-gs-details-modal-btn" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition" type="button">
           Close
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spreadsheet Sheet Tab Context Menu -->
+  <div id="gs-tab-context-menu" class="gs-dropdown-menu hidden" style="position:fixed; z-index:99999; box-shadow:0 10px 25px -5px rgba(0,0,0,0.2), 0 8px 10px -6px rgba(0,0,0,0.1);">
+    <div class="gs-menu-item-row" id="gs-tab-ctx-rename">
+      <div class="gs-menu-left"><i class="fa-solid fa-pen gs-menu-icon"></i><span class="gs-menu-label">Rename sheet</span></div>
+    </div>
+    <div class="gs-menu-item-row" id="gs-tab-ctx-duplicate">
+      <div class="gs-menu-left"><i class="fa-solid fa-copy gs-menu-icon"></i><span class="gs-menu-label">Duplicate sheet</span></div>
+    </div>
+    <div class="gs-menu-item-row" id="gs-tab-ctx-add">
+      <div class="gs-menu-left"><i class="fa-solid fa-plus gs-menu-icon text-emerald-600"></i><span class="gs-menu-label">Insert sheet to right</span></div>
+    </div>
+    <div class="gs-menu-divider"></div>
+    <div class="gs-menu-item-row" id="gs-tab-ctx-delete">
+      <div class="gs-menu-left"><i class="fa-solid fa-trash gs-menu-icon text-rose-600"></i><span class="gs-menu-label text-rose-600">Delete sheet</span></div>
+    </div>
+  </div>
+
+  <!-- Spreadsheet Cell Context Menu (Right Click) -->
+  <div id="gs-cell-context-menu" class="gs-dropdown-menu hidden" style="position:fixed; z-index:99999; box-shadow:0 10px 25px -5px rgba(0,0,0,0.2), 0 8px 10px -6px rgba(0,0,0,0.1);">
+    <div class="gs-menu-item-row" id="gs-ctx-edit-cell">
+      <div class="gs-menu-left"><i class="fa-solid fa-pen-to-square gs-menu-icon text-emerald-600"></i><span class="gs-menu-label font-bold text-slate-900">Edit cell</span></div>
+      <div class="gs-menu-right"><span class="gs-menu-shortcut">Enter / F2</span></div>
+    </div>
+    <div class="gs-menu-divider"></div>
+    <div class="gs-menu-item-row" id="gs-ctx-cut">
+      <div class="gs-menu-left"><i class="fa-solid fa-scissors gs-menu-icon"></i><span class="gs-menu-label">Cut</span></div>
+      <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+X</span></div>
+    </div>
+    <div class="gs-menu-item-row" id="gs-ctx-copy">
+      <div class="gs-menu-left"><i class="fa-solid fa-copy gs-menu-icon"></i><span class="gs-menu-label">Copy</span></div>
+      <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+C</span></div>
+    </div>
+    <div class="gs-menu-item-row" id="gs-ctx-paste">
+      <div class="gs-menu-left"><i class="fa-solid fa-paste gs-menu-icon"></i><span class="gs-menu-label">Paste</span></div>
+      <div class="gs-menu-right"><span class="gs-menu-shortcut">Ctrl+V</span></div>
+    </div>
+    <div class="gs-menu-divider"></div>
+    <div class="gs-menu-item-row" id="gs-ctx-clear">
+      <div class="gs-menu-left"><i class="fa-solid fa-eraser gs-menu-icon"></i><span class="gs-menu-label">Clear value</span></div>
+      <div class="gs-menu-right"><span class="gs-menu-shortcut">Del</span></div>
+    </div>
+    <div class="gs-menu-item-row" id="gs-ctx-insert-row">
+      <div class="gs-menu-left"><i class="fa-solid fa-plus gs-menu-icon text-emerald-600"></i><span class="gs-menu-label">Insert row below</span></div>
+    </div>
+    <div class="gs-menu-item-row" id="gs-ctx-delete-row">
+      <div class="gs-menu-left"><i class="fa-solid fa-trash-can gs-menu-icon text-rose-600"></i><span class="gs-menu-label text-rose-600">Delete row</span></div>
+    </div>
+  </div>
+
+  <!-- Find and Replace Modal -->
+  <div id="gs-find-replace-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-magnifying-glass text-blue-600"></i> Find and replace in sheet
+        </h3>
+        <button id="close-gs-find-replace-btn" class="text-slate-400 hover:text-slate-600 text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Find text</label>
+          <input type="text" id="gs-find-input" placeholder="Type text to search..." class="w-full text-xs p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-blue-500 font-medium" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Replace with</label>
+          <input type="text" id="gs-replace-input" placeholder="Replacement text..." class="w-full text-xs p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-blue-500 font-medium" />
+        </div>
+        <div id="gs-find-results-badge" class="text-xs text-slate-500 italic min-h-[18px]"></div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button type="button" id="gs-find-next-btn" class="px-3 py-1.5 text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl transition">Find Next</button>
+        <button type="button" id="gs-replace-one-btn" class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl transition">Replace</button>
+        <button type="button" id="gs-replace-all-btn" class="px-4 py-1.5 text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md transition">Replace All</button>
       </div>
     </div>
   </div>

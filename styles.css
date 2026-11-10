@@ -618,20 +618,67 @@ body {
   background: #dfe4ec;
 }
 
+.gs-tabs-scroll-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  max-width: 580px;
+  scrollbar-width: thin;
+}
+.gs-tabs-scroll-container::-webkit-scrollbar {
+  height: 3px;
+}
+.gs-tabs-scroll-container::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 3px;
+}
+
 .gs-sheet-tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
   border-radius: 6px 6px 0 0;
-  background: #ffffff;
+  background: #e8eaed;
   border: 1px solid #dadce0;
-  border-bottom: 2px solid #1a73e8;
-  color: #1a73e8;
+  border-bottom: 2px solid transparent;
+  color: #3c4043;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  white-space: nowrap;
+  user-select: none;
+  transition: all 0.12s;
+}
+.gs-sheet-tab:hover {
+  background: #dfe1e5;
+  color: #202124;
+}
+.gs-sheet-tab.active {
+  background: #ffffff;
+  border-color: #dadce0;
+  border-bottom: 2px solid #0f9d58;
+  color: #0f9d58;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.gs-tab-title {
+  cursor: pointer;
+}
+.gs-tab-caret {
+  border: none;
+  background: transparent;
+  padding: 1px 3px;
+  color: #70757a;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.gs-tab-caret:hover {
+  background: rgba(0,0,0,0.08);
+  color: #202124;
 }
 
 .gs-tabs-right {
