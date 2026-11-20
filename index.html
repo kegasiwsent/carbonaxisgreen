@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Custom CSS -->
   <link rel="stylesheet" href="styles.css">
+  <!-- SheetJS (xlsx) for native Multi-Sheet Excel Master Workbooks -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- Supabase JS Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1147,8 +1149,8 @@
               <button id="admin-gs-embed-toggle-btn" class="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold transition flex items-center gap-1.5 text-xs">
                 <i class="fa-brands fa-google-drive text-blue-600"></i> Connect Google Drive Sheet
               </button>
-              <button id="admin-gs-export-btn" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition flex items-center gap-1.5 text-xs shadow-sm">
-                <i class="fa-solid fa-file-csv text-emerald-400"></i> Export Master (.CSV)
+              <button id="admin-gs-export-btn" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition flex items-center gap-1.5 text-xs shadow-sm" title="Download all sheets as Master Excel Workbook (.xlsx)">
+                <i class="fa-solid fa-file-excel text-emerald-400"></i> Download Master Excel (.xlsx)
               </button>
             </div>
           </div>
@@ -1277,16 +1279,22 @@
                             </div>
                           </div>
                           <div class="gs-submenu">
-                            <div class="gs-menu-item-row" id="admin-file-dl-csv">
-                              <div class="gs-menu-left">
-                                <i class="fa-solid fa-file-csv text-emerald-600 gs-menu-icon"></i>
-                                <span class="gs-menu-label">Comma-separated values (.csv)</span>
-                              </div>
-                            </div>
                             <div class="gs-menu-item-row" id="admin-file-dl-xlsx">
                               <div class="gs-menu-left">
                                 <i class="fa-solid fa-file-excel text-emerald-700 gs-menu-icon"></i>
-                                <span class="gs-menu-label">Microsoft Excel (.xlsx)</span>
+                                <span class="gs-menu-label font-bold text-slate-800">Master Excel Workbook (.xlsx) &mdash; All Sheets</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="admin-file-dl-all-xlsx">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-layer-group text-blue-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">All Saved Spreadsheets (.xlsx)</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="admin-file-dl-csv">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-csv text-emerald-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Active Sheet Only (.csv)</span>
                               </div>
                             </div>
                             <div class="gs-menu-item-row" id="admin-file-dl-pdf">
@@ -1726,8 +1734,8 @@
               <button id="emp-gs-embed-toggle-btn" class="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold transition flex items-center gap-1.5 text-xs">
                 <i class="fa-brands fa-google-drive text-blue-600"></i> Connect Google Drive Sheet
               </button>
-              <button id="emp-gs-export-btn" class="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold transition flex items-center gap-1.5 text-xs shadow-sm">
-                <i class="fa-solid fa-file-csv"></i> Export (.CSV)
+              <button id="emp-gs-export-btn" class="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold transition flex items-center gap-1.5 text-xs shadow-sm" title="Download all sheets as Master Excel Workbook (.xlsx)">
+                <i class="fa-solid fa-file-excel"></i> Download Master Excel (.xlsx)
               </button>
             </div>
           </div>
@@ -1856,16 +1864,22 @@
                             </div>
                           </div>
                           <div class="gs-submenu">
-                            <div class="gs-menu-item-row" id="emp-file-dl-csv">
-                              <div class="gs-menu-left">
-                                <i class="fa-solid fa-file-csv text-emerald-600 gs-menu-icon"></i>
-                                <span class="gs-menu-label">Comma-separated values (.csv)</span>
-                              </div>
-                            </div>
                             <div class="gs-menu-item-row" id="emp-file-dl-xlsx">
                               <div class="gs-menu-left">
                                 <i class="fa-solid fa-file-excel text-emerald-700 gs-menu-icon"></i>
-                                <span class="gs-menu-label">Microsoft Excel (.xlsx)</span>
+                                <span class="gs-menu-label font-bold text-slate-800">Master Excel Workbook (.xlsx) &mdash; All Sheets</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="emp-file-dl-all-xlsx">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-layer-group text-blue-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">All Saved Spreadsheets (.xlsx)</span>
+                              </div>
+                            </div>
+                            <div class="gs-menu-item-row" id="emp-file-dl-csv">
+                              <div class="gs-menu-left">
+                                <i class="fa-solid fa-file-csv text-emerald-600 gs-menu-icon"></i>
+                                <span class="gs-menu-label">Active Sheet Only (.csv)</span>
                               </div>
                             </div>
                             <div class="gs-menu-item-row" id="emp-file-dl-pdf">

@@ -3131,17 +3131,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (adminKpiVal) adminKpiVal.textContent = valFormatted;
   }
 
-  // Helper to find merge covering a given cell
-  function findCellMerge(col, row, state) {
-    if (!state || !state.sheets || !state.sheets[state.activeTabId]) return null;
-    const merges = state.sheets[state.activeTabId].merges || [];
-    if (!merges.length) return null;
-    const cols = getActiveSheetCols(state);
+  // Helper to find merge covering a given cell in a specific sheet
+  function findCellMergeInSheet(col, row, sheet, cols) {
+    if (!sheet || !Array.isArray(sheet.merges) || sheet.merges.length === 0) return null;
     const cIdx = cols.indexOf(col);
     if (cIdx === -1) return null;
 
-    for (let i = 0; i < merges.length; i++) {
-      const m = merges[i];
+    for (let i = 0; i < sheet.merges.length; i++) {
+      const m = sheet.merges[i];
       const scIdx = cols.indexOf(m.startCol);
       const ecIdx = cols.indexOf(m.endCol);
       if (scIdx === -1 || ecIdx === -1) continue;
@@ -3164,6 +3161,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     return null;
+  }
+
+  // Helper to find merge covering a given cell in the active sheet
+  function findCellMerge(col, row, state) {
+    if (!state || !state.sheets || !state.sheets[state.activeTabId]) return null;
+    const activeSheet = state.sheets[state.activeTabId];
+    const cols = getActiveSheetCols(state);
+    return findCellMergeInSheet(col, row, activeSheet, cols);
   }
 
   function isCellInRange(col, row, range, cols) {
@@ -4717,10 +4722,10 @@ document.addEventListener('DOMContentLoaded', () => {
       printBtn.addEventListener('click', () => window.print());
     }
 
-    // Export CSV
+    // Export Master Excel (.xlsx) - downloads all sheets
     const exportBtn = document.getElementById(`${mode}-gs-export-btn`);
     if (exportBtn) {
-      exportBtn.addEventListener('click', exportGSheetCSV);
+      exportBtn.addEventListener('click', exportGSheetXLSX);
     }
 
     // Google Drive Embed modal trigger
@@ -4730,30 +4735,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Export CSV Function
+  // Export CSV Function (Active sheet only)
   function exportGSheetCSV() {
     const state = getGSheetState();
+    ensureWorkbookTabs(state);
+    if (state.sheets && state.sheets[state.activeTabId]) {
+      state.sheets[state.activeTabId].gridData = state.cells;
+      state.sheets[state.activeTabId].rowCount = state.rows;
+    }
+    const cols = getActiveSheetCols(state);
     const rows = [];
 
     for (let r = 1; r <= state.rows; r++) {
       const rowVals = [];
       let hasData = false;
-      GS_COLS.forEach(col => {
+      cols.forEach(col => {
         const key = col + r;
         const val = evalGSheetCell(key, state);
         if (val !== '' && val !== null && val !== undefined) hasData = true;
-        rowVals.push(`"${String(val).replace(/"/g, '""')}"`);
+        const safeVal = String(val !== undefined && val !== null ? val : '').replace(/"/g, '""');
+        rowVals.push(`"${safeVal}"`);
       });
       if (hasData || r <= 10) {
         rows.push(rowVals.join(','));
       }
     }
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const curSheet = state.sheets ? state.sheets[state.activeTabId] : null;
+    const tabSuffix = curSheet ? `_${curSheet.name.replace(/\s+/g, '_')}` : '';
+    const csvContent = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join('\n'));
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${(state.title || 'CarbonAxis_Master_Deals').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('href', csvContent);
+    link.setAttribute('download', `${(state.title || 'CarbonAxis_Master_Deals').replace(/\s+/g, '_')}${tabSuffix}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -5102,144 +5115,397 @@ document.addEventListener('DOMContentLoaded', () => {
     return lines;
   }
 
-  // Import Spreadsheet File Engine
+  // Apply parsed 2D row array to current/new sheet
+  function applyParsedRowsToActiveSheet(parsedRows, fileName, destMode) {
+    const curEmp = getCurrentEmployee();
+    const fileNameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+
+    if (destMode === 'new') {
+      const newId = 'sheet_' + Date.now();
+      const newCells = {};
+
+      parsedRows.forEach((rowArr, rIdx) => {
+        const rowNum = rIdx + 1;
+        rowArr.forEach((cellVal, cIdx) => {
+          if (cIdx < ALL_GS_COLS.length) {
+            const col = ALL_GS_COLS[cIdx];
+            const isHeader = rowNum === 1;
+            newCells[col + rowNum] = {
+              raw: String(cellVal !== undefined && cellVal !== null ? cellVal : ''),
+              bold: isHeader,
+              bg: isHeader ? '#f8fafd' : '#ffffff',
+              align: isHeader ? 'center' : (isNaN(Number(cellVal)) ? 'left' : 'right')
+            };
+          }
+        });
+      });
+
+      const initialTabId = 'tab_' + Date.now() + '_1';
+      const newSheet = {
+        id: newId,
+        title: fileNameWithoutExt,
+        starred: false,
+        rows: Math.max(GS_DEFAULT_ROWS, parsedRows.length + 5),
+        cells: newCells,
+        sheets: {
+          [initialTabId]: {
+            id: initialTabId,
+            name: 'Sheet 1',
+            gridData: newCells,
+            rowCount: Math.max(GS_DEFAULT_ROWS, parsedRows.length + 5),
+            colCount: Math.min(ALL_GS_COLS.length, Math.max(GS_COLS.length, (parsedRows[0] ? parsedRows[0].length : 0))),
+            colWidths: {},
+            merges: [],
+            history: []
+          }
+        },
+        activeTabId: initialTabId,
+        tabs: [{ id: initialTabId, name: 'Sheet 1' }],
+        author: curEmp ? `${curEmp.name} (@${curEmp.username})` : 'Administrator',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const store = getSheetsStore();
+      store[newId] = newSheet;
+      saveSheetsStore(store);
+      localStorage.setItem(ACTIVE_SHEET_KEY, newId);
+
+      closeAllGSheetMenus();
+      const openModal = document.getElementById('gs-open-modal');
+      if (openModal) openModal.classList.add('hidden');
+
+      renderGSheet('emp');
+      renderGSheet('admin');
+      alert(`Successfully imported "${fileName}" as a new spreadsheet with ${parsedRows.length} rows!`);
+    } else if (destMode === 'replace') {
+      const curSheet = getGSheetState();
+      curSheet.cells = {};
+      parsedRows.forEach((rowArr, rIdx) => {
+        const rowNum = rIdx + 1;
+        rowArr.forEach((cellVal, cIdx) => {
+          if (cIdx < ALL_GS_COLS.length) {
+            const col = ALL_GS_COLS[cIdx];
+            const isHeader = rowNum === 1;
+            curSheet.cells[col + rowNum] = {
+              raw: String(cellVal !== undefined && cellVal !== null ? cellVal : ''),
+              bold: isHeader,
+              bg: isHeader ? '#f8fafd' : '#ffffff',
+              align: isHeader ? 'center' : (isNaN(Number(cellVal)) ? 'left' : 'right')
+            };
+          }
+        });
+      });
+      curSheet.rows = Math.max(curSheet.rows || 35, parsedRows.length + 5);
+      if (curSheet.sheets && curSheet.sheets[curSheet.activeTabId]) {
+        curSheet.sheets[curSheet.activeTabId].gridData = curSheet.cells;
+        curSheet.sheets[curSheet.activeTabId].rowCount = curSheet.rows;
+      }
+      saveGSheetState(curSheet);
+
+      closeAllGSheetMenus();
+      const openModal = document.getElementById('gs-open-modal');
+      if (openModal) openModal.classList.add('hidden');
+
+      renderGSheet('emp');
+      renderGSheet('admin');
+      alert(`Successfully replaced active sheet data with ${parsedRows.length} rows from "${fileName}"!`);
+    } else if (destMode === 'append') {
+      const curSheet = getGSheetState();
+      let lastRow = 1;
+      Object.keys(curSheet.cells).forEach(k => {
+        const m = k.match(/[0-9]+/);
+        if (m) lastRow = Math.max(lastRow, parseInt(m[0], 10));
+      });
+
+      parsedRows.forEach((rowArr, rIdx) => {
+        if (rIdx === 0 && rowArr[0] && (String(rowArr[0]).toLowerCase().includes('client') || String(rowArr[0]).toLowerCase().includes('name'))) {
+          return;
+        }
+        lastRow++;
+        rowArr.forEach((cellVal, cIdx) => {
+          if (cIdx < ALL_GS_COLS.length) {
+            const col = ALL_GS_COLS[cIdx];
+            curSheet.cells[col + lastRow] = {
+              raw: String(cellVal !== undefined && cellVal !== null ? cellVal : ''),
+              align: isNaN(Number(cellVal)) ? 'left' : 'right'
+            };
+          }
+        });
+      });
+
+      curSheet.rows = Math.max(curSheet.rows || 35, lastRow + 5);
+      if (curSheet.sheets && curSheet.sheets[curSheet.activeTabId]) {
+        curSheet.sheets[curSheet.activeTabId].gridData = curSheet.cells;
+        curSheet.sheets[curSheet.activeTabId].rowCount = curSheet.rows;
+      }
+      saveGSheetState(curSheet);
+
+      closeAllGSheetMenus();
+      const openModal = document.getElementById('gs-open-modal');
+      if (openModal) openModal.classList.add('hidden');
+
+      renderGSheet('emp');
+      renderGSheet('admin');
+      alert(`Successfully appended rows from "${fileName}"! Current row count: ${lastRow}.`);
+    }
+  }
+
+  // Import Spreadsheet File Engine (supports CSV, TSV, and native Excel .xlsx/.xls)
   function importSpreadsheetFile(file, destMode = 'new') {
     if (!file) {
       alert('Please select a file to import.');
       return;
     }
 
+    const isExcel = (/\.(xlsx|xls)$/i).test(file.name);
+
+    if (isExcel && typeof XLSX !== 'undefined') {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          if (!wb || !wb.SheetNames || wb.SheetNames.length === 0) {
+            alert('No sheets found in Excel file.');
+            return;
+          }
+
+          const curEmp = getCurrentEmployee();
+          const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+
+          if (destMode === 'new') {
+            const newId = 'sheet_' + Date.now();
+            const sheetsDict = {};
+            let firstTabId = '';
+
+            wb.SheetNames.forEach((sheetName, sIdx) => {
+              const ws = wb.Sheets[sheetName];
+              const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+              const tabId = 'tab_' + Date.now() + '_' + sIdx;
+              if (!firstTabId) firstTabId = tabId;
+
+              const grid = {};
+              aoa.forEach((rowArr, rIdx) => {
+                const rowNum = rIdx + 1;
+                rowArr.forEach((cellVal, cIdx) => {
+                  if (cIdx < ALL_GS_COLS.length) {
+                    const col = ALL_GS_COLS[cIdx];
+                    const isHeader = rowNum === 1;
+                    grid[col + rowNum] = {
+                      raw: String(cellVal !== undefined && cellVal !== null ? cellVal : ''),
+                      bold: isHeader,
+                      bg: isHeader ? '#f8fafd' : '#ffffff',
+                      align: isHeader ? 'center' : (isNaN(Number(cellVal)) ? 'left' : 'right')
+                    };
+                  }
+                });
+              });
+
+              sheetsDict[tabId] = {
+                id: tabId,
+                name: sheetName,
+                gridData: grid,
+                rowCount: Math.max(GS_DEFAULT_ROWS, aoa.length + 5),
+                colCount: Math.min(ALL_GS_COLS.length, Math.max(GS_COLS.length, (aoa[0] ? aoa[0].length : 0))),
+                colWidths: {},
+                merges: [],
+                history: []
+              };
+            });
+
+            const newDoc = {
+              id: newId,
+              title: fileNameWithoutExt,
+              starred: false,
+              rows: sheetsDict[firstTabId].rowCount,
+              cells: sheetsDict[firstTabId].gridData,
+              sheets: sheetsDict,
+              activeTabId: firstTabId,
+              tabs: Object.keys(sheetsDict).map(k => ({ id: k, name: sheetsDict[k].name })),
+              author: curEmp ? `${curEmp.name} (@${curEmp.username})` : 'Administrator',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+
+            const store = getSheetsStore();
+            store[newId] = newDoc;
+            saveSheetsStore(store);
+            localStorage.setItem(ACTIVE_SHEET_KEY, newId);
+
+            closeAllGSheetMenus();
+            const openModal = document.getElementById('gs-open-modal');
+            if (openModal) openModal.classList.add('hidden');
+
+            renderGSheet('emp');
+            renderGSheet('admin');
+            alert(`Successfully imported "${file.name}" with ${wb.SheetNames.length} sheet(s) into workspace!`);
+            return;
+          } else {
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const parsedRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+            applyParsedRowsToActiveSheet(parsedRows, file.name, destMode);
+            return;
+          }
+        } catch (err) {
+          console.error('Excel parse error:', err);
+          alert('Could not parse Excel file: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    // Fallback or CSV/TSV
     const reader = new FileReader();
     reader.onload = function(e) {
       const text = e.target.result;
       const parsedRows = parseCSV(text);
-
       if (parsedRows.length === 0) {
         alert('The uploaded file appears to be empty.');
         return;
       }
-
-      const curEmp = getCurrentEmployee();
-      const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-
-      if (destMode === 'new') {
-        // Create new spreadsheet
-        const newId = 'sheet_' + Date.now();
-        const newCells = {};
-
-        parsedRows.forEach((rowArr, rIdx) => {
-          const rowNum = rIdx + 1;
-          rowArr.forEach((cellVal, cIdx) => {
-            if (cIdx < GS_COLS.length) {
-              const col = GS_COLS[cIdx];
-              const isHeader = rowNum === 1;
-              newCells[col + rowNum] = {
-                raw: cellVal,
-                bold: isHeader,
-                bg: isHeader ? '#f8fafd' : '#ffffff',
-                align: isHeader ? 'center' : (isNaN(Number(cellVal)) ? 'left' : 'right')
-              };
-            }
-          });
-        });
-
-        const newSheet = {
-          id: newId,
-          title: fileNameWithoutExt,
-          starred: false,
-          rows: Math.max(GS_DEFAULT_ROWS, parsedRows.length + 5),
-          cells: newCells,
-          author: curEmp ? `${curEmp.name} (@${curEmp.username})` : 'Administrator',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-
-        const store = getSheetsStore();
-        store[newId] = newSheet;
-        saveSheetsStore(store);
-        localStorage.setItem(ACTIVE_SHEET_KEY, newId);
-
-        closeAllGSheetMenus();
-        const openModal = document.getElementById('gs-open-modal');
-        if (openModal) openModal.classList.add('hidden');
-
-        renderGSheet('emp');
-        renderGSheet('admin');
-        alert(`Successfully imported "${file.name}" as a new spreadsheet with ${parsedRows.length} rows!`);
-      } else if (destMode === 'replace') {
-        // Replace current sheet cells
-        const curSheet = getGSheetState();
-        curSheet.cells = {};
-        parsedRows.forEach((rowArr, rIdx) => {
-          const rowNum = rIdx + 1;
-          rowArr.forEach((cellVal, cIdx) => {
-            if (cIdx < GS_COLS.length) {
-              const col = GS_COLS[cIdx];
-              const isHeader = rowNum === 1;
-              curSheet.cells[col + rowNum] = {
-                raw: cellVal,
-                bold: isHeader,
-                bg: isHeader ? '#f8fafd' : '#ffffff',
-                align: isHeader ? 'center' : (isNaN(Number(cellVal)) ? 'left' : 'right')
-              };
-            }
-          });
-        });
-        curSheet.rows = Math.max(curSheet.rows || 35, parsedRows.length + 5);
-        saveGSheetState(curSheet);
-
-        closeAllGSheetMenus();
-        const openModal = document.getElementById('gs-open-modal');
-        if (openModal) openModal.classList.add('hidden');
-
-        renderGSheet('emp');
-        renderGSheet('admin');
-        alert(`Successfully replaced current sheet data with ${parsedRows.length} rows from "${file.name}"!`);
-      } else if (destMode === 'append') {
-        // Append rows
-        const curSheet = getGSheetState();
-        let lastRow = 1;
-        Object.keys(curSheet.cells).forEach(k => {
-          const m = k.match(/[0-9]+/);
-          if (m) lastRow = Math.max(lastRow, parseInt(m[0], 10));
-        });
-
-        parsedRows.forEach((rowArr, rIdx) => {
-          if (rIdx === 0 && rowArr[0] && (rowArr[0].toLowerCase().includes('client') || rowArr[0].toLowerCase().includes('name'))) {
-            return;
-          }
-          lastRow++;
-          rowArr.forEach((cellVal, cIdx) => {
-            if (cIdx < GS_COLS.length) {
-              const col = GS_COLS[cIdx];
-              curSheet.cells[col + lastRow] = {
-                raw: cellVal,
-                align: isNaN(Number(cellVal)) ? 'left' : 'right'
-              };
-            }
-          });
-        });
-
-        curSheet.rows = Math.max(curSheet.rows || 35, lastRow + 5);
-        saveGSheetState(curSheet);
-
-        closeAllGSheetMenus();
-        const openModal = document.getElementById('gs-open-modal');
-        if (openModal) openModal.classList.add('hidden');
-
-        renderGSheet('emp');
-        renderGSheet('admin');
-        alert(`Successfully appended rows from "${file.name}"! Current row count: ${lastRow}.`);
-      }
+      applyParsedRowsToActiveSheet(parsedRows, file.name, destMode);
     };
     reader.readAsText(file);
   }
 
-  // Export Multi-Sheet Excel Workbook (.xls / .xlsx XML compatible with all sheets preserved)
+  // Export Multi-Sheet Master Excel Workbook (.xlsx) with all sheet tabs preserved
   function exportGSheetXLSX() {
     const state = getGSheetState();
     ensureWorkbookTabs(state);
 
+    // 1. Flush active sheet edits so memory is completely up to date
+    if (state.sheets && state.sheets[state.activeTabId]) {
+      state.sheets[state.activeTabId].gridData = state.cells;
+      state.sheets[state.activeTabId].rowCount = state.rows;
+    }
+
+    const sheetIds = Object.keys(state.sheets || {});
+    if (sheetIds.length === 0) {
+      ensureWorkbookTabs(state);
+    }
+
+    const safeTitle = (state.title || 'CarbonAxis_Master_Deals').trim().replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
+    const fileName = `${safeTitle || 'CarbonAxis_Master_Deals'}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+    // 2. Try native SheetJS binary export first (creates real multi-sheet .xlsx)
+    if (typeof XLSX !== 'undefined') {
+      try {
+        const wb = XLSX.utils.book_new();
+
+        sheetIds.forEach((sheetId, idx) => {
+          const sheet = state.sheets[sheetId] || {};
+          const rawName = (sheet.name || `Sheet${idx + 1}`).trim().replace(/[:\\/?*\[\]]/g, ' ') || `Sheet${idx + 1}`;
+          let sheetName = rawName.slice(0, 31);
+          let counter = 1;
+          while (wb.SheetNames.includes(sheetName)) {
+            sheetName = `${rawName.slice(0, 27)}_${counter++}`;
+          }
+
+          const colCount = Math.max(sheet.colCount || GS_COLS.length, GS_COLS.length);
+          const cols = ALL_GS_COLS.slice(0, Math.min(ALL_GS_COLS.length, colCount));
+          const maxRows = Math.max(sheet.rowCount || GS_DEFAULT_ROWS, 10);
+          const grid = sheet.gridData || {};
+
+          // Build 2D array
+          const aoa = [];
+          for (let r = 1; r <= maxRows; r++) {
+            const rowArr = [];
+            cols.forEach(col => {
+              const key = col + r;
+              const cell = grid[key];
+              let val = '';
+              if (cell && cell.raw !== undefined && cell.raw !== null) {
+                val = cell.raw;
+              }
+              rowArr.push(val);
+            });
+            aoa.push(rowArr);
+          }
+
+          // Trim empty trailing rows beyond 15
+          while (aoa.length > 15 && aoa[aoa.length - 1].every(v => v === '' || v === null || v === undefined)) {
+            aoa.pop();
+          }
+
+          const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+          // Formulas & cell values
+          for (let r = 1; r <= aoa.length; r++) {
+            cols.forEach((col, cIdx) => {
+              const key = col + r;
+              const cell = grid[key];
+              if (!cell || cell.raw === undefined || cell.raw === null || cell.raw === '') return;
+              const cellRef = XLSX.utils.encode_cell({ c: cIdx, r: r - 1 });
+              if (!ws[cellRef]) return;
+
+              const rawStr = String(cell.raw).trim();
+              if (rawStr.startsWith('=')) {
+                ws[cellRef].f = rawStr.substring(1);
+                const evaluated = evalGSheetCell(key, state);
+                if (typeof evaluated === 'number') {
+                  ws[cellRef].t = 'n';
+                  ws[cellRef].v = evaluated;
+                } else {
+                  const num = Number(String(evaluated).replace(/[^0-9.-]/g, ''));
+                  if (!isNaN(num) && String(evaluated).trim() !== '') {
+                    ws[cellRef].t = 'n';
+                    ws[cellRef].v = num;
+                  } else {
+                    ws[cellRef].v = evaluated;
+                  }
+                }
+              } else if (!isNaN(Number(rawStr)) && rawStr !== '') {
+                ws[cellRef].t = 'n';
+                ws[cellRef].v = Number(rawStr);
+              }
+            });
+          }
+
+          // Column widths
+          const colWidths = sheet.colWidths || {};
+          ws['!cols'] = cols.map(col => {
+            const px = colWidths[col] || getInitialColWidth(col) || 100;
+            return { wch: Math.max(10, Math.round(px / 7.5)) };
+          });
+
+          // Merged cells
+          if (Array.isArray(sheet.merges) && sheet.merges.length > 0) {
+            ws['!merges'] = sheet.merges.map(m => {
+              const scIdx = cols.indexOf(m.startCol);
+              const ecIdx = cols.indexOf(m.endCol);
+              return {
+                s: { r: m.startRow - 1, c: Math.min(scIdx, ecIdx) },
+                e: { r: m.endRow - 1, c: Math.max(scIdx, ecIdx) }
+              };
+            }).filter(m => m.s.c !== -1 && m.e.c !== -1);
+          }
+
+          XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+
+        XLSX.writeFile(wb, fileName);
+
+        const curEmp = getCurrentEmployee();
+        logEmployeeActivity({
+          employee: curEmp || { name: 'Staff', username: 'staff', role: 'Staff Member' },
+          action_type: 'GSHEET_EXPORT_EXCEL',
+          action_label: 'Downloaded Master Excel Workbook',
+          details: `Exported ${sheetIds.length} sheet tabs as "${fileName}".`
+        });
+        return;
+      } catch (err) {
+        console.warn('SheetJS export error, falling back to Excel XML:', err);
+      }
+    }
+
+    // 3. Fallback: XML Spreadsheet 2003 with all sheets, columns, widths, and merges
+    exportGSheetXML(state, fileName);
+  }
+
+  // XML Spreadsheet 2003 fallback generator (Works 100% offline with zero dependencies)
+  function exportGSheetXML(state, fileName) {
     let xml = '<?xml version="1.0"?>\r\n';
     xml += '<?mso-application progid="Excel.Sheet"?>\r\n';
     xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\r\n';
@@ -5254,46 +5520,102 @@ document.addEventListener('DOMContentLoaded', () => {
     xml += '  </DocumentProperties>\r\n';
     xml += '  <Styles>\r\n';
     xml += '    <Style ss:ID="Default" ss:Name="Normal">\r\n';
-    xml += '      <Alignment ss:Vertical="Bottom"/>\r\n';
+    xml += '      <Alignment ss:Vertical="Center"/>\r\n';
     xml += '      <Font ss:FontName="Calibri" ss:Size="11" ss:Color="#1f1f1f"/>\r\n';
     xml += '    </Style>\r\n';
     xml += '    <Style ss:ID="Header">\r\n';
     xml += '      <Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1" ss:Color="#0f172a"/>\r\n';
     xml += '      <Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/>\r\n';
+    xml += '      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>\r\n';
     xml += '    </Style>\r\n';
     xml += '    <Style ss:ID="BoldCell">\r\n';
     xml += '      <Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1"/>\r\n';
     xml += '    </Style>\r\n';
+    xml += '    <Style ss:ID="AlignRight">\r\n';
+    xml += '      <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>\r\n';
+    xml += '    </Style>\r\n';
+    xml += '    <Style ss:ID="AlignCenter">\r\n';
+    xml += '      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>\r\n';
+    xml += '    </Style>\r\n';
     xml += '  </Styles>\r\n';
 
-    // Loop through every sheet in workbook and create a separate Worksheet tab
-    const sheetIds = Object.keys(state.sheets);
-    sheetIds.forEach(sheetId => {
-      const sheet = state.sheets[sheetId];
-      const sheetName = (sheet.name || 'Sheet').replace(/[:\\/?*\[\]]/g, ' ').slice(0, 31);
-      const maxRows = sheet.rowCount || GS_DEFAULT_ROWS;
+    const sheetIds = Object.keys(state.sheets || {});
+    sheetIds.forEach((sheetId, sIdx) => {
+      const sheet = state.sheets[sheetId] || {};
+      const rawName = (sheet.name || `Sheet${sIdx + 1}`).trim().replace(/[:\\/?*\[\]]/g, ' ') || `Sheet${sIdx + 1}`;
+      const sheetName = rawName.slice(0, 31);
+      const colCount = Math.max(sheet.colCount || GS_COLS.length, GS_COLS.length);
+      const cols = ALL_GS_COLS.slice(0, Math.min(ALL_GS_COLS.length, colCount));
+      const maxRows = Math.max(sheet.rowCount || GS_DEFAULT_ROWS, 10);
       const grid = sheet.gridData || {};
+      const colWidths = sheet.colWidths || {};
 
       xml += `  <Worksheet ss:Name="${escapeHtml(sheetName)}">\r\n`;
       xml += '    <Table>\r\n';
+
+      cols.forEach(col => {
+        const wPx = colWidths[col] || getInitialColWidth(col) || 100;
+        const wPt = Math.round(wPx * 0.75);
+        xml += `      <Column ss:Width="${wPt}"/>\r\n`;
+      });
 
       for (let r = 1; r <= maxRows; r++) {
         let rowCellsXml = '';
         let rowHasData = false;
 
-        GS_COLS.forEach(col => {
+        cols.forEach((col, cIdx) => {
+          const merge = findCellMergeInSheet(col, r, sheet, cols);
+          if (merge && !merge.isTopLeft) {
+            return;
+          }
+
           const key = col + r;
           const cell = grid[key];
+          let mergeAttrs = '';
+          if (merge && merge.isTopLeft) {
+            if (merge.colSpan > 1) mergeAttrs += ` ss:MergeAcross="${merge.colSpan - 1}"`;
+            if (merge.rowSpan > 1) mergeAttrs += ` ss:MergeDown="${merge.rowSpan - 1}"`;
+          }
+
           if (cell && cell.raw !== undefined && cell.raw !== null && String(cell.raw).trim() !== '') {
             rowHasData = true;
-            const rawVal = String(cell.raw);
-            const isNumeric = !isNaN(Number(rawVal)) && !rawVal.startsWith('=') && rawVal !== '';
-            const dataType = isNumeric ? 'Number' : 'String';
-            const val = isNumeric ? Number(rawVal) : escapeHtml(rawVal);
-            const styleAttr = (r === 1) ? ' ss:StyleID="Header"' : (cell.bold ? ' ss:StyleID="BoldCell"' : '');
-            rowCellsXml += `        <Cell${styleAttr}><Data ss:Type="${dataType}">${val}</Data></Cell>\r\n`;
-          } else {
-            rowCellsXml += '        <Cell><Data ss:Type="String"></Data></Cell>\r\n';
+            const rawVal = String(cell.raw).trim();
+            const isFormula = rawVal.startsWith('=');
+            const evalVal = evalGSheetCell(key, state);
+            const isNumeric = !isNaN(Number(rawVal)) && !isFormula && rawVal !== '';
+
+            let dataType = 'String';
+            let dataVal = escapeHtml(rawVal);
+            let formulaAttr = '';
+
+            if (isFormula) {
+              formulaAttr = ` ss:Formula="${escapeHtml(rawVal)}"`;
+              if (typeof evalVal === 'number') {
+                dataType = 'Number';
+                dataVal = evalVal;
+              } else {
+                const n = Number(String(evalVal).replace(/[^0-9.-]/g, ''));
+                if (!isNaN(n) && String(evalVal).trim() !== '') {
+                  dataType = 'Number';
+                  dataVal = n;
+                } else {
+                  dataVal = escapeHtml(String(evalVal));
+                }
+              }
+            } else if (isNumeric) {
+              dataType = 'Number';
+              dataVal = Number(rawVal);
+            }
+
+            let styleAttr = '';
+            if (r === 1) styleAttr = ' ss:StyleID="Header"';
+            else if (cell.bold) styleAttr = ' ss:StyleID="BoldCell"';
+            else if (cell.align === 'right' || isNumeric) styleAttr = ' ss:StyleID="AlignRight"';
+            else if (cell.align === 'center') styleAttr = ' ss:StyleID="AlignCenter"';
+
+            rowCellsXml += `        <Cell ss:Index="${cIdx + 1}"${styleAttr}${mergeAttrs}${formulaAttr}><Data ss:Type="${dataType}">${dataVal}</Data></Cell>\r\n`;
+          } else if (mergeAttrs) {
+            rowCellsXml += `        <Cell ss:Index="${cIdx + 1}"${mergeAttrs}><Data ss:Type="String"></Data></Cell>\r\n`;
           }
         });
 
@@ -5311,10 +5633,118 @@ document.addEventListener('DOMContentLoaded', () => {
     const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `${(state.title || 'CarbonAxis_Master_Deals').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    const curEmp = getCurrentEmployee();
+    logEmployeeActivity({
+      employee: curEmp || { name: 'Staff', username: 'staff', role: 'Staff Member' },
+      action_type: 'GSHEET_EXPORT_EXCEL',
+      action_label: 'Downloaded Master Excel Workbook',
+      details: `Exported ${sheetIds.length} sheet tabs as "${fileName}".`
+    });
+  }
+
+  // Export ALL spreadsheets from the store into a single combined Master Excel workbook
+  function exportAllWorkbooksMasterXLSX() {
+    const store = getSheetsStore();
+    const curState = getGSheetState();
+    ensureWorkbookTabs(curState);
+    if (curState.sheets && curState.sheets[curState.activeTabId]) {
+      curState.sheets[curState.activeTabId].gridData = curState.cells;
+      curState.sheets[curState.activeTabId].rowCount = curState.rows;
+    }
+    store[curState.id || getActiveSheetId()] = curState;
+
+    const docKeys = Object.keys(store);
+    if (docKeys.length === 0) {
+      alert('No spreadsheet documents found to export.');
+      return;
+    }
+
+    const fileName = `CarbonAxis_All_Workbooks_Master_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+    if (typeof XLSX !== 'undefined') {
+      try {
+        const wb = XLSX.utils.book_new();
+
+        docKeys.forEach((docId, docIdx) => {
+          const doc = store[docId];
+          ensureWorkbookTabs(doc);
+          const sheetIds = Object.keys(doc.sheets || {});
+
+          sheetIds.forEach((sheetId, sIdx) => {
+            const sheet = doc.sheets[sheetId] || {};
+            const baseDocName = (doc.title || `Doc${docIdx + 1}`).replace(/[:\\/?*\[\]]/g, ' ').trim();
+            const baseSheetName = (sheet.name || `Sheet${sIdx + 1}`).replace(/[:\\/?*\[\]]/g, ' ').trim();
+            let rawTabName = sheetIds.length > 1 ? `${baseDocName.slice(0, 16)}_${baseSheetName.slice(0, 12)}` : baseDocName.slice(0, 28);
+            if (!rawTabName) rawTabName = `Sheet_${docIdx + 1}_${sIdx + 1}`;
+
+            let uniqueName = rawTabName.slice(0, 31);
+            let counter = 1;
+            while (wb.SheetNames.includes(uniqueName)) {
+              uniqueName = `${rawTabName.slice(0, 27)}_${counter++}`;
+            }
+
+            const colCount = Math.max(sheet.colCount || GS_COLS.length, GS_COLS.length);
+            const cols = ALL_GS_COLS.slice(0, Math.min(ALL_GS_COLS.length, colCount));
+            const maxRows = Math.max(sheet.rowCount || GS_DEFAULT_ROWS, 10);
+            const grid = sheet.gridData || {};
+
+            const aoa = [];
+            for (let r = 1; r <= maxRows; r++) {
+              const rowArr = [];
+              cols.forEach(col => {
+                const cell = grid[col + r];
+                rowArr.push(cell && cell.raw !== undefined && cell.raw !== null ? cell.raw : '');
+              });
+              aoa.push(rowArr);
+            }
+
+            while (aoa.length > 15 && aoa[aoa.length - 1].every(v => v === '' || v === null || v === undefined)) {
+              aoa.pop();
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+            // Columns and merges
+            const colWidths = sheet.colWidths || {};
+            ws['!cols'] = cols.map(col => ({ wch: Math.max(10, Math.round((colWidths[col] || getInitialColWidth(col) || 100) / 7.5)) }));
+
+            if (Array.isArray(sheet.merges) && sheet.merges.length > 0) {
+              ws['!merges'] = sheet.merges.map(m => {
+                const scIdx = cols.indexOf(m.startCol);
+                const ecIdx = cols.indexOf(m.endCol);
+                return {
+                  s: { r: m.startRow - 1, c: Math.min(scIdx, ecIdx) },
+                  e: { r: m.endRow - 1, c: Math.max(scIdx, ecIdx) }
+                };
+              }).filter(m => m.s.c !== -1 && m.e.c !== -1);
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, uniqueName);
+          });
+        });
+
+        XLSX.writeFile(wb, fileName);
+
+        const curEmp = getCurrentEmployee();
+        logEmployeeActivity({
+          employee: curEmp || { name: 'Staff', username: 'staff', role: 'Staff Member' },
+          action_type: 'GSHEET_EXPORT_ALL_EXCEL',
+          action_label: 'Downloaded All Workbooks Master Excel',
+          details: `Exported ${wb.SheetNames.length} sheets across ${docKeys.length} workbooks as "${fileName}".`
+        });
+        return;
+      } catch (e) {
+        console.warn('Failed SheetJS export-all, falling back to current workbook export:', e);
+      }
+    }
+
+    // Fallback: export current workbook
+    exportGSheetXLSX();
   }
 
   // Show Details Modal
@@ -5517,6 +5947,14 @@ document.addEventListener('DOMContentLoaded', () => {
       dlXlsxBtn.addEventListener('click', () => {
         closeAllGSheetMenus();
         exportGSheetXLSX();
+      });
+    }
+
+    const dlAllXlsxBtn = document.getElementById(`${mode}-file-dl-all-xlsx`);
+    if (dlAllXlsxBtn) {
+      dlAllXlsxBtn.addEventListener('click', () => {
+        closeAllGSheetMenus();
+        exportAllWorkbooksMasterXLSX();
       });
     }
 
