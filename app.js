@@ -256,38 +256,697 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  // ==================== 2. Project Filters (Projects Page) ====================
-  const filterButtons = document.querySelectorAll('.project-filter-btn');
-  const projectItems = document.querySelectorAll('.project-item-card');
+  // ==================== 2. Credit Catalog Management & Public Rendering ====================
+  const DEFAULT_CATALOG_PROJECTS = [
+    {
+      id: 'PRJ-GS-0104',
+      num: 'Project #01',
+      title: 'Acre Canopy Protection',
+      category: 'nature',
+      categoryBadge: 'Nature Reforestation',
+      location: 'Acre, Brazil',
+      country: 'Brazil',
+      flag: '🇧🇷',
+      registry: 'Gold Standard',
+      registryRef: 'GS-Registry: BR-928',
+      volume: 12000,
+      price: 28.50,
+      vintage: 2024,
+      status: 'Verified Active',
+      description: 'Protects large forest sectors from logging and commercial agricultural clearing. Integrates regional community support logs.',
+      image: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRJ-VCS-0218',
+      num: 'Project #02',
+      title: 'Sahara Concentrated Solar',
+      category: 'renewables',
+      categoryBadge: 'Renewable Solar',
+      location: 'Ouarzazate, Morocco',
+      country: 'Morocco',
+      flag: '🇲🇦',
+      registry: 'Verra (VCS)',
+      registryRef: 'VCS-Registry: MA-771',
+      volume: 34500,
+      price: 16.25,
+      vintage: 2024,
+      status: 'Verified Active',
+      description: 'Replaces coal grids with clean solar thermal infrastructure, lowering overall grid greenhouse gas inputs.',
+      image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRJ-PV-0342',
+      num: 'Project #03',
+      title: 'Mombasa Mangrove Replanting',
+      category: 'nature',
+      categoryBadge: 'Marine Estuary',
+      location: 'Mombasa, Kenya',
+      country: 'Kenya',
+      flag: '🇰🇪',
+      registry: 'Plan Vivo',
+      registryRef: 'PV-Registry: KE-004',
+      volume: 8400,
+      price: 32.00,
+      vintage: 2025,
+      status: 'Verified Active',
+      description: 'Stabilizes coastal soil and restores ocean blue-carbon mangroves capturing massive metric volumes.',
+      image: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRJ-DAC-0419',
+      num: 'Project #04',
+      title: 'Icelandic Direct Air Capture',
+      category: 'tech',
+      categoryBadge: 'High-Tech DAC',
+      location: 'Hellisheidi, Iceland',
+      country: 'Iceland',
+      flag: '🇮🇸',
+      registry: 'CarbonDirect',
+      registryRef: 'Verifier: CarbonDirect',
+      volume: 5200,
+      price: 650.00,
+      vintage: 2025,
+      status: 'Verified Active',
+      description: 'Uses geological geothermal systems to extract ambient CO₂ and mineralize it permanently underground.',
+      image: 'https://images.unsplash.com/photo-1473872170063-eb914837e609?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRJ-VCS-0552',
+      num: 'Project #05',
+      title: 'Gujarat Clean Wind Corridor',
+      category: 'renewables',
+      categoryBadge: 'Renewable Wind',
+      location: 'Gujarat, India',
+      country: 'India',
+      flag: '🇮🇳',
+      registry: 'Verra (VCS)',
+      registryRef: 'VCS-Registry: IN-309',
+      volume: 42000,
+      price: 14.50,
+      vintage: 2024,
+      status: 'Verified Active',
+      description: 'Displaces thermal power generation on the western grid corridor with high-capacity wind turbines.',
+      image: 'https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRJ-GS-0681',
+      num: 'Project #06',
+      title: 'Andean Cloud Forest Conservation',
+      category: 'nature',
+      categoryBadge: 'Agroforestry',
+      location: 'Antioquia, Colombia',
+      country: 'Colombia',
+      flag: '🇨🇴',
+      registry: 'Gold Standard',
+      registryRef: 'GS-Registry: CO-512',
+      volume: 10500,
+      price: 24.00,
+      vintage: 2024,
+      status: 'Verified Active',
+      description: 'Combines native species canopy regeneration with sustainable shade-grown coffee farming cooperatives.',
+      image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=600&q=80'
+    }
+  ];
 
-  filterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      // Toggle active filter button style
-      filterButtons.forEach(b => {
-        b.classList.remove('bg-green-600', 'text-white');
-        b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
-      });
-      btn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
-      btn.classList.add('bg-green-600', 'text-white');
+  const CATALOG_STORAGE_KEY = 'carbonaxis_credit_catalog';
 
-      const filterValue = btn.getAttribute('data-filter');
-      let visibleCount = 0;
-      projectItems.forEach(item => {
-        const itemCategory = item.getAttribute('data-category');
-        if (filterValue === 'all' || itemCategory === filterValue) {
-          item.classList.remove('hidden');
-          visibleCount++;
-        } else {
-          item.classList.add('hidden');
+  function getCatalogProjects() {
+    try {
+      const stored = localStorage.getItem(CATALOG_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
         }
-      });
+      }
+    } catch (e) {
+      console.warn('Error reading catalog from localStorage:', e);
+    }
+    const cloned = JSON.parse(JSON.stringify(DEFAULT_CATALOG_PROJECTS));
+    try {
+      localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(cloned));
+    } catch (e) {}
+    return cloned;
+  }
 
-      const countIndicator = document.getElementById('catalog-count-indicator');
-      if (countIndicator) {
-        countIndicator.textContent = `Showing ${visibleCount} of ${projectItems.length} Projects`;
+  async function saveCatalogProjects(projects, syncCloud = true) {
+    try {
+      localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(projects));
+    } catch (e) {
+      console.warn('Error saving catalog to localStorage:', e);
+    }
+
+    if (syncCloud && supabaseClient) {
+      try {
+        const payload = projects.map(p => ({
+          id: p.id,
+          num: p.num || '',
+          title: p.title,
+          category: p.category,
+          category_badge: p.categoryBadge || '',
+          location: p.location || '',
+          country: p.country || '',
+          flag: p.flag || '',
+          registry: p.registry || '',
+          registry_ref: p.registryRef || '',
+          volume: Number(p.volume) || 0,
+          price: Number(p.price) || 0,
+          vintage: Number(p.vintage) || 2024,
+          status: p.status || 'Verified Active',
+          description: p.description || '',
+          image: p.image || '',
+          updated_at: new Date().toISOString()
+        }));
+        await supabaseClient.from('catalog_projects').upsert(payload, { onConflict: 'id' });
+      } catch (err) {
+        console.warn('Supabase catalog notice:', err.message);
+      }
+    }
+
+    renderPublicCreditCatalog();
+    renderAdminCatalogTable();
+    renderStaffInventoryQuickRef();
+    updateCatalogKPIs();
+  }
+
+  async function fetchCatalogFromCloud() {
+    if (!supabaseClient) return getCatalogProjects();
+    try {
+      const { data, error } = await supabaseClient.from('catalog_projects').select('*').order('id', { ascending: true });
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const normalized = data.map(d => ({
+          id: d.id,
+          num: d.num || '',
+          title: d.title,
+          category: d.category,
+          categoryBadge: d.category_badge || d.categoryBadge || '',
+          location: d.location || '',
+          country: d.country || '',
+          flag: d.flag || '',
+          registry: d.registry || '',
+          registryRef: d.registry_ref || d.registryRef || '',
+          volume: Number(d.volume) || 0,
+          price: Number(d.price) || 0,
+          vintage: Number(d.vintage) || 2024,
+          status: d.status || 'Verified Active',
+          description: d.description || '',
+          image: d.image || ''
+        }));
+        localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(normalized));
+        renderPublicCreditCatalog();
+        renderAdminCatalogTable();
+        renderStaffInventoryQuickRef();
+        updateCatalogKPIs();
+        return normalized;
+      }
+    } catch (e) {
+      console.warn('Notice fetching catalog from Supabase:', e.message);
+    }
+    return getCatalogProjects();
+  }
+
+  function updateCatalogKPIs() {
+    const projects = getCatalogProjects();
+    let totalVolume = 0;
+    let totalValue = 0;
+    const countries = new Set();
+    const registries = new Set();
+
+    projects.forEach(p => {
+      const vol = Number(p.volume) || 0;
+      const prc = Number(p.price) || 0;
+      totalVolume += vol;
+      totalValue += (vol * prc);
+      if (p.country && p.country.trim()) countries.add(p.country.trim());
+      if (p.registry && p.registry.trim()) {
+        const m = p.registry.match(/\(([A-Za-z]+)\)/) || p.registry.match(/\b([A-Za-z]{2,4})\b/);
+        registries.add(m ? m[1] : p.registry.trim());
       }
     });
-  });
+
+    const avgPrice = totalVolume > 0 ? (totalValue / totalVolume) : 0;
+
+    // Public catalog metrics
+    const pubTotalCount = document.getElementById('catalog-total-projects-stat');
+    const pubTotalVol = document.getElementById('catalog-total-volume-stat');
+    const pubRegistries = document.getElementById('catalog-registries-stat');
+    const pubCountries = document.getElementById('catalog-countries-stat');
+
+    if (pubTotalCount) pubTotalCount.textContent = `${projects.length} Projects`;
+    if (pubTotalVol) pubTotalVol.textContent = `${totalVolume.toLocaleString()} tCO₂e`;
+    if (pubRegistries) pubRegistries.textContent = Array.from(registries).slice(0, 4).join(' • ') || 'VCS • GS • PV';
+    if (pubCountries) pubCountries.textContent = `${countries.size || projects.length} Countries`;
+
+    // Admin dashboard KPI
+    const adminPortfolioVol = document.getElementById('admin-kpi-portfolio-vol');
+    if (adminPortfolioVol) adminPortfolioVol.textContent = `${totalVolume.toLocaleString()} t`;
+
+    // Admin catalog tab KPIs
+    const adminCount = document.getElementById('admin-catalog-kpi-count');
+    const adminVol = document.getElementById('admin-catalog-kpi-volume');
+    const adminAvgPrice = document.getElementById('admin-catalog-kpi-avgprice');
+    const adminVal = document.getElementById('admin-catalog-kpi-value');
+    const tabCount = document.getElementById('tab-catalog-count');
+
+    if (adminCount) adminCount.textContent = `${projects.length} Projects`;
+    if (adminVol) adminVol.textContent = `${totalVolume.toLocaleString()} tCO₂e`;
+    if (adminAvgPrice) adminAvgPrice.textContent = `$${avgPrice.toFixed(2)} / t`;
+    if (adminVal) adminVal.textContent = '$' + totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    if (tabCount) tabCount.textContent = projects.length;
+
+    // Staff quick list count
+    const staffCount = document.getElementById('emp-projects-quick-count');
+    if (staffCount) staffCount.textContent = `${projects.length} Projects`;
+  }
+
+  function renderPublicCreditCatalog() {
+    const grid = document.getElementById('catalog-projects-grid');
+    if (!grid) return;
+
+    const projects = getCatalogProjects();
+    const activeFilterBtn = document.querySelector('.project-filter-btn.bg-green-600') || document.querySelector('.project-filter-btn[data-filter="all"]');
+    const currentFilter = activeFilterBtn ? activeFilterBtn.getAttribute('data-filter') : 'all';
+
+    let html = '';
+    projects.forEach((p, idx) => {
+      const cat = p.category || 'nature';
+      const isVisible = currentFilter === 'all' || currentFilter === cat;
+      const numLabel = p.num || `Project #${String(idx + 1).padStart(2, '0')}`;
+
+      let badgeClass = 'bg-emerald-600';
+      let idColor = 'text-green-700 font-bold bg-green-50 border-green-200';
+      if (cat === 'renewables') {
+        badgeClass = 'bg-blue-600';
+        idColor = 'text-blue-700 font-bold bg-blue-50 border-blue-200';
+      } else if (cat === 'tech') {
+        badgeClass = 'bg-teal-600';
+        idColor = 'text-teal-700 font-bold bg-teal-50 border-teal-200';
+      } else if (cat === 'community') {
+        badgeClass = 'bg-purple-600';
+        idColor = 'text-purple-700 font-bold bg-purple-50 border-purple-200';
+      }
+
+      const imgUrl = p.image || 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=600&q=80';
+      const volumeFormatted = Number(p.volume || 0).toLocaleString() + ' t/yr';
+      const priceFormatted = '$' + Number(p.price || 0).toFixed(2) + '/t';
+      const vintageLabel = p.vintage ? ` • Vintage ${p.vintage}` : '';
+
+      html += `
+        <div class="project-item-card bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm space-y-3 ${isVisible ? '' : 'hidden'}" data-category="${escapeHtml(cat)}" data-id="${escapeHtml(p.id)}">
+          <div class="relative h-44 bg-slate-100 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 hover:scale-105" style="background-image: url('${escapeHtml(imgUrl)}')"></div>
+            <span class="absolute top-2.5 left-2.5 ${badgeClass} text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">${escapeHtml(p.categoryBadge || cat)}</span>
+            <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded">${escapeHtml(numLabel)}</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-mono px-2 py-0.5 rounded border ${idColor}">ID: ${escapeHtml(p.id)}</span>
+              <span class="text-slate-400 text-[11px]"><i class="fa-solid fa-location-dot text-slate-400"></i> ${escapeHtml(p.location || 'Global')}</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900 flex items-center justify-between">
+              <span>${escapeHtml(p.title)}</span>
+              <span class="text-xs text-emerald-700 font-black">${priceFormatted}</span>
+            </h3>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">${escapeHtml(p.description || '')}</p>
+          <div class="pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-400 text-[11px]">${escapeHtml(p.registryRef || p.registry || 'Standard Registry')}${vintageLabel}</span>
+            <span class="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded text-[11px] font-mono">${escapeHtml(volumeFormatted)}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    grid.innerHTML = html;
+
+    // Update filter counts
+    const countAll = projects.length;
+    const countNature = projects.filter(p => p.category === 'nature').length;
+    const countRenewables = projects.filter(p => p.category === 'renewables').length;
+    const countTech = projects.filter(p => p.category === 'tech').length;
+
+    const elAll = document.getElementById('filter-count-all');
+    const elNature = document.getElementById('filter-count-nature');
+    const elRenewables = document.getElementById('filter-count-renewables');
+    const elTech = document.getElementById('filter-count-tech');
+
+    if (elAll) elAll.textContent = countAll;
+    if (elNature) elNature.textContent = countNature;
+    if (elRenewables) elRenewables.textContent = countRenewables;
+    if (elTech) elTech.textContent = countTech;
+
+    const visibleItems = grid.querySelectorAll('.project-item-card:not(.hidden)');
+    const countIndicator = document.getElementById('catalog-count-indicator');
+    if (countIndicator) {
+      countIndicator.textContent = `Showing ${visibleItems.length} of ${projects.length} Projects`;
+    }
+  }
+
+  function initProjectFilters() {
+    const filterButtons = document.querySelectorAll('.project-filter-btn');
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => {
+          b.classList.remove('bg-green-600', 'text-white');
+          b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+        });
+        btn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+        btn.classList.add('bg-green-600', 'text-white');
+
+        const filterValue = btn.getAttribute('data-filter');
+        const projectItems = document.querySelectorAll('#catalog-projects-grid .project-item-card');
+        let visibleCount = 0;
+        projectItems.forEach(item => {
+          const itemCategory = item.getAttribute('data-category');
+          if (filterValue === 'all' || itemCategory === filterValue) {
+            item.classList.remove('hidden');
+            visibleCount++;
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+
+        const countIndicator = document.getElementById('catalog-count-indicator');
+        if (countIndicator) {
+          countIndicator.textContent = `Showing ${visibleCount} of ${projectItems.length} Projects`;
+        }
+      });
+    });
+  }
+
+  function renderAdminCatalogTable() {
+    const tbody = document.getElementById('admin-catalog-tbody');
+    if (!tbody) return;
+
+    const projects = getCatalogProjects();
+    const searchQuery = (document.getElementById('admin-catalog-search-input')?.value || '').trim().toLowerCase();
+    const catFilter = document.getElementById('admin-catalog-cat-filter')?.value || 'all';
+
+    const filtered = projects.filter(p => {
+      if (catFilter !== 'all' && p.category !== catFilter) return false;
+      if (searchQuery) {
+        const text = `${p.id} ${p.title} ${p.location} ${p.country} ${p.registry} ${p.registryRef}`.toLowerCase();
+        if (!text.includes(searchQuery)) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="px-6 py-8 text-center text-slate-400 font-medium">
+            No projects matched the search or filter criteria.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(p => {
+      const volFormatted = Number(p.volume || 0).toLocaleString();
+      const priceFormatted = '$' + Number(p.price || 0).toFixed(2);
+      let catBadgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      if (p.category === 'renewables') catBadgeColor = 'bg-blue-100 text-blue-800 border-blue-200';
+      else if (p.category === 'tech') catBadgeColor = 'bg-teal-100 text-teal-800 border-teal-200';
+      else if (p.category === 'community') catBadgeColor = 'bg-purple-100 text-purple-800 border-purple-200';
+
+      const statusColor = (p.status === 'Fully Allocated')
+        ? 'bg-amber-100 text-amber-800 border-amber-200'
+        : 'bg-emerald-100 text-emerald-800 border-emerald-200';
+
+      return `
+        <tr class="hover:bg-slate-50/70 transition">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              <img src="${escapeHtml(p.image || '')}" alt="${escapeHtml(p.title)}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shadow-xs" onerror="this.src='assets/logo.jpg'" />
+              <div>
+                <span class="font-extrabold text-slate-900 block">${escapeHtml(p.title)}</span>
+                <span class="font-mono text-[10px] text-slate-500">${escapeHtml(p.id)}</span>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${catBadgeColor}">
+              ${escapeHtml(p.categoryBadge || p.category)}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="font-medium text-slate-700 block">${escapeHtml(p.location || '—')}</span>
+            <span class="text-[10px] text-slate-400">${escapeHtml(p.country || '')}</span>
+          </td>
+          <td class="px-4 py-3 font-medium">
+            <span class="text-slate-800 block">${escapeHtml(p.registry || 'Standard')}</span>
+            <span class="font-mono text-[10px] text-slate-400">${escapeHtml(p.registryRef || '')}</span>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <span class="font-mono font-bold text-emerald-600 text-xs">${volFormatted} t</span>
+          </td>
+          <td class="px-4 py-3 text-right font-mono font-bold text-slate-800">
+            ${priceFormatted}
+          </td>
+          <td class="px-4 py-3 text-center font-mono text-slate-600">
+            ${escapeHtml(String(p.vintage || '2024'))}
+          </td>
+          <td class="px-4 py-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusColor}">
+              ${escapeHtml(p.status || 'Verified Active')}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1.5">
+              <button class="admin-catalog-edit-btn px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition flex items-center gap-1" data-id="${escapeHtml(p.id)}">
+                <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+              </button>
+              <button class="admin-catalog-delete-btn p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" data-id="${escapeHtml(p.id)}" title="Delete project">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.admin-catalog-edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        openCatalogEditModal(id);
+      });
+    });
+
+    tbody.querySelectorAll('.admin-catalog-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const projects = getCatalogProjects();
+        const target = projects.find(p => p.id === id);
+        if (!target) return;
+
+        if (confirm(`Are you sure you want to delete "${target.title}" (${target.id}) from the Credit Catalog?`)) {
+          const updated = projects.filter(p => p.id !== id);
+          await saveCatalogProjects(updated);
+          if (supabaseClient) {
+            try {
+              await supabaseClient.from('catalog_projects').delete().eq('id', id);
+            } catch (err) {}
+          }
+          const curAdmin = sessionStorage.getItem('carbonaxis_admin_email') || 'Administrator';
+          logEmployeeActivity({
+            employee: { name: curAdmin, username: 'admin', role: 'Administrator' },
+            action_type: 'CATALOG_DELETE',
+            action_label: 'Project Removed from Catalog',
+            details: `Admin deleted carbon project [${id}] "${target.title}" from catalog.`
+          });
+        }
+      });
+    });
+  }
+
+  function renderStaffInventoryQuickRef() {
+    const listEl = document.getElementById('emp-projects-quick-list');
+    if (!listEl) return;
+
+    const projects = getCatalogProjects();
+    listEl.innerHTML = projects.map((p, idx) => {
+      const volFormatted = Number(p.volume || 0).toLocaleString() + ' t/yr';
+      const flag = p.flag || '🌐';
+      const numLabel = p.num || `Project #${String(idx + 1).padStart(2, '0')}`;
+
+      return `
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:border-slate-300 transition">
+          <div>
+            <span class="font-bold text-slate-900 block">${flag} ${escapeHtml(numLabel)} • ${escapeHtml(p.title)}</span>
+            <span class="text-[10px] text-slate-400 font-mono">ID: ${escapeHtml(p.id)} • ${volFormatted} • $${Number(p.price || 0).toFixed(2)}/t</span>
+          </div>
+          <button class="emp-inspect-proj-btn px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition" data-id="${escapeHtml(p.id)}" data-name="${escapeHtml(p.title)}">
+            Inspect Lot
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    listEl.querySelectorAll('.emp-inspect-proj-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const projId = btn.getAttribute('data-id');
+        const projName = btn.getAttribute('data-name');
+        const curEmp = getCurrentEmployee();
+        const p = projects.find(x => x.id === projId);
+
+        await logEmployeeActivity({
+          employee: curEmp || { name: 'Staff', username: 'staff', role: 'Staff Member' },
+          action_type: 'CATALOG_INSPECT',
+          action_label: 'Carbon Asset Inspected',
+          details: `Inspected technical specifications & verification registry documents for project [${projId}] - ${projName}.`
+        });
+
+        alert(`TECHNICAL SPECIFICATION LOT REVIEW\n------------------------------------\nProject: ${projName}\nIdentifier: ${projId}\nAvailable Volume: ${p ? Number(p.volume).toLocaleString() + ' tCO2e/yr' : 'N/A'}\nPrice: ${p ? '$' + Number(p.price).toFixed(2) + '/t' : 'N/A'}\nRegistry: ${p ? (p.registryRef || p.registry) : 'Standard'}\nTrading Status: ${p ? p.status : 'Ready for Allocation'}\n\nYour review has been timestamped in the compliance audit log.`);
+        loadEmployeeWorkspace();
+      });
+    });
+  }
+
+  function openCatalogEditModal(projectId) {
+    const modal = document.getElementById('admin-catalog-modal');
+    const modalTitle = document.getElementById('admin-catalog-modal-title');
+    const origIdInput = document.getElementById('catalog-edit-orig-id');
+    const form = document.getElementById('admin-catalog-form');
+    if (!modal || !form) return;
+
+    form.reset();
+
+    if (projectId) {
+      const projects = getCatalogProjects();
+      const target = projects.find(p => p.id === projectId);
+      if (target) {
+        if (modalTitle) modalTitle.textContent = `Edit Project: ${target.title}`;
+        if (origIdInput) origIdInput.value = target.id;
+        document.getElementById('catalog-input-title').value = target.title || '';
+        document.getElementById('catalog-input-id').value = target.id || '';
+        document.getElementById('catalog-input-category').value = target.category || 'nature';
+        document.getElementById('catalog-input-catbadge').value = target.categoryBadge || '';
+        document.getElementById('catalog-input-volume').value = target.volume || 10000;
+        document.getElementById('catalog-input-price').value = target.price || 25.00;
+        document.getElementById('catalog-input-location').value = target.location || '';
+        document.getElementById('catalog-input-country').value = target.country || '';
+        document.getElementById('catalog-input-registry').value = target.registry || '';
+        document.getElementById('catalog-input-registryref').value = target.registryRef || '';
+        document.getElementById('catalog-input-vintage').value = target.vintage || 2024;
+        document.getElementById('catalog-input-status').value = target.status || 'Verified Active';
+        document.getElementById('catalog-input-image').value = target.image || '';
+        document.getElementById('catalog-input-desc').value = target.description || '';
+      }
+    } else {
+      if (modalTitle) modalTitle.textContent = 'Add New Carbon Credit Project';
+      if (origIdInput) origIdInput.value = '';
+      const nextNum = getCatalogProjects().length + 1;
+      document.getElementById('catalog-input-id').value = `PRJ-NEW-${String(nextNum).padStart(4, '0')}`;
+      document.getElementById('catalog-input-volume').value = 15000;
+      document.getElementById('catalog-input-price').value = 24.50;
+      document.getElementById('catalog-input-vintage').value = new Date().getFullYear();
+      document.getElementById('catalog-input-status').value = 'Verified Active';
+      document.getElementById('catalog-input-category').value = 'nature';
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  function closeCatalogEditModal() {
+    const modal = document.getElementById('admin-catalog-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function initCreditCatalogAdmin() {
+    const addBtn = document.getElementById('admin-catalog-add-btn');
+    if (addBtn) addBtn.addEventListener('click', () => openCatalogEditModal(null));
+
+    const resetBtn = document.getElementById('admin-catalog-reset-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', async () => {
+        if (confirm('Are you sure you want to reset the Credit Catalog back to the baseline 6 projects? All custom edits and added projects will be reset.')) {
+          const cloned = JSON.parse(JSON.stringify(DEFAULT_CATALOG_PROJECTS));
+          await saveCatalogProjects(cloned);
+          alert('Credit Catalog has been restored to standard baseline.');
+        }
+      });
+    }
+
+    const closeBtn = document.getElementById('admin-catalog-modal-close');
+    const cancelBtn = document.getElementById('admin-catalog-modal-cancel');
+    if (closeBtn) closeBtn.addEventListener('click', closeCatalogEditModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeCatalogEditModal);
+
+    const searchInput = document.getElementById('admin-catalog-search-input');
+    if (searchInput) searchInput.addEventListener('input', renderAdminCatalogTable);
+
+    const catFilter = document.getElementById('admin-catalog-cat-filter');
+    if (catFilter) catFilter.addEventListener('change', renderAdminCatalogTable);
+
+    const form = document.getElementById('admin-catalog-form');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const origId = document.getElementById('catalog-edit-orig-id').value;
+        const newId = (document.getElementById('catalog-input-id').value || '').trim();
+        const title = (document.getElementById('catalog-input-title').value || '').trim();
+        const category = document.getElementById('catalog-input-category').value;
+        const catBadge = (document.getElementById('catalog-input-catbadge').value || '').trim();
+        const volume = parseFloat(document.getElementById('catalog-input-volume').value) || 0;
+        const price = parseFloat(document.getElementById('catalog-input-price').value) || 0;
+        const location = (document.getElementById('catalog-input-location').value || '').trim();
+        const country = (document.getElementById('catalog-input-country').value || '').trim();
+        const registry = (document.getElementById('catalog-input-registry').value || '').trim();
+        const registryRef = (document.getElementById('catalog-input-registryref').value || '').trim();
+        const vintage = parseInt(document.getElementById('catalog-input-vintage').value, 10) || new Date().getFullYear();
+        const status = document.getElementById('catalog-input-status').value;
+        const image = (document.getElementById('catalog-input-image').value || '').trim();
+        const desc = (document.getElementById('catalog-input-desc').value || '').trim();
+
+        if (!title || !newId || volume <= 0) {
+          alert('Please enter a valid project title, unique identifier, and available volume.');
+          return;
+        }
+
+        const projects = getCatalogProjects();
+        const existingIdx = origId ? projects.findIndex(p => p.id === origId) : projects.findIndex(p => p.id === newId);
+
+        const projectPayload = {
+          id: newId,
+          num: (existingIdx >= 0 && projects[existingIdx].num) ? projects[existingIdx].num : `Project #${String(projects.length + 1).padStart(2, '0')}`,
+          title: title,
+          category: category,
+          categoryBadge: catBadge || (category === 'nature' ? 'Nature Reforestation' : category === 'renewables' ? 'Renewable Power' : 'High-Tech DAC'),
+          location: location,
+          country: country,
+          flag: projects[existingIdx]?.flag || '🌐',
+          registry: registry,
+          registryRef: registryRef,
+          volume: volume,
+          price: price,
+          vintage: vintage,
+          status: status,
+          description: desc,
+          image: image || (projects[existingIdx] ? projects[existingIdx].image : 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=600&q=80')
+        };
+
+        if (existingIdx >= 0) {
+          projects[existingIdx] = projectPayload;
+        } else {
+          projects.push(projectPayload);
+        }
+
+        await saveCatalogProjects(projects);
+        closeCatalogEditModal();
+
+        const curAdmin = sessionStorage.getItem('carbonaxis_admin_email') || 'Administrator';
+        logEmployeeActivity({
+          employee: { name: curAdmin, username: 'admin', role: 'Administrator' },
+          action_type: existingIdx >= 0 ? 'CATALOG_UPDATE' : 'CATALOG_CREATE',
+          action_label: existingIdx >= 0 ? 'Credit Catalog Project Updated' : 'New Project Added to Catalog',
+          details: `Admin updated [${newId}] "${title}" (Volume: ${volume.toLocaleString()} tCO2e, Price: $${price.toFixed(2)}/t, Registry: ${registry}).`
+        });
+
+        alert(`Successfully saved "${title}" (${newId})! The project data and numbers are now live across the platform.`);
+      });
+    }
+  }
 
 
   // ==================== 3. Carbon Calculator (Marketplace Page) ====================
@@ -645,12 +1304,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabEmployeesBtn = document.getElementById('admin-tab-employees-btn');
   const tabLogsBtn = document.getElementById('admin-tab-logs-btn');
   const tabSheetBtn = document.getElementById('admin-tab-sheet-btn');
+  const tabCatalogBtn = document.getElementById('admin-tab-catalog-btn');
 
   const tabInquiriesView = document.getElementById('admin-tab-inquiries');
   const tabTradesView = document.getElementById('admin-tab-trades');
   const tabEmployeesView = document.getElementById('admin-tab-employees');
   const tabLogsView = document.getElementById('admin-tab-logs');
   const tabSheetView = document.getElementById('admin-tab-sheet');
+  const tabCatalogView = document.getElementById('admin-tab-catalog');
 
   const searchInput = document.getElementById('admin-search-input');
   const statusFilter = document.getElementById('admin-status-filter');
@@ -710,14 +1371,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Tab switching inside Admin Dashboard
   function switchAdminTab(tabName) {
-    [tabInquiriesBtn, tabTradesBtn, tabEmployeesBtn, tabLogsBtn, tabSheetBtn].forEach(b => {
+    [tabInquiriesBtn, tabTradesBtn, tabEmployeesBtn, tabLogsBtn, tabSheetBtn, tabCatalogBtn].forEach(b => {
       if (b) {
         b.classList.remove('border-green-600', 'text-green-600', 'active');
         b.classList.add('border-transparent', 'text-slate-500');
       }
     });
 
-    [tabInquiriesView, tabTradesView, tabEmployeesView, tabLogsView, tabSheetView].forEach(v => {
+    [tabInquiriesView, tabTradesView, tabEmployeesView, tabLogsView, tabSheetView, tabCatalogView].forEach(v => {
       if (v) v.classList.add('hidden');
     });
 
@@ -755,6 +1416,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (tabSheetView) tabSheetView.classList.remove('hidden');
       renderAdminSpreadsheet();
+    } else if (tabName === 'catalog') {
+      if (tabCatalogBtn) {
+        tabCatalogBtn.classList.add('border-green-600', 'text-green-600', 'active');
+        tabCatalogBtn.classList.remove('border-transparent', 'text-slate-500');
+      }
+      if (tabCatalogView) tabCatalogView.classList.remove('hidden');
+      renderAdminCatalogTable();
+      updateCatalogKPIs();
     }
   }
 
@@ -763,6 +1432,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (tabEmployeesBtn) tabEmployeesBtn.addEventListener('click', () => switchAdminTab('employees'));
   if (tabLogsBtn) tabLogsBtn.addEventListener('click', () => switchAdminTab('logs'));
   if (tabSheetBtn) tabSheetBtn.addEventListener('click', () => switchAdminTab('sheet'));
+  if (tabCatalogBtn) tabCatalogBtn.addEventListener('click', () => switchAdminTab('catalog'));
 
   async function loadAdminDashboardData() {
     currentInquiries = await fetchInquiries();
@@ -780,6 +1450,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabEmpCountEl = document.getElementById('tab-employees-count');
     const tabLogsCountEl = document.getElementById('tab-logs-count');
     const tabSheetCountEl = document.getElementById('tab-sheet-count');
+    const tabCatalogCountEl = document.getElementById('tab-catalog-count');
     const adminEmpCountDisplay = document.getElementById('admin-emp-count-display');
 
     const newCount = currentInquiries.filter(i => (i.status || 'New') === 'New').length;
@@ -793,12 +1464,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (adminEmpCountDisplay) adminEmpCountDisplay.textContent = employees.length;
     if (tabLogsCountEl) tabLogsCountEl.textContent = logs.length;
     if (tabSheetCountEl) tabSheetCountEl.textContent = sheetRecords.length;
+    if (tabCatalogCountEl) tabCatalogCountEl.textContent = getCatalogProjects().length;
 
     renderInquiriesTable();
     renderTradesTable();
     renderAdminEmployeesTable();
     renderAdminEmployeeLogs();
     renderAdminSpreadsheet();
+    renderAdminCatalogTable();
+    updateCatalogKPIs();
   }
 
   function renderInquiriesTable() {
@@ -1931,6 +2605,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await renderEmployeeLeads();
     renderEmployeeSessionFeed();
     updateEmployeeKPIs();
+    renderStaffInventoryQuickRef();
 
     const inquiries = await fetchInquiries();
     const leadsCountTab = document.getElementById('emp-leads-count-tab');
@@ -6520,4 +7195,12 @@ document.addEventListener('DOMContentLoaded', () => {
     div.textContent = text;
     return div.innerHTML;
   }
+
+  // Initialize Credit Catalog Admin, Public Catalog, Project Filters, Staff Inventory Quick Ref & Live KPIs
+  initCreditCatalogAdmin();
+  initProjectFilters();
+  renderPublicCreditCatalog();
+  renderStaffInventoryQuickRef();
+  updateCatalogKPIs();
+  fetchCatalogFromCloud().catch(() => {});
 });

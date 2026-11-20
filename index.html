@@ -470,39 +470,39 @@
         </div>
         <div class="p-2 border-r border-slate-100 last:border-0">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Available Volume</span>
-          <span class="text-lg font-black text-slate-900">112,600 tCO₂e</span>
+          <span id="catalog-total-volume-stat" class="text-lg font-black text-slate-900">112,600 tCO₂e</span>
         </div>
         <div class="p-2 border-r border-slate-100 last:border-0">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Registry Standards</span>
-          <span class="text-lg font-black text-slate-900">VCS • GS • PV</span>
+          <span id="catalog-registries-stat" class="text-lg font-black text-slate-900">VCS • GS • PV</span>
         </div>
         <div class="p-2">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Global Sourcing Hubs</span>
-          <span class="text-lg font-black text-slate-900">6 Countries</span>
+          <span id="catalog-countries-stat" class="text-lg font-black text-slate-900">6 Countries</span>
         </div>
       </div>
 
       <!-- Project Directory Filters with Counts -->
       <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2" id="catalog-filter-buttons-container">
           <button class="project-filter-btn px-3.5 py-1.5 text-xs font-bold bg-green-600 text-white rounded-lg transition shadow-sm" data-filter="all">
-            All Projects <span class="ml-1 bg-white/20 px-1.5 py-0.2 rounded-full text-[10px]">6</span>
+            All Projects <span id="filter-count-all" class="ml-1 bg-white/20 px-1.5 py-0.2 rounded-full text-[10px]">6</span>
           </button>
           <button class="project-filter-btn px-3.5 py-1.5 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition" data-filter="nature">
-            Nature-Based <span class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">3</span>
+            Nature-Based <span id="filter-count-nature" class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">3</span>
           </button>
           <button class="project-filter-btn px-3.5 py-1.5 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition" data-filter="renewables">
-            Renewable Power <span class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">2</span>
+            Renewable Power <span id="filter-count-renewables" class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">2</span>
           </button>
           <button class="project-filter-btn px-3.5 py-1.5 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition" data-filter="tech">
-            High-Tech Removal <span class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">1</span>
+            High-Tech Removal <span id="filter-count-tech" class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-full text-[10px]">1</span>
           </button>
         </div>
         <span id="catalog-count-indicator" class="text-xs font-bold text-slate-500 pr-2">Showing 6 of 6 Projects</span>
       </div>
 
       <!-- Projects Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div id="catalog-projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         
         <!-- Project #01 (Nature) -->
         <div class="project-item-card bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm space-y-3" data-category="nature">
@@ -935,13 +935,13 @@
           <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Portfolio Volume</span>
             <div class="flex items-center justify-between mt-1">
-              <span class="text-xl font-black text-slate-900">112,600 t</span>
+              <span id="admin-kpi-portfolio-vol" class="text-xl font-black text-slate-900">112,600 t</span>
               <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm"><i class="fa-solid fa-chart-line"></i></span>
             </div>
           </div>
         </div>
 
-        <!-- Tab Controls (Inquiries vs Trade Orders vs Staff vs Activity Logs) -->
+        <!-- Tab Controls (Inquiries vs Trade Orders vs Staff vs Activity Logs vs Catalog) -->
         <div class="flex border-b border-slate-200 space-x-2 sm:space-x-4 text-xs font-bold overflow-x-auto custom-scrollbar">
           <button id="admin-tab-inquiries-btn" class="pb-3 border-b-2 border-green-600 text-green-600 active whitespace-nowrap">
             <i class="fa-solid fa-envelope-open-text mr-1"></i> Inquiries & Leads (<span id="tab-inquiries-count">0</span>)
@@ -957,6 +957,9 @@
           </button>
           <button id="admin-tab-sheet-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition whitespace-nowrap">
             <i class="fa-solid fa-table-cells mr-1 text-emerald-600"></i> Staff Records Sheet (<span id="tab-sheet-count">0</span>)
+          </button>
+          <button id="admin-tab-catalog-btn" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition whitespace-nowrap">
+            <i class="fa-solid fa-layer-group mr-1 text-emerald-600"></i> Credit Catalog Inventory (<span id="tab-catalog-count">6</span>)
           </button>
         </div>
 
@@ -1576,6 +1579,224 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Section 6: Credit Catalog Inventory Management -->
+        <div id="admin-tab-catalog" class="space-y-4 hidden">
+          <!-- Top Control & Action Bar -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="space-y-0.5">
+              <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-emerald-600"></i> Credit Catalog & Inventory Management
+              </h3>
+              <p class="text-xs text-slate-500">Update project details, live available volumes (tCO₂e), pricing, registries, and status. Changes immediately sync to the public Credit Catalog.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="admin-catalog-add-btn" type="button" class="px-3.5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-plus text-xs"></i> Add New Project
+              </button>
+              <button id="admin-catalog-reset-btn" type="button" class="px-3 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition flex items-center gap-1.5" title="Reset to standard baseline 6 projects">
+                <i class="fa-solid fa-rotate-left text-xs"></i> Reset Baseline
+              </button>
+            </div>
+          </div>
+
+          <!-- Catalog Summary KPI Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Catalog Projects</span>
+              <span id="admin-catalog-kpi-count" class="text-xl font-black text-slate-900 mt-1 block">6 Projects</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Available Volume</span>
+              <span id="admin-catalog-kpi-volume" class="text-xl font-black text-emerald-600 mt-1 block">112,600 tCO₂e</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Avg. Price / Ton</span>
+              <span id="admin-catalog-kpi-avgprice" class="text-xl font-black text-blue-600 mt-1 block">$22.40 / t</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Est. Inventory Value</span>
+              <span id="admin-catalog-kpi-value" class="text-xl font-black text-purple-600 mt-1 block">$2,450,000</span>
+            </div>
+          </div>
+
+          <!-- Search & Filter Bar -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative w-full sm:w-72">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+              <input type="text" id="admin-catalog-search-input" placeholder="Search by title, ID, registry, country..." class="w-full text-xs pl-8 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" />
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Category:</span>
+              <select id="admin-catalog-cat-filter" class="text-xs p-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-green-500 font-medium">
+                <option value="all">All Categories</option>
+                <option value="nature">Nature-Based</option>
+                <option value="renewables">Renewable Power</option>
+                <option value="tech">High-Tech Removal</option>
+                <option value="community">Community / Agroforestry</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Catalog Inventory Table -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th class="px-4 py-3.5">Project & Identifier</th>
+                    <th class="px-4 py-3.5">Category</th>
+                    <th class="px-4 py-3.5">Location & Country</th>
+                    <th class="px-4 py-3.5">Registry Standard</th>
+                    <th class="px-4 py-3.5 text-right">Available Volume (t/yr)</th>
+                    <th class="px-4 py-3.5 text-right">Price ($/t)</th>
+                    <th class="px-4 py-3.5 text-center">Vintage</th>
+                    <th class="px-4 py-3.5 text-center">Status</th>
+                    <th class="px-4 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-catalog-tbody" class="divide-y divide-slate-100 text-slate-600">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal: Admin Edit / Add Project Modal -->
+        <div id="admin-catalog-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+          <div class="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+                <div>
+                  <h3 id="admin-catalog-modal-title" class="text-sm font-extrabold text-slate-900">Edit Project</h3>
+                  <p class="text-[11px] text-slate-500">Update project attributes, annual capacity volume, pricing, and registry data.</p>
+                </div>
+              </div>
+              <button id="admin-catalog-modal-close" type="button" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark text-sm"></i>
+              </button>
+            </div>
+
+            <form id="admin-catalog-form" class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs">
+              <input type="hidden" id="catalog-edit-orig-id" value="" />
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Title -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Project Name *</label>
+                  <input type="text" id="catalog-input-title" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" placeholder="e.g. Acre Canopy Protection" />
+                </div>
+
+                <!-- Identifier / ID -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Project Identifier (ID) *</label>
+                  <input type="text" id="catalog-input-id" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 font-mono" placeholder="e.g. PRJ-GS-0104" />
+                </div>
+
+                <!-- Category -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Category *</label>
+                  <select id="catalog-input-category" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 bg-white">
+                    <option value="nature">Nature-Based (Reforestation / Estuary / Agroforestry)</option>
+                    <option value="renewables">Renewable Power (Solar / Wind / Hydro)</option>
+                    <option value="tech">High-Tech Removal (Direct Air Capture / Mineralization)</option>
+                    <option value="community">Community & Forest Conservation</option>
+                  </select>
+                </div>
+
+                <!-- Category Badge Label -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Badge Tag / Subtype</label>
+                  <input type="text" id="catalog-input-catbadge" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" placeholder="e.g. Nature Reforestation, Renewable Solar" />
+                </div>
+
+                <!-- Available Volume (t/yr) -->
+                <div>
+                  <label class="block text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                    <span>Available Volume (tCO₂e / yr) *</span>
+                    <span class="text-[9px] font-normal text-slate-400">Numeric</span>
+                  </label>
+                  <input type="number" id="catalog-input-volume" required min="1" step="1" class="w-full text-xs px-3 py-2 border border-emerald-300 rounded-xl focus:outline-none focus:border-emerald-500 font-bold text-emerald-700 bg-emerald-50/30" placeholder="e.g. 12000" />
+                </div>
+
+                <!-- Price per Ton ($/t) -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                    <span>Price per Ton ($/t) *</span>
+                    <span class="text-[9px] font-normal text-slate-400">USD</span>
+                  </label>
+                  <input type="number" id="catalog-input-price" required min="0.01" step="0.01" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 font-bold" placeholder="e.g. 28.50" />
+                </div>
+
+                <!-- Location -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Location Region</label>
+                  <input type="text" id="catalog-input-location" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" placeholder="e.g. Acre, Brazil" />
+                </div>
+
+                <!-- Country -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Country</label>
+                  <input type="text" id="catalog-input-country" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" placeholder="e.g. Brazil, Morocco, India" />
+                </div>
+
+                <!-- Registry Standard -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Registry Standard</label>
+                  <input type="text" id="catalog-input-registry" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" placeholder="e.g. Gold Standard, Verra (VCS), Plan Vivo" />
+                </div>
+
+                <!-- Registry Reference -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Registry Code / Ref</label>
+                  <input type="text" id="catalog-input-registryref" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 font-mono" placeholder="e.g. GS-Registry: BR-928" />
+                </div>
+
+                <!-- Vintage Year -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Vintage Year</label>
+                  <input type="number" id="catalog-input-vintage" min="2018" max="2035" step="1" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" placeholder="e.g. 2024" />
+                </div>
+
+                <!-- Status -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Trading Status</label>
+                  <select id="catalog-input-status" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 bg-white">
+                    <option value="Verified Active">Verified Active</option>
+                    <option value="Trading Live">Trading Live</option>
+                    <option value="In Verification">In Verification</option>
+                    <option value="Fully Allocated">Fully Allocated</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Image URL -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Cover Image URL</label>
+                <input type="url" id="catalog-input-image" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500" placeholder="https://images.unsplash.com/..." />
+              </div>
+
+              <!-- Description -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Project Summary / Description *</label>
+                <textarea id="catalog-input-desc" required rows="3" class="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 resize-none leading-relaxed" placeholder="Detailed description of carbon offset mechanisms, permanence models, and co-benefits..."></textarea>
+              </div>
+
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" id="admin-catalog-modal-cancel" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                  Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm flex items-center gap-1.5">
+                  <i class="fa-solid fa-check"></i> Save Project Data & Numbers
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -2262,10 +2483,10 @@
                 <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                   <i class="fa-solid fa-layer-group text-blue-600"></i> Sourced Inventory Quick Reference
                 </h3>
-                <span class="text-[10px] font-bold text-slate-400">6 Projects</span>
+                <span id="emp-projects-quick-count" class="text-[10px] font-bold text-slate-400">6 Projects</span>
               </div>
 
-              <div class="space-y-2.5 max-h-[320px] overflow-y-auto custom-scrollbar pr-1">
+              <div id="emp-projects-quick-list" class="space-y-2.5 max-h-[320px] overflow-y-auto custom-scrollbar pr-1">
                 <!-- Project Item 1 -->
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:border-slate-300 transition">
                   <div>
